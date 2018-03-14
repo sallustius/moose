@@ -128,6 +128,33 @@ NonlinearSystem::solve()
     // Calculate the initial residual for use in the convergence criterion.
     _computing_initial_residual = true;
     _fe_problem.computeResidual(_transient_sys, *_current_solution, *_transient_sys.rhs);
+    if (_fe_problem.automaticScaling())
+    {
+      for (auto & var : _vars[0].allVariables())
+      {
+        Real var_resid = _transient_sys.calculate_norm(RHS(), var->number(), DISCRETE_L2);
+        if (var_resid == 0)
+          var->scalingFactor(1.);
+        else
+          var->scalingFactor(1. / var_resid);
+        // std::set<dof_id_type> set_var_indices;
+        // _transient_sys.local_dof_indices(var->number(), set_var_indices);
+        // std::vector<dof_id_type> vector_var_indices(set_var_indices.begin(),
+        // set_var_indices.end()); std::vector<Real>
+        // current_vector_values(vector_var_indices.size());
+        // std::transform(current_vector_values.begin(),
+        //                current_vector_values.end(),
+        //                current_vector_values.begin(),
+        //                std::bind1st(std::multiplies<Real>(), var->scalingFactor()));
+        // RHS().get(vector_var_indices, current_vector_values);
+        // std::transform(current_vector_values.begin(),
+        //                current_vector_values.end(),
+        //                current_vector_values.begin(),
+        //                std::bind1st(std::multiplies<Real>(), var->scalingFactor()));
+        // RHS().insert(current_vector_values, vector_var_indices);
+      }
+      _fe_problem.computeResidual(_transient_sys, *_current_solution, *_transient_sys.rhs);
+    }
     _computing_initial_residual = false;
     _transient_sys.rhs->close();
     _initial_residual_before_preset_bcs = _transient_sys.rhs->l2_norm();

@@ -46,6 +46,7 @@ validParams<CreateProblemAction>()
                                        "File base name used for restart (e.g. "
                                        "<path>/<filebase> or <path>/LATEST to "
                                        "grab the latest file available)");
+  params.addParam<bool>("automatic_scaling", false, "Whether to automatically scale variables");
 
   return params;
 }
@@ -91,6 +92,7 @@ CreateProblemAction::act()
     _problem->setKernelCoverageCheck(getParam<bool>("kernel_coverage_check"));
     _problem->setMaterialCoverageCheck(getParam<bool>("material_coverage_check"));
     _problem->setParallelBarrierMessaging(getParam<bool>("parallel_barrier_messaging"));
+    _problem->automaticScaling(getParam<bool>("automatic_scaling"));
 
     if (isParamValid("restart_file_base"))
     {

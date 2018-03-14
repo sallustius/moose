@@ -100,6 +100,12 @@ VariableWarehouse::fieldVariables()
   return _vars;
 }
 
+const std::vector<MooseVariableBase *> &
+VariableWarehouse::allVariables()
+{
+  return _all_objects;
+}
+
 const std::vector<MooseVariableScalar *> &
 VariableWarehouse::scalars()
 {

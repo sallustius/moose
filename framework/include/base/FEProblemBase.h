@@ -1318,6 +1318,9 @@ public:
 
   ExecuteMooseObjectWarehouse<MultiApp> & getMultiAppWarehouse() { return _multi_apps; }
 
+  void automaticScaling(bool automatic_scaling) { _automatic_scaling = automatic_scaling; }
+  const bool & automaticScaling() { return _automatic_scaling; }
+
 protected:
   ///@{
   /**
@@ -1326,6 +1329,7 @@ protected:
   VectorPostprocessorData & getVectorPostprocessorData();
   ///@}
 
+  bool _automatic_scaling;
   MooseMesh & _mesh;
   EquationSystems _eq;
   bool _initialized;

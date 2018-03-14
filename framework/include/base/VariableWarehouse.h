@@ -108,6 +108,12 @@ public:
   const std::vector<MooseVariableFE *> & fieldVariables();
 
   /**
+   * Get the list of all variables
+   * @return The list of all variables
+   */
+  const std::vector<MooseVariableBase *> & allVariables();
+
+  /**
    * Get the list of variables that needs to be reinitialized on a given boundary
    * @param bnd The boundary ID
    * @return The list of variables
