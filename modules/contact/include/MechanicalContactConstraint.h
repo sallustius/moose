@@ -139,6 +139,8 @@ protected:
 
   const bool _print_contact_nodes;
   static Threads::spin_mutex _contact_set_mutex;
+  const VariableValue & _lm;
+  const unsigned _lm_id;
 };
 
 #endif

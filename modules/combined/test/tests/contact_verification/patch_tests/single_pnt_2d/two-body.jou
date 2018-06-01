@@ -1,0 +1,21 @@
+reset
+create surface rectangle width 1.1 height 1
+create surface rectangle width 1
+surface 1 move 0 -1
+surface 2 move 0 1
+surface 1 size 1
+surface 2 size 1
+
+curve 2 4 6 8 interval 1
+
+
+sideset 10 curve 7
+sideset 20 curve 1
+block 1 surface 1
+block 2 surface 2
+block 3 curve 7
+mesh curve all
+mesh surface all
+sideset 30 curve 5
+sideset 40 curve 3
+export mesh "two-body.e" overwrite

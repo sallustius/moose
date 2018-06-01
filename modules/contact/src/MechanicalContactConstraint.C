@@ -44,6 +44,7 @@ validParams<MechanicalContactConstraint>()
   params.addCoupledVar("disp_x", "The x displacement");
   params.addCoupledVar("disp_y", "The y displacement");
   params.addCoupledVar("disp_z", "The z displacement");
+  params.addCoupledVar("lm", "The lagrange multiplier");
 
   params.addCoupledVar(
       "displacements",
@@ -143,7 +144,9 @@ MechanicalContactConstraint::MechanicalContactConstraint(const InputParameters &
     _non_displacement_vars_jacobian(getParam<bool>("non_displacement_variables_jacobian")),
     _contact_linesearch(
         std::dynamic_pointer_cast<ContactLineSearchBase>(_fe_problem.getLineSearch())),
-    _print_contact_nodes(getParam<bool>("print_contact_nodes"))
+    _print_contact_nodes(getParam<bool>("print_contact_nodes")),
+    _lm(isCoupled("lm") ? coupledValue("lm") : _zero),
+    _lm_id(isCoupled("lm") ? coupled("lm") : libMesh::invalid_uint)
 {
   _overwrite_slave_residual = false;
 
@@ -232,6 +235,9 @@ MechanicalContactConstraint::MechanicalContactConstraint(const InputParameters &
       }
     }
   }
+  if (_formulation == CF_LAGRANGE && !isCoupled("lm"))
+    mooseError(
+        "If using the Lagrange formulation, you must couple in a lagrange multiplier variable");
 }
 
 void
@@ -481,6 +487,9 @@ MechanicalContactConstraint::shouldApply()
     PenetrationInfo * pinfo = found->second;
     if (pinfo != NULL)
     {
+      if (_formulation == CF_LAGRANGE)
+        return true;
+
       bool is_nonlinear = _fe_problem.computingNonlinearResid();
 
       // This computes the contact force once per constraint, rather than once per quad point
@@ -797,7 +806,11 @@ Real
 MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
 {
   PenetrationInfo * pinfo = _penetration_locator._penetration_info[_current_node->id()];
-  Real resid = pinfo->_contact_force(_component);
+  Real resid;
+  if (_formulation == CF_LAGRANGE)
+    resid = _lm[_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component);
+  else
+    resid = pinfo->_contact_force(_component);
   switch (type)
   {
     case Moose::Slave:

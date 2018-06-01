@@ -29,7 +29,7 @@ InputParameters
 validParams<ContactAction>()
 {
   MooseEnum orders(AddVariableAction::getNonlinearVariableOrders());
-  MooseEnum formulation("DEFAULT KINEMATIC PENALTY AUGMENTED_LAGRANGE TANGENTIAL_PENALTY",
+  MooseEnum formulation("DEFAULT KINEMATIC PENALTY AUGMENTED_LAGRANGE TANGENTIAL_PENALTY LAGRANGE",
                         "DEFAULT");
   MooseEnum system("DiracKernel Constraint", "DiracKernel");
 
@@ -41,6 +41,7 @@ validParams<ContactAction>()
   params.addParam<NonlinearVariableName>("disp_x", "The x displacement");
   params.addParam<NonlinearVariableName>("disp_y", "The y displacement");
   params.addParam<NonlinearVariableName>("disp_z", "The z displacement");
+  params.addCoupledVar("lm", "The lagrange multiplier variable");
 
   params.addParam<std::vector<NonlinearVariableName>>(
       "displacements",
@@ -168,6 +169,11 @@ ContactAction::act()
         params.set<unsigned int>("component") = i;
         params.set<NonlinearVariableName>("variable") = displacements[i];
         params.set<std::vector<VariableName>>("master_variable") = {coupled_displacements[i]};
+        if (isParamValid("lm"))
+        {
+          std::vector<std::string> lm = {"lm"};
+          params.applySpecificParameters(parameters(), lm);
+        }
         _problem->addConstraint("MechanicalContactConstraint", name, params);
       }
     }
