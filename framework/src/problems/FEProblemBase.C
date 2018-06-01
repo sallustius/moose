@@ -1161,6 +1161,14 @@ FEProblemBase::addCachedJacobian(THREAD_ID tid)
 }
 
 void
+FEProblemBase::addCachedJacobianContributions(THREAD_ID tid)
+{
+  _assembly[tid]->addCachedJacobianContributions();
+  if (_displaced_problem)
+    _displaced_problem->addCachedJacobianContributions(tid);
+}
+
+void
 FEProblemBase::addJacobianBlock(SparseMatrix<Number> & jacobian,
                                 unsigned int ivar,
                                 unsigned int jvar,

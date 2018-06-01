@@ -100,11 +100,10 @@
 []
 
 [Executioner]
-  # type = Steady
   type = Transient
   num_steps = 1
   dt = 1
-  solve_type = 'FD'
+  solve_type = 'PJFNK'
   line_search = 'bt'
 
   l_max_its = 100
@@ -116,6 +115,9 @@
 
 [Outputs]
   exodus = true
+  [./dof_map]
+    type = DOFMap
+  [../]
 []
 
 [Contact]
