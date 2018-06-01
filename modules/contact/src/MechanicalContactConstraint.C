@@ -1519,7 +1519,7 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
             case CF_LAGRANGE:
             {
               if (jvar == _lm_id)
-                return nodalArea(*pinfo) * -pinfo->_normal(_component) * _test_slave[_i][_qp];
+                return nodalArea(*pinfo) * -pinfo->_normal(_component) * -_test_master[_i][_qp];
               else
                 return 0;
             }
@@ -1780,11 +1780,14 @@ MechanicalContactConstraint::computeOffDiagJacobian(unsigned int jvar)
 
   if (_master_slave_jacobian)
   {
-    DenseMatrix<Number> & Ken =
-        _assembly.jacobianBlockNeighbor(Moose::ElementNeighbor, _var.number(), jvar);
-    for (_i = 0; _i < _test_slave.size(); _i++)
-      for (_j = 0; _j < _phi_master.size(); _j++)
-        Ken(_i, _j) += computeQpOffDiagJacobian(Moose::SlaveMaster, jvar);
+    if (!isCoupled("lm") || jvar != _lm_id)
+    {
+      DenseMatrix<Number> & Ken =
+          _assembly.jacobianBlockNeighbor(Moose::ElementNeighbor, _var.number(), jvar);
+      for (_i = 0; _i < _test_slave.size(); _i++)
+        for (_j = 0; _j < _phi_master.size(); _j++)
+          Ken(_i, _j) += computeQpOffDiagJacobian(Moose::SlaveMaster, jvar);
+    }
 
     _Kne.resize(_test_master.size(), _connected_dof_indices.size());
     if (_Kne.m() && _Kne.n())
@@ -1794,9 +1797,12 @@ MechanicalContactConstraint::computeOffDiagJacobian(unsigned int jvar)
           _Kne(_i, _j) += computeQpOffDiagJacobian(Moose::MasterSlave, jvar);
   }
 
-  for (_i = 0; _i < _test_master.size(); _i++)
-    for (_j = 0; _j < _phi_master.size(); _j++)
-      Knn(_i, _j) += computeQpOffDiagJacobian(Moose::MasterMaster, jvar);
+  if (!isCoupled("lm") || jvar != _lm_id)
+  {
+    for (_i = 0; _i < _test_master.size(); _i++)
+      for (_j = 0; _j < _phi_master.size(); _j++)
+        Knn(_i, _j) += computeQpOffDiagJacobian(Moose::MasterMaster, jvar);
+  }
 }
 
 void

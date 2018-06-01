@@ -2005,7 +2005,7 @@ NonlinearSystemBase::computeJacobianInternal(const std::set<TagID> & tags)
           unsigned int n_threads = libMesh::n_threads();
           for (unsigned int i = 0; i < n_threads;
                i++) // Add any cached jacobians that might be hanging around
-            _fe_problem.assembly(i).addCachedJacobianContributions();
+            _fe_problem.addCachedJacobianContributions(i);
         }
 
         // Boundary restricted Nodal Kernels
@@ -2019,7 +2019,7 @@ NonlinearSystemBase::computeJacobianInternal(const std::set<TagID> & tags)
           unsigned int n_threads = libMesh::n_threads();
           for (unsigned int i = 0; i < n_threads;
                i++) // Add any cached jacobians that might be hanging around
-            _fe_problem.assembly(i).addCachedJacobianContributions();
+            _fe_problem.addCachedJacobianContributions(i);
         }
       }
       break;

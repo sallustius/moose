@@ -1,0 +1,10 @@
+## cubitclx
+## Cubit Version 15.2
+## Cubit Build 405468
+## Revised 2016-09-23 10:47:14 -0600 (Fri, 23 Sep 2016)
+## Running 06/01/2018 01:49:38 PM
+## Command Options:
+reset
+import mesh geometry "sliding_elastic_blocks_2d.e"
+block 30 curve 3
+export mesh "sliding_elastic_blocks_2d_with_lagrange.e" overwrite
