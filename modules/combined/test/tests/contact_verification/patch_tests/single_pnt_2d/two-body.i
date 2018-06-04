@@ -6,6 +6,10 @@
   file = two-body.e
 []
 
+[Problem]
+  kernel_coverage_check = false
+[]
+
 [Variables]
   [./disp_x]
     block = '1 2'
@@ -25,13 +29,23 @@
   [../]
 []
 
-[NodalKernels]
+# [NodalKernels]
+#   [./lm]
+#     type = LM
+#     slave = 10
+#     master = 20
+#     block = 3
+#     variable = lm
+#   [../]
+# []
+
+[Constraints]
   [./lm]
-    type = LM
+    type = LMConstraint
     slave = 10
     master = 20
-    block = 3
     variable = lm
+    master_variable = disp_x
   [../]
 []
 
