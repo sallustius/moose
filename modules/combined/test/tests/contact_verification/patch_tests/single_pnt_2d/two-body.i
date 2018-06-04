@@ -22,12 +22,12 @@
   [../]
 []
 
-[Kernels]
-  [./TensorMechanics]
-    use_displaced_mesh = true
-    block = '1 2'
-  [../]
-[]
+# [Kernels]
+#   [./TensorMechanics]
+#     use_displaced_mesh = true
+#     block = '1 2'
+#   [../]
+# []
 
 # [NodalKernels]
 #   [./lm]
@@ -39,15 +39,15 @@
 #   [../]
 # []
 
-[Constraints]
-  [./lm]
-    type = LMConstraint
-    slave = 10
-    master = 20
-    variable = lm
-    master_variable = disp_x
-  [../]
-[]
+# [Constraints]
+#   [./lm]
+#     type = LMConstraint
+#     slave = 10
+#     master = 20
+#     variable = lm
+#     master_variable = disp_x
+#   [../]
+# []
 
 [BCs]
   [./botx]
@@ -115,9 +115,9 @@
 
 [Executioner]
   type = Transient
-  num_steps = 1
+  num_steps = 2
   dt = 1
-  solve_type = 'PJFNK'
+  solve_type = 'NEWTON'
   line_search = 'bt'
 
   l_max_its = 100
@@ -129,6 +129,7 @@
 
 [Outputs]
   exodus = true
+  checkpoint = true
   [./dof_map]
     type = DOFMap
   [../]
@@ -147,4 +148,11 @@
 
 [Debug]
   show_var_residual_norms = true
+[]
+
+[Preconditioning]
+  [./smp]
+    type = SMP
+    full = true
+  [../]
 []

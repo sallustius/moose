@@ -808,7 +808,7 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
   PenetrationInfo * pinfo = _penetration_locator._penetration_info[_current_node->id()];
   Real resid;
   if (_formulation == CF_LAGRANGE)
-    resid = _lm[_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component);
+    resid = _lm[_qp] /** nodalArea(*pinfo) * -pinfo->_normal(_component)*/;
   else
     resid = pinfo->_contact_force(_component);
   switch (type)
@@ -1354,7 +1354,8 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
             case CF_LAGRANGE:
             {
               if (jvar == _lm_id)
-                return nodalArea(*pinfo) * -pinfo->_normal(_component) * _test_slave[_i][_qp];
+                return _phi_slave[_j][_qp] * /*nodalArea(*pinfo) * -pinfo->_normal(_component) **/
+                       _test_slave[_i][_qp];
               else
                 return 0;
             }
@@ -1519,7 +1520,8 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
             case CF_LAGRANGE:
             {
               if (jvar == _lm_id)
-                return nodalArea(*pinfo) * -pinfo->_normal(_component) * -_test_master[_i][_qp];
+                return _phi_slave[_j][_qp] * /*nodalArea(*pinfo) * -pinfo->_normal(_component) **/
+                       -_test_master[_i][_qp];
               else
                 return 0;
             }

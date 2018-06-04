@@ -15,6 +15,10 @@
   patch_size = 80
 []
 
+[Problem]
+  kernel_coverage_check = false
+[]
+
 [GlobalParams]
   displacements = 'disp_x disp_y'
 []
@@ -63,13 +67,13 @@
   [../]
 []
 
-[NodalKernels]
+[Constraints]
   [./lm]
-    type = LM
+    type = LMConstraint
     slave = 3
     master = 2
-    block = 30
     variable = lm
+    master_variable = disp_x
   [../]
 []
 
