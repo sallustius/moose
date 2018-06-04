@@ -201,4 +201,9 @@
     superlu = true
     allow_warnings = true
   [../]
+  [./lm_ncp_contact]
+    type = 'Exodiff'
+    input = 'two-body.i'
+    exodiff = 'two-body_out.e'
+  [../]
 []
