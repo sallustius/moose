@@ -21,6 +21,7 @@
 
 [GlobalParams]
   displacements = 'disp_x disp_y'
+  youngs_modulus = 1e5
 []
 
 [Variables]
@@ -153,7 +154,6 @@
     disp_y = disp_y
     disp_x = disp_x
     poissons_ratio = 0.3
-    youngs_modulus = 1e3
   [../]
   [./right]
     type = LinearIsotropicMaterial
@@ -161,7 +161,6 @@
     disp_y = disp_y
     disp_x = disp_x
     poissons_ratio = 0.3
-    youngs_modulus = 1e3
   [../]
   [./dummy]
     type = GenericConstantMaterial
@@ -183,6 +182,9 @@
   solve_type = 'PJFNK'
 
   petsc_options = '-options_left'
+  petsc_options_iname = '-ksp_gmres_restart -pc_type'
+  petsc_options_value = '30                 lu'
+  line_search = basic
 
   l_max_its = 30
   dt = 0.1
@@ -199,7 +201,7 @@
 [Outputs]
   file_base = frictionless_lagrange_out
   checkpoint = true
-  print_linear_residuals = false
+  print_linear_residuals = true
   [./exodus]
     type = Exodus
     elemental_as_nodal = true
