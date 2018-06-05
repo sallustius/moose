@@ -808,7 +808,7 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
   PenetrationInfo * pinfo = _penetration_locator._penetration_info[_current_node->id()];
   Real resid;
   if (_formulation == CF_LAGRANGE)
-    resid = _lm[_qp] /** nodalArea(*pinfo) * -pinfo->_normal(_component)*/;
+    resid = _lm[_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component);
   else
     resid = pinfo->_contact_force(_component);
   switch (type)
@@ -1013,7 +1013,10 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
                      pinfo->_normal(_component) * pinfo->_normal(_component);
 
             case CF_LAGRANGE:
-              return 0.;
+              if (_mesh.dimension() == 2)
+                return onDiagNormalsJacContrib(pinfo);
+              else
+                return 0.;
 
             default:
               mooseError("Invalid contact formulation");
@@ -1256,7 +1259,10 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
                      pinfo->_normal(_component) * pinfo->_normal(_component);
 
             case CF_LAGRANGE:
-              return 0.;
+              if (_mesh.dimension() == 2)
+                return onDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
+              else
+                return 0.;
 
             default:
               mooseError("Invalid contact formulation");
@@ -1354,7 +1360,7 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
             case CF_LAGRANGE:
             {
               if (jvar == _lm_id)
-                return _phi_slave[_j][_qp] * /*nodalArea(*pinfo) * -pinfo->_normal(_component) **/
+                return _phi_slave[_j][_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) *
                        _test_slave[_i][_qp];
               else
                 return 0;
@@ -1443,7 +1449,10 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                      pinfo->_normal(_component) * normal_component_in_coupled_var_dir;
 
             case CF_LAGRANGE:
-              return 0;
+              if (_mesh.dimension() == 2 && jvar != _lm_id)
+                return offDiagNormalsJacContrib(pinfo);
+              else
+                return 0.;
 
             default:
               mooseError("Invalid contact formulation");
@@ -1520,10 +1529,16 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
             case CF_LAGRANGE:
             {
               if (jvar == _lm_id)
-                return _phi_slave[_j][_qp] * /*nodalArea(*pinfo) * -pinfo->_normal(_component) **/
+                return _phi_slave[_j][_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) *
                        -_test_master[_i][_qp];
               else
-                return 0;
+              {
+                if (_connected_dof_indices[_j] != _current_node->dof_number(0, jvar, 0) ||
+                    !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
+                  return 0;
+                else
+                  return testPerturbations(pinfo, false, true) * -1;
+              }
             }
 
             default:
@@ -1633,7 +1648,14 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                      pinfo->_normal(_component) * normal_component_in_coupled_var_dir;
 
             case CF_LAGRANGE:
-              return 0;
+              if (_mesh.dimension() == 2 && jvar != _lm_id)
+              {
+                Real resid = offDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
+                resid += testPerturbations(pinfo, false, false) * -_test_master[_i][_qp];
+                return resid;
+              }
+              else
+                return 0.;
 
             default:
               mooseError("Invalid contact formulation");
@@ -1879,4 +1901,101 @@ MechanicalContactConstraint::residualEnd()
     _old_contact_state.swap(_current_contact_state);
     _current_contact_state.clear();
   }
+}
+
+Real
+MechanicalContactConstraint::onDiagNormalsJacContrib(PenetrationInfo * pinfo)
+{
+  Real sign;
+  RealVectorValue abar;
+  if (!signAndABar(pinfo, sign, abar))
+    return 0;
+
+  Real abar_x = abar(0);
+  Real abar_y = abar(1);
+  return _lm[_qp] * nodalArea(*pinfo) * sign * abar_y * abar_x /
+         (abar.norm() * abar.norm() * abar.norm());
+}
+
+Real
+MechanicalContactConstraint::offDiagNormalsJacContrib(PenetrationInfo * pinfo)
+{
+  Real sign;
+  RealVectorValue abar;
+  if (!signAndABar(pinfo, sign, abar))
+    return 0;
+
+  Real abar_comp = _component == 0 ? abar(1) : abar(0);
+
+  return _lm[_qp] * nodalArea(*pinfo) * sign *
+         (abar_comp * abar_comp / std::pow(abar.norm(), 3) - 1. / abar.norm());
+}
+
+Real
+MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
+                                               bool on_diagonal,
+                                               bool slave)
+{
+  // Real sign;
+  // RealVectorValue abar;
+  // if (!signAndABar(pinfo, sign, abar))
+  //   return 0;
+
+  // unsigned comp;
+  // if (on_diagonal)
+  //   comp = _component;
+  // else
+  //   comp = _component == 0 ? 1 : 0;
+
+  // return _lm[_qp] * nodalArea(*pinfo) * abar(comp) / (abar.norm() * abar.norm());
+
+  const Elem & master_elem = *pinfo->_elem;
+
+  if (!slave && !master_elem.is_node_on_side(_j, pinfo->_side_num))
+    return 0;
+
+  // std::vector<unsigned> volume_dofs = master_elem.nodes_on_side(pinfo->_side_num);
+  // std::map<unsigned, unsigned> volume_dof_to_side_dof;
+  // unsigned side_dof = 0;
+  // for (auto & volume_dof : volume_dofs)
+  //   volume_dof_to_side_dof[volume_dof] = side_dof++;
+
+  unsigned comp;
+  if (on_diagonal)
+    comp = _component;
+  else
+    comp = _component == 0 ? 1 : 0;
+
+  Real sign = (*master_elem.get_node(_i))(comp) > pinfo->_closest_point(comp) ? 1 : -1;
+  if (slave)
+    sign *= -1;
+
+  return _lm[_qp] * nodalArea(*pinfo) * std::abs(pinfo->_side_grad_phi[0][0](comp)) * sign;
+}
+
+bool
+MechanicalContactConstraint::signAndABar(PenetrationInfo * pinfo,
+                                         Real & sign,
+                                         RealVectorValue & abar)
+{
+  const Elem & master_elem = *pinfo->_elem;
+  bool node_on_contact_side = master_elem.is_node_on_side(_j, pinfo->_side_num);
+  if (!node_on_contact_side)
+    return false;
+
+  const Elem & master_side = *pinfo->_side;
+  unsigned n_nodes = master_side.n_nodes();
+  if (n_nodes != 2)
+    mooseError("This Jacobian is only designed for EDGE2 side elements");
+  Node & master_node0 = *master_side.get_node(0);
+  Node & master_node1 = *master_side.get_node(1);
+  Node & current_phi_node = *master_elem.get_node(_j);
+  sign = current_phi_node == master_node1 ? 1 : -1;
+
+  abar = master_node1 - master_node0;
+  RealVectorValue test_normals(-abar(1), abar(0), 0);
+  if (test_normals * pinfo->_normal < 0)
+    abar *= -1;
+
+  return true;
 }

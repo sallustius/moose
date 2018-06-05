@@ -19,6 +19,14 @@
 
 using namespace libMesh;
 
+namespace libMesh
+{
+template <typename>
+class NumericVector;
+template <typename>
+class SparseMatrix;
+}
+
 class ActionFactory;
 class Factory;
 class MooseEnumItem;
@@ -95,6 +103,9 @@ extern const ExecFlagType EXEC_FAILED;
 extern const ExecFlagType EXEC_CUSTOM;
 extern const ExecFlagType EXEC_SUBDOMAIN;
 extern const ExecFlagType EXEC_SAME_AS_MULTIAPP;
+
+void moose_vec_view(NumericVector<Real> & vec);
+void moose_mat_view(SparseMatrix<Real> & mat);
 
 namespace Moose
 {

@@ -1681,6 +1681,8 @@ NonlinearSystemBase::constraintJacobians(bool displaced)
                   _fe_problem.cacheJacobian(0);
                   if (nfc->addCouplingEntriesToJacobian())
                     _fe_problem.cacheJacobianNeighbor(0);
+                  _fe_problem.addCachedJacobian(0);
+                  jacobian.close();
                 }
               }
             }

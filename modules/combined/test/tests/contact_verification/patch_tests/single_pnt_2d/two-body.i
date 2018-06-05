@@ -29,52 +29,42 @@
 #   [../]
 # []
 
-# [NodalKernels]
-#   [./lm]
-#     type = LM
-#     slave = 10
-#     master = 20
-#     block = 3
-#     variable = lm
-#   [../]
-# []
-
-# [Constraints]
-#   [./lm]
-#     type = LMConstraint
-#     slave = 10
-#     master = 20
-#     variable = lm
-#     master_variable = disp_x
-#   [../]
-# []
-
-[BCs]
-  [./botx]
-    type = DirichletBC
-    variable = disp_x
-    boundary = 40
-    value = 0.0
-  [../]
-  [./boty]
-    type = DirichletBC
-    variable = disp_y
-    boundary = 40
-    value = 0.0
-  [../]
-  [./topx]
-    type = DirichletBC
-    variable = disp_x
-    boundary = 30
-    value = 0
-  [../]
-  [./topy]
-    type = DirichletBC
-    variable = disp_y
-    boundary = 30
-    value = -1.5
+[Constraints]
+  [./lm]
+    type = LMConstraint
+    slave = 10
+    master = 20
+    variable = lm
+    master_variable = disp_x
   [../]
 []
+
+# [BCs]
+#   [./botx]
+#     type = DirichletBC
+#     variable = disp_x
+#     boundary = 40
+#     value = 0.0
+#   [../]
+#   [./boty]
+#     type = DirichletBC
+#     variable = disp_y
+#     boundary = 40
+#     value = 0.0
+#   [../]
+#   [./topx]
+#     type = DirichletBC
+#     variable = disp_x
+#     boundary = 30
+#     value = 0
+#   [../]
+#   [./topy]
+#     type = DirichletBC
+#     variable = disp_y
+#     boundary = 30
+#     value = -1.5
+#   [../]
+# []
 
 [Materials]
   [./bot_elas_tens]
@@ -117,6 +107,7 @@
   type = Transient
   num_steps = 2
   dt = 1
+  dtmin = 1
   solve_type = 'NEWTON'
   line_search = 'bt'
 

@@ -86,6 +86,11 @@ public:
   bool shouldApply() override;
   void computeContactForce(PenetrationInfo * pinfo, bool update_contact_set);
 
+  Real onDiagNormalsJacContrib(PenetrationInfo * pinfo);
+  Real offDiagNormalsJacContrib(PenetrationInfo * pinfo);
+  Real testPerturbations(PenetrationInfo * pinfo, bool on_diagonal, bool slave);
+  bool signAndABar(PenetrationInfo * pinfo, Real & sign, RealVectorValue & abar);
+
 protected:
   MooseSharedPointer<DisplacedProblem> _displaced_problem;
   FEProblem & _fe_problem;

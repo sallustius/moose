@@ -9,6 +9,8 @@
 
 #include "libmesh/petsc_macro.h"
 #include "libmesh/libmesh_config.h"
+#include "libmesh/petsc_vector.h"
+#include "libmesh/petsc_matrix.h"
 
 #include "Moose.h"
 #include "MooseApp.h"
@@ -365,3 +367,19 @@ bool _deprecated_is_error = false;
 bool _throw_on_error = false;
 
 } // namespace Moose
+
+void
+moose_vec_view(NumericVector<Real> & vec)
+{
+  PetscVector<Real> & petsc_vec = dynamic_cast<PetscVector<Real> &>(vec);
+
+  VecView(petsc_vec.vec(), 0);
+}
+
+void
+moose_mat_view(SparseMatrix<Real> & mat)
+{
+  PetscMatrix<Real> & petsc_mat = dynamic_cast<PetscMatrix<Real> &>(mat);
+
+  MatView(petsc_mat.mat(), 0);
+}
