@@ -1148,7 +1148,11 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
                      pinfo->_normal(_component) * pinfo->_normal(_component);
 
             case CF_LAGRANGE:
-              return 0.;
+              if (_connected_dof_indices[_j] != _current_node->dof_number(0, _var.number(), 0) ||
+                  !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
+                return 0;
+              else
+                return testPerturbations(pinfo, true, true) * -1;
 
             default:
               mooseError("Invalid contact formulation");
@@ -1260,7 +1264,11 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
 
             case CF_LAGRANGE:
               if (_mesh.dimension() == 2)
-                return onDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
+              {
+                Real resid = onDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
+                resid += testPerturbations(pinfo, true, false) * -_test_master[_i][_qp];
+                return resid;
+              }
               else
                 return 0.;
 
@@ -1966,11 +1974,27 @@ MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
   else
     comp = _component == 0 ? 1 : 0;
 
-  Real sign = (*master_elem.get_node(_i))(comp) > pinfo->_closest_point(comp) ? 1 : -1;
+  Real sign;
+  if ((*master_elem.get_node(_j))(comp) < (*_current_node)(comp))
+  {
+    if (_i == _j)
+      sign = 1;
+    else
+      sign = -1;
+  }
+  else
+  {
+    if (_i == _j)
+      sign = -1;
+    else
+      sign = 1;
+  }
+
   if (slave)
     sign *= -1;
 
-  return _lm[_qp] * nodalArea(*pinfo) * std::abs(pinfo->_side_grad_phi[0][0](comp)) * sign;
+  return _lm[_qp] * nodalArea(*pinfo) *
+         std::abs(pinfo->_side_grad_phi[0][0](comp) * pinfo->_normal(_component)) * sign;
 }
 
 bool
@@ -1991,6 +2015,8 @@ MechanicalContactConstraint::signAndABar(PenetrationInfo * pinfo,
   Node & master_node1 = *master_side.get_node(1);
   Node & current_phi_node = *master_elem.get_node(_j);
   sign = current_phi_node == master_node1 ? 1 : -1;
+  if (_component == 1)
+    sign *= -1;
 
   abar = master_node1 - master_node0;
   RealVectorValue test_normals(-abar(1), abar(0), 0);

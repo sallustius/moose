@@ -35,7 +35,8 @@ protected:
   virtual Real computeQpJacobian(Moose::ConstraintJacobianType type) override;
   virtual Real computeQpOffDiagJacobian(Moose::ConstraintJacobianType type, unsigned jvar) override;
 
-  std::vector<unsigned> _vars;
+  const unsigned _disp_y_id;
+  const unsigned _disp_z_id;
 };
 
 #endif

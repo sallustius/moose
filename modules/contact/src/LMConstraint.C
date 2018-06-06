@@ -21,22 +21,17 @@ validParams<LMConstraint>()
   InputParameters params = validParams<NodeFaceConstraint>();
   params.set<bool>("use_displaced_mesh") = true;
 
-  params.addCoupledVar(
-      "displacements",
-      "The displacements appropriate for the simulation geometry and coordinate system");
+  params.addCoupledVar("disp_y", "The y displacement");
+  params.addCoupledVar("disp_z", "The z displacement");
 
   return params;
 }
 
 LMConstraint::LMConstraint(const InputParameters & parameters)
-  : NodeFaceConstraint(parameters), _vars(3, libMesh::invalid_uint)
+  : NodeFaceConstraint(parameters), _disp_y_id(coupled("disp_y")), _disp_z_id(coupled("disp_z"))
 
 {
   _overwrite_slave_residual = false;
-
-  if (isParamValid("displacements"))
-    for (unsigned int i = 0; i < coupledComponents("displacements"); ++i)
-      _vars[i] = coupled("displacements", i);
 }
 
 Real
@@ -142,11 +137,11 @@ LMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type, unsig
       RealVectorValue distance_vec(*_current_node - pinfo->_closest_point);
       Real da_daj = 1. / -pinfo->_distance;
 
-      if (jvar == _vars[0])
+      if (jvar == _master_var_num)
         da_daj *= distance_vec(0);
-      else if (jvar == _vars[1])
+      else if (jvar == _disp_y_id)
         da_daj *= distance_vec(1);
-      else if (jvar == _vars[2])
+      else if (jvar == _disp_z_id)
         da_daj *= distance_vec(2);
       else
         da_daj *= 0;
