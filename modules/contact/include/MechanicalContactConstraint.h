@@ -88,7 +88,8 @@ public:
 
   Real onDiagNormalsJacContrib(PenetrationInfo * pinfo);
   Real offDiagNormalsJacContrib(PenetrationInfo * pinfo);
-  Real testPerturbations(PenetrationInfo * pinfo, bool on_diagonal, bool slave);
+  Real testPerturbationsMaster(PenetrationInfo * pinfo, bool on_diagonal);
+  Real testPerturbationsSlave(PenetrationInfo * pinfo, bool on_diagonal);
   bool signAndABar(PenetrationInfo * pinfo, Real & sign, RealVectorValue & abar);
 
 protected:

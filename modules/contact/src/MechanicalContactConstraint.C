@@ -1152,7 +1152,7 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
                   !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
                 return 0;
               else
-                return testPerturbations(pinfo, true, true) * -1;
+                return testPerturbationsSlave(pinfo, true) * -1;
 
             default:
               mooseError("Invalid contact formulation");
@@ -1266,7 +1266,7 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
               if (_mesh.dimension() == 2)
               {
                 Real resid = onDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
-                resid += testPerturbations(pinfo, true, false) * -_test_master[_i][_qp];
+                resid += testPerturbationsMaster(pinfo, true) * -_test_master[_i][_qp];
                 return resid;
               }
               else
@@ -1545,7 +1545,7 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                     !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
                   return 0;
                 else
-                  return testPerturbations(pinfo, false, true) * -1;
+                  return testPerturbationsSlave(pinfo, false) * -1;
               }
             }
 
@@ -1659,7 +1659,7 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
               if (_mesh.dimension() == 2 && jvar != _lm_id)
               {
                 Real resid = offDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
-                resid += testPerturbations(pinfo, false, false) * -_test_master[_i][_qp];
+                resid += testPerturbationsMaster(pinfo, false) * -_test_master[_i][_qp];
                 return resid;
               }
               else
@@ -1940,26 +1940,11 @@ MechanicalContactConstraint::offDiagNormalsJacContrib(PenetrationInfo * pinfo)
 }
 
 Real
-MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
-                                               bool on_diagonal,
-                                               bool slave)
+MechanicalContactConstraint::testPerturbationsMaster(PenetrationInfo * pinfo, bool on_diagonal)
 {
-  // Real sign;
-  // RealVectorValue abar;
-  // if (!signAndABar(pinfo, sign, abar))
-  //   return 0;
-
-  // unsigned comp;
-  // if (on_diagonal)
-  //   comp = _component;
-  // else
-  //   comp = _component == 0 ? 1 : 0;
-
-  // return _lm[_qp] * nodalArea(*pinfo) * abar(comp) / (abar.norm() * abar.norm());
-
   const Elem & master_elem = *pinfo->_elem;
 
-  if (!slave && !master_elem.is_node_on_side(_j, pinfo->_side_num))
+  if (!master_elem.is_node_on_side(_j, pinfo->_side_num))
     return 0;
 
   unsigned comp;
@@ -1984,8 +1969,52 @@ MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
       sign = 1;
   }
 
-  if (slave)
-    sign *= -1;
+  return -_lm[_qp] * nodalArea(*pinfo) *
+         std::abs(pinfo->_side_grad_phi[0][0](comp) * pinfo->_normal(_component)) * sign;
+}
+
+Real
+MechanicalContactConstraint::testPerturbationsSlave(PenetrationInfo * pinfo, bool on_diagonal)
+{
+  const Elem & master_elem = *pinfo->_elem;
+
+  unsigned comp;
+  if (on_diagonal)
+    comp = _component;
+  else
+    comp = _component == 0 ? 1 : 0;
+
+  std::vector<unsigned> volume_nodes = master_elem.nodes_on_side(pinfo->_side_num);
+  std::map<unsigned, unsigned> volume_node_to_side_node;
+  std::map<unsigned, unsigned> side_node_to_volume_node;
+  unsigned side_node = 0;
+  for (auto & volume_node : volume_nodes)
+  {
+    side_node_to_volume_node[side_node] = volume_node;
+    volume_node_to_side_node[volume_node] = side_node++;
+  }
+
+  if (volume_node_to_side_node.find(_i) == volume_node_to_side_node.end())
+    return 0;
+
+  Node * test_node = nullptr;
+  Node * neighbor_node = nullptr;
+  if (volume_node_to_side_node[_i] == 1)
+  {
+    test_node = master_elem.get_node(side_node_to_volume_node[1]);
+    neighbor_node = master_elem.get_node(side_node_to_volume_node[0]);
+  }
+  else
+  {
+    test_node = master_elem.get_node(side_node_to_volume_node[0]);
+    neighbor_node = master_elem.get_node(side_node_to_volume_node[1]);
+  }
+
+  Real sign;
+  if ((*test_node)(comp) > (*neighbor_node)(comp))
+    sign = 1.;
+  else
+    sign = -1.;
 
   return -_lm[_qp] * nodalArea(*pinfo) *
          std::abs(pinfo->_side_grad_phi[0][0](comp) * pinfo->_normal(_component)) * sign;
