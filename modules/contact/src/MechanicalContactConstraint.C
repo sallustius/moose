@@ -1921,7 +1921,7 @@ MechanicalContactConstraint::onDiagNormalsJacContrib(PenetrationInfo * pinfo)
 
   Real abar_x = abar(0);
   Real abar_y = abar(1);
-  return _lm[_qp] * nodalArea(*pinfo) * sign * abar_y * abar_x /
+  return -_lm[_qp] * nodalArea(*pinfo) * sign * abar_y * abar_x /
          (abar.norm() * abar.norm() * abar.norm());
 }
 
@@ -1935,7 +1935,7 @@ MechanicalContactConstraint::offDiagNormalsJacContrib(PenetrationInfo * pinfo)
 
   Real abar_comp = _component == 0 ? abar(1) : abar(0);
 
-  return _lm[_qp] * nodalArea(*pinfo) * sign *
+  return -_lm[_qp] * nodalArea(*pinfo) * sign *
          (abar_comp * abar_comp / std::pow(abar.norm(), 3) - 1. / abar.norm());
 }
 
@@ -1962,12 +1962,6 @@ MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
   if (!slave && !master_elem.is_node_on_side(_j, pinfo->_side_num))
     return 0;
 
-  // std::vector<unsigned> volume_dofs = master_elem.nodes_on_side(pinfo->_side_num);
-  // std::map<unsigned, unsigned> volume_dof_to_side_dof;
-  // unsigned side_dof = 0;
-  // for (auto & volume_dof : volume_dofs)
-  //   volume_dof_to_side_dof[volume_dof] = side_dof++;
-
   unsigned comp;
   if (on_diagonal)
     comp = _component;
@@ -1993,7 +1987,7 @@ MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
   if (slave)
     sign *= -1;
 
-  return _lm[_qp] * nodalArea(*pinfo) *
+  return -_lm[_qp] * nodalArea(*pinfo) *
          std::abs(pinfo->_side_grad_phi[0][0](comp) * pinfo->_normal(_component)) * sign;
 }
 
@@ -2007,21 +2001,27 @@ MechanicalContactConstraint::signAndABar(PenetrationInfo * pinfo,
   if (!node_on_contact_side)
     return false;
 
-  const Elem & master_side = *pinfo->_side;
-  unsigned n_nodes = master_side.n_nodes();
-  if (n_nodes != 2)
-    mooseError("This Jacobian is only designed for EDGE2 side elements");
-  Node & master_node0 = *master_side.get_node(0);
-  Node & master_node1 = *master_side.get_node(1);
-  Node & current_phi_node = *master_elem.get_node(_j);
-  sign = current_phi_node == master_node1 ? 1 : -1;
+  std::vector<unsigned> volume_nodes = master_elem.nodes_on_side(pinfo->_side_num);
+  std::map<unsigned, unsigned> volume_node_to_side_node;
+  std::map<unsigned, unsigned> side_node_to_volume_node;
+  unsigned side_node = 0;
+  for (auto & volume_node : volume_nodes)
+  {
+    side_node_to_volume_node[side_node] = volume_node;
+    volume_node_to_side_node[volume_node] = side_node++;
+  }
+
+  if (volume_node_to_side_node[_j] == 1)
+    sign = -1.;
+  else
+    sign = 1.;
   if (_component == 1)
-    sign *= -1;
+    sign *= -1.;
+
+  Node & master_node0 = *master_elem.get_node(side_node_to_volume_node[0]);
+  Node & master_node1 = *master_elem.get_node(side_node_to_volume_node[1]);
 
   abar = master_node1 - master_node0;
-  RealVectorValue test_normals(-abar(1), abar(0), 0);
-  if (test_normals * pinfo->_normal < 0)
-    abar *= -1;
 
   return true;
 }
