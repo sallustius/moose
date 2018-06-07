@@ -1969,8 +1969,8 @@ MechanicalContactConstraint::testPerturbationsMaster(PenetrationInfo * pinfo, bo
       sign = 1;
   }
 
-  return -_lm[_qp] * nodalArea(*pinfo) *
-         std::abs(pinfo->_side_grad_phi[0][0](comp) * pinfo->_normal(_component)) * sign;
+  return -_lm[_qp] * nodalArea(*pinfo) * std::abs(pinfo->_side_grad_phi[0][0](comp)) *
+         pinfo->_normal(_component) * sign;
 }
 
 Real
@@ -2016,8 +2016,8 @@ MechanicalContactConstraint::testPerturbationsSlave(PenetrationInfo * pinfo, boo
   else
     sign = -1.;
 
-  return -_lm[_qp] * nodalArea(*pinfo) *
-         std::abs(pinfo->_side_grad_phi[0][0](comp) * pinfo->_normal(_component)) * sign;
+  return -_lm[_qp] * nodalArea(*pinfo) * std::abs(pinfo->_side_grad_phi[0][0](comp)) *
+         pinfo->_normal(_component) * sign;
 }
 
 bool

@@ -29,6 +29,7 @@
     master = 20
     variable = lm
     master_variable = disp_x
+    disp_y = disp_y
   [../]
 []
 
@@ -56,13 +57,40 @@
 #     type = DirichletBC
 #     variable = disp_x
 #     boundary = 30
-#     value = -1.0606601717798212
+#     value = 1.0606601717798212
 #   [../]
 #   [./topy]
 #     type = DirichletBC
 #     variable = disp_y
 #     boundary = 30
 #     value = -1.0606601717798212
+#   [../]
+# []
+
+# [BCs]
+#   [./botx]
+#     type = DirichletBC
+#     variable = disp_x
+#     boundary = 40
+#     value = 0.0
+#   [../]
+#   [./boty]
+#     type = DirichletBC
+#     variable = disp_y
+#     boundary = 40
+#     value = 0.0
+#   [../]
+#   [./topx]
+#     type = DirichletBC
+#     variable = disp_x
+#     boundary = 30
+#     value = 1.5
+#   [../]
+#   [./topy]
+#     type = DirichletBC
+#     variable = disp_y
+#     boundary = 30
+#     value = 0
 #   [../]
 # []
 

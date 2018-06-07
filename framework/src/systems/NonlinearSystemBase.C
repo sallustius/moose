@@ -949,6 +949,8 @@ NonlinearSystemBase::constraintResiduals(NumericVector<Number> & residual, bool 
                 else
                   _fe_problem.cacheResidual(0);
                 _fe_problem.cacheResidualNeighbor(0);
+                _fe_problem.addCachedResidualDirectly(residual, 0);
+                residual.close();
               }
           }
         }

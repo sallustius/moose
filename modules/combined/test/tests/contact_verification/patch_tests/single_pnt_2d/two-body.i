@@ -22,13 +22,6 @@
   [../]
 []
 
-# [Kernels]
-#   [./TensorMechanics]
-#     use_displaced_mesh = true
-#     block = '1 2'
-#   [../]
-# []
-
 [Constraints]
   [./lm]
     type = LMConstraint
@@ -36,8 +29,16 @@
     master = 20
     variable = lm
     master_variable = disp_x
+    disp_y = disp_y
   [../]
 []
+
+# [Kernels]
+#   [./TensorMechanics]
+#     use_displaced_mesh = true
+#     block = '1 2'
+#   [../]
+# []
 
 # [BCs]
 #   [./botx]
@@ -113,8 +114,6 @@
 
   l_max_its = 100
   nl_max_its = 200
-  nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-8
   l_tol = 1e-3
 []
 

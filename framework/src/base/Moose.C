@@ -383,3 +383,19 @@ moose_mat_view(SparseMatrix<Real> & mat)
 
   MatView(petsc_mat.mat(), 0);
 }
+
+Real
+moose_vec_entry(NumericVector<Real> & vec, const unsigned i)
+{
+  PetscVector<Real> & petsc_vec = dynamic_cast<PetscVector<Real> &>(vec);
+
+  return petsc_vec(i);
+}
+
+PetscScalar
+moose_petsc_vec_entry(Vec x, const unsigned i)
+{
+  const PetscScalar * read_only_values;
+  VecGetArrayRead(x, &read_only_values);
+  return read_only_values[i];
+}

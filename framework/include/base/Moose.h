@@ -106,6 +106,10 @@ extern const ExecFlagType EXEC_SAME_AS_MULTIAPP;
 
 void moose_vec_view(NumericVector<Real> & vec);
 void moose_mat_view(SparseMatrix<Real> & mat);
+Real moose_vec_entry(NumericVector<Real> & vec, const unsigned i);
+
+#include <petscsnes.h>
+PetscScalar moose_petsc_vec_entry(Vec x, const unsigned i);
 
 namespace Moose
 {
