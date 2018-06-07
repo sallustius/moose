@@ -4195,8 +4195,22 @@ FEProblemBase::computeResidualTags(const std::set<TagID> & tags)
 
   computeUserObjects(EXEC_LINEAR, Moose::PRE_AUX);
 
-  if (_displaced_problem != NULL)
-    _displaced_problem->updateMesh();
+  try
+  {
+    try
+    {
+      if (_displaced_problem != NULL)
+        _displaced_problem->updateMesh();
+    }
+    catch (MooseException & e)
+    {
+      checkExceptionAndStopSolve();
+    }
+  }
+  catch (MooseException & e)
+  {
+    return;
+  }
 
   for (THREAD_ID tid = 0; tid < n_threads; tid++)
   {

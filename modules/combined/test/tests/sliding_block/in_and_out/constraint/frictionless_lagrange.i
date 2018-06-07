@@ -21,15 +21,17 @@
 
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  youngs_modulus = 1e5
+  youngs_modulus = 1e9
 []
 
 [Variables]
   [./disp_x]
     block = '1 2'
+    # scaling = 1e-7
   [../]
   [./disp_y]
     block = '1 2'
+    # scaling = 1e-7
   [../]
   [./lm]
     block = 30
@@ -179,18 +181,19 @@
 
 [Executioner]
   type = Transient
-  solve_type = 'PJFNK'
+  solve_type = 'NEWTON'
 
   petsc_options = '-options_left'
-  petsc_options_iname = '-ksp_gmres_restart -pc_type'
-  petsc_options_value = '30                 lu'
+  petsc_options_iname = '-ksp_gmres_restart'
+  petsc_options_value = '30'
   line_search = basic
 
   l_max_its = 30
   dt = 0.1
-  end_time = 3
+  end_time = 2.4
   dtmin = 0.01
   nl_max_its = 10
+  # num_steps = 3
 
   # [./Predictor]
   #   type = SimplePredictor

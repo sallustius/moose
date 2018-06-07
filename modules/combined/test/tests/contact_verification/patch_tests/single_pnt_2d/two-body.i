@@ -33,39 +33,39 @@
   [../]
 []
 
-# [Kernels]
-#   [./TensorMechanics]
-#     use_displaced_mesh = true
-#     block = '1 2'
-#   [../]
-# []
+[Kernels]
+  [./TensorMechanics]
+    use_displaced_mesh = true
+    block = '1 2'
+  [../]
+[]
 
-# [BCs]
-#   [./botx]
-#     type = DirichletBC
-#     variable = disp_x
-#     boundary = 40
-#     value = 0.0
-#   [../]
-#   [./boty]
-#     type = DirichletBC
-#     variable = disp_y
-#     boundary = 40
-#     value = 0.0
-#   [../]
-#   [./topx]
-#     type = DirichletBC
-#     variable = disp_x
-#     boundary = 30
-#     value = 0
-#   [../]
-#   [./topy]
-#     type = DirichletBC
-#     variable = disp_y
-#     boundary = 30
-#     value = -1.5
-#   [../]
-# []
+[BCs]
+  [./botx]
+    type = DirichletBC
+    variable = disp_x
+    boundary = 40
+    value = 0.0
+  [../]
+  [./boty]
+    type = DirichletBC
+    variable = disp_y
+    boundary = 40
+    value = 0.0
+  [../]
+  [./topx]
+    type = DirichletBC
+    variable = disp_x
+    boundary = 30
+    value = 0
+  [../]
+  [./topy]
+    type = DirichletBC
+    variable = disp_y
+    boundary = 30
+    value = -1.5
+  [../]
+[]
 
 [Materials]
   [./bot_elas_tens]
@@ -106,7 +106,7 @@
 
 [Executioner]
   type = Transient
-  num_steps = 2
+  num_steps = 1
   dt = 1
   dtmin = 1
   solve_type = 'NEWTON'
