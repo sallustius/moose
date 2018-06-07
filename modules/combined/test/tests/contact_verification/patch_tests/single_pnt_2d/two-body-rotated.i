@@ -84,13 +84,13 @@
 #     type = DirichletBC
 #     variable = disp_x
 #     boundary = 30
-#     value = 1.5
+#     value = 0
 #   [../]
 #   [./topy]
 #     type = DirichletBC
 #     variable = disp_y
 #     boundary = 30
-#     value = 0
+#     value = -1.5
 #   [../]
 # []
 
