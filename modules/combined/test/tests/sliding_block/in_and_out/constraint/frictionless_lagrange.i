@@ -21,17 +21,17 @@
 
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  youngs_modulus = 1e9
+  youngs_modulus = 1e12
 []
 
 [Variables]
   [./disp_x]
     block = '1 2'
-    # scaling = 1e-7
+    scaling = 1e-12
   [../]
   [./disp_y]
     block = '1 2'
-    # scaling = 1e-7
+    scaling = 1e-12
   [../]
   [./lm]
     block = 30
@@ -190,7 +190,7 @@
 
   l_max_its = 30
   dt = 0.1
-  end_time = 2.4
+  end_time = 3
   dtmin = 0.01
   nl_max_its = 10
   # num_steps = 3

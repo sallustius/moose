@@ -115,7 +115,7 @@ Real LMConstraint::computeQpJacobian(Moose::ConstraintJacobianType /*type*/)
     {
       Real a = -pinfo->_distance;
       Real b = _u_slave[_qp];
-      return 1. - b / std::sqrt(a * a + b * b);
+      return 1. - b / (std::sqrt(a * a + b * b) + std::numeric_limits<Real>::epsilon());
     }
   }
   return 0;
@@ -135,7 +135,7 @@ LMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type, unsig
       Real b = _u_slave[_qp];
 
       RealVectorValue distance_vec(*_current_node - pinfo->_closest_point);
-      Real da_daj = 1. / -pinfo->_distance;
+      Real da_daj = 1. / (-pinfo->_distance + std::numeric_limits<Real>::epsilon());
 
       if (jvar == _master_var_num)
         da_daj *= distance_vec(0);
@@ -157,7 +157,8 @@ LMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type, unsig
         default:
           mooseError("LMs do not have a master contribution.");
       }
-      return da_daj - a / std::sqrt(a * a + b * b) * da_daj;
+      return da_daj -
+             a / (std::sqrt(a * a + b * b) * da_daj + std::numeric_limits<Real>::epsilon());
     }
   }
   return 0;
