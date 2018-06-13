@@ -118,7 +118,7 @@ Real LMConstraint::computeQpJacobian(Moose::ConstraintJacobianType /*type*/)
     {
       Real a = -pinfo->_distance;
       Real b = _u_slave[_qp];
-      if (a < _epsilon && b < _epsilon)
+      if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
         return 0.;
       else
         return 1. - b / std::sqrt(a * a + b * b);
@@ -140,15 +140,17 @@ LMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type, unsig
       Real a = -pinfo->_distance;
       Real b = _u_slave[_qp];
 
-      Real da_daj;
+      unsigned comp;
       if (jvar == _master_var_num)
-        da_daj = pinfo->_normal(0);
+        comp = 0;
       else if (jvar == _disp_y_id)
-        da_daj = pinfo->_normal(1);
+        comp = 1;
       else if (jvar == _disp_z_id)
-        da_daj = pinfo->_normal(2);
+        comp = 2;
       else
-        da_daj = 0;
+        return 0;
+
+      Real da_daj = pinfo->_normal(comp);
 
       switch (type)
       {
@@ -161,8 +163,15 @@ LMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type, unsig
         default:
           mooseError("LMs do not have a master contribution.");
       }
-      return da_daj - ((a < _epsilon && b < _epsilon) ? 1. : a / std::sqrt(a * a + b * b)) * da_daj;
+
+      if (std::abs(b) < _epsilon && std::abs(a) < _epsilon)
+      {
+        Real sign_a = da_daj > 0 ? 1 : -1;
+        return da_daj * (1. - sign_a);
+      }
+      else
+        return da_daj - a / std::sqrt(a * a + b * b) * da_daj;
     }
   }
-  return 0;
+  return 0.;
 }
