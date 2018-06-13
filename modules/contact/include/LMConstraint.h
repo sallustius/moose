@@ -37,6 +37,7 @@ protected:
 
   const unsigned _disp_y_id;
   const unsigned _disp_z_id;
+  const Real _epsilon;
 };
 
 #endif

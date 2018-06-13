@@ -118,6 +118,7 @@
   dtmin = 1
   solve_type = 'NEWTON'
   line_search = 'bt'
+  petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian -snes_test_jacobian_view'
 
   l_max_its = 100
   nl_max_its = 100
