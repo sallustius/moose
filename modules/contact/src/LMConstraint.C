@@ -140,18 +140,15 @@ LMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type, unsig
       Real a = -pinfo->_distance;
       Real b = _u_slave[_qp];
 
-      RealVectorValue distance_vec(*_current_node - pinfo->_closest_point);
-
-      Real da_daj = a < _epsilon ? 0. : 1. / a;
-
+      Real da_daj;
       if (jvar == _master_var_num)
-        da_daj *= distance_vec(0);
+        da_daj = pinfo->_normal(0);
       else if (jvar == _disp_y_id)
-        da_daj *= distance_vec(1);
+        da_daj = pinfo->_normal(1);
       else if (jvar == _disp_z_id)
-        da_daj *= distance_vec(2);
+        da_daj = pinfo->_normal(2);
       else
-        da_daj *= 0;
+        da_daj = 0;
 
       switch (type)
       {

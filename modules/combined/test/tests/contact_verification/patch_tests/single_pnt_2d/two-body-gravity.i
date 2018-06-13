@@ -86,31 +86,6 @@
   # [../]
 []
 
-# [SolidMechanics]
-#   [./solid]
-#     disp_x = disp_x
-#     disp_y = disp_y
-#     block = '1 2'
-#   [../]
-# []
-
-# [Materials]
-#   [./bodies]
-#     type = LinearIsotropicMaterial
-#     block = '1 2'
-#     disp_x = disp_x
-#     disp_y = disp_y
-#     poissons_ratio = 0.3
-#     youngs_modulus = 1
-#   [../]
-#   [./dummy]
-#     type = GenericConstantMaterial
-#     block = '3'
-#     prop_names = 'dumb'
-#     prop_values = '1'
-#   [../]
-# []
-
 [Executioner]
   type = Transient
   num_steps = 1
@@ -119,6 +94,8 @@
   solve_type = 'NEWTON'
   line_search = 'bt'
   petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian -snes_test_jacobian_view'
+  petsc_options_iname = '-pc_factor_shift_type -pc_factor_shift_amount'
+  petsc_options_value = 'NONZERO	       1e-15'
 
   l_max_its = 100
   nl_max_its = 100
