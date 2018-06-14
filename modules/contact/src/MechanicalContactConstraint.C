@@ -1946,7 +1946,7 @@ MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
 {
   const Elem & master_elem = *pinfo->_elem;
 
-  if (!master_elem.is_node_on_side(_j, pinfo->_side_num))
+  if (!slave && !master_elem.is_node_on_side(_j, pinfo->_side_num))
     return 0;
 
   unsigned comp;
