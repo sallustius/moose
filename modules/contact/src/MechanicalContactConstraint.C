@@ -1152,7 +1152,7 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
                   !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
                 return 0;
               else
-                return testPerturbationsSlave(pinfo, true) * -1;
+                return testPerturbations(pinfo, true, true);
 
             default:
               mooseError("Invalid contact formulation");
@@ -1266,7 +1266,7 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
               if (_mesh.dimension() == 2)
               {
                 Real resid = onDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
-                resid += testPerturbationsMaster(pinfo, true) * -_test_master[_i][_qp];
+                resid += testPerturbations(pinfo, true, false);
                 return resid;
               }
               else
@@ -1545,7 +1545,7 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                     !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
                   return 0;
                 else
-                  return testPerturbationsSlave(pinfo, false) * -1;
+                  return testPerturbations(pinfo, false, true);
               }
             }
 
@@ -1659,7 +1659,7 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
               if (_mesh.dimension() == 2 && jvar != _lm_id)
               {
                 Real resid = offDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
-                resid += testPerturbationsMaster(pinfo, false) * -_test_master[_i][_qp];
+                resid += testPerturbations(pinfo, false, false);
                 return resid;
               }
               else
@@ -1940,43 +1940,14 @@ MechanicalContactConstraint::offDiagNormalsJacContrib(PenetrationInfo * pinfo)
 }
 
 Real
-MechanicalContactConstraint::testPerturbationsMaster(PenetrationInfo * pinfo, bool on_diagonal)
+MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
+                                               bool on_diagonal,
+                                               bool slave)
 {
   const Elem & master_elem = *pinfo->_elem;
 
   if (!master_elem.is_node_on_side(_j, pinfo->_side_num))
     return 0;
-
-  unsigned comp;
-  if (on_diagonal)
-    comp = _component;
-  else
-    comp = _component == 0 ? 1 : 0;
-
-  Real sign;
-  if ((*master_elem.get_node(_j))(comp) < (*_current_node)(comp))
-  {
-    if (_i == _j)
-      sign = 1;
-    else
-      sign = -1;
-  }
-  else
-  {
-    if (_i == _j)
-      sign = -1;
-    else
-      sign = 1;
-  }
-
-  return -_lm[_qp] * nodalArea(*pinfo) * std::abs(pinfo->_side_grad_phi[0][0](comp)) *
-         pinfo->_normal(_component) * sign;
-}
-
-Real
-MechanicalContactConstraint::testPerturbationsSlave(PenetrationInfo * pinfo, bool on_diagonal)
-{
-  const Elem & master_elem = *pinfo->_elem;
 
   unsigned comp;
   if (on_diagonal)
@@ -1997,27 +1968,29 @@ MechanicalContactConstraint::testPerturbationsSlave(PenetrationInfo * pinfo, boo
   if (volume_node_to_side_node.find(_i) == volume_node_to_side_node.end())
     return 0;
 
-  Node * test_node = nullptr;
-  Node * neighbor_node = nullptr;
-  if (volume_node_to_side_node[_i] == 1)
-  {
-    test_node = master_elem.get_node(side_node_to_volume_node[1]);
-    neighbor_node = master_elem.get_node(side_node_to_volume_node[0]);
-  }
-  else
-  {
-    test_node = master_elem.get_node(side_node_to_volume_node[0]);
-    neighbor_node = master_elem.get_node(side_node_to_volume_node[1]);
-  }
+  Node & node0 = *master_elem.get_node(side_node_to_volume_node[0]);
+  Node & node1 = *master_elem.get_node(side_node_to_volume_node[1]);
+  RealVectorValue abar = node1 - node0;
+  Real l2 = abar * abar;
+  RealVectorValue slave_to_m0 = *pinfo->_node - node0;
 
-  Real sign;
-  if ((*test_node)(comp) > (*neighbor_node)(comp))
-    sign = 1.;
-  else
-    sign = -1.;
+  RealVectorValue dabar_duj(0, 0, 0);
+  if (!slave)
+    dabar_duj(comp) = volume_node_to_side_node[_j] == 1 ? 1. : -1.;
+  RealVectorValue dslave_to_m0_duj(0, 0, 0);
+  if (slave)
+    dslave_to_m0_duj(comp) = 1.;
+  else if (volume_node_to_side_node[_j] == 0)
+    dslave_to_m0_duj(comp) = -1.;
 
-  return -_lm[_qp] * nodalArea(*pinfo) * std::abs(pinfo->_side_grad_phi[0][0](comp)) *
-         pinfo->_normal(_component) * sign;
+  Real numerator1 = l2 * (slave_to_m0 * dabar_duj + abar * dslave_to_m0_duj);
+  Real numerator2 = -(slave_to_m0 * abar) * 2. * (abar * dabar_duj);
+  Real denominator = l2 * l2;
+  Real deta_duj = (numerator1 + numerator2) / denominator;
+
+  Real dtest_duj = volume_node_to_side_node[_i] == 1 ? deta_duj : -deta_duj;
+
+  return _lm[_qp] * nodalArea(*pinfo) * pinfo->_normal(_component) * dtest_duj;
 }
 
 bool
