@@ -14,11 +14,11 @@ block 1 surface 1
 block 2 surface 2
 block 3 curve 7
 
-rotate surface 1 2 about z angle 45
+rotate surface 1 2 about z angle 315
 
 mesh curve all
 mesh surface all
 sideset 30 curve 5
 sideset 40 curve 3
 
-export mesh "two-body-rotated.e" overwrite
+export mesh "two-body-315.e" overwrite

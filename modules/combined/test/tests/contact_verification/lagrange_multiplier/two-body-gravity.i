@@ -23,11 +23,17 @@
 []
 
 [ICs]
-  [./block2]
+  [./block2y]
     block = 2
     variable = disp_y
     type = ConstantIC
     value = -1
+  [../]
+  [./block2x]
+    block = 2
+    variable = disp_x
+    type = ConstantIC
+    value = 0
   [../]
 []
 
@@ -104,10 +110,6 @@
 
 [Outputs]
   exodus = true
-  checkpoint = true
-  [./dof_map]
-    type = DOFMap
-  [../]
 []
 
 [Contact]
