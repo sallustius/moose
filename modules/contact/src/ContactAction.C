@@ -42,6 +42,10 @@ validParams<ContactAction>()
   params.addParam<NonlinearVariableName>("disp_y", "The y displacement");
   params.addParam<NonlinearVariableName>("disp_z", "The z displacement");
   params.addCoupledVar("lm", "The lagrange multiplier variable");
+  params.addCoupledVar("tangent_lm", "The tangential lagrange multiplier variable");
+  params.addCoupledVar("vel_x", "The x velocity");
+  params.addCoupledVar("vel_y", "The y velocity");
+  params.addCoupledVar("vel_z", "The z velocity");
 
   params.addParam<std::vector<NonlinearVariableName>>(
       "displacements",
@@ -173,6 +177,26 @@ ContactAction::act()
         {
           std::vector<std::string> lm = {"lm"};
           params.applySpecificParameters(parameters(), lm);
+        }
+        if (isParamValid("tangent_lm"))
+        {
+          std::vector<std::string> tangent_lm = {"tangent_lm"};
+          params.applySpecificParameters(parameters(), tangent_lm);
+        }
+        if (isParamValid("vel_x"))
+        {
+          std::vector<std::string> vel_x = {"vel_x"};
+          params.applySpecificParameters(parameters(), vel_x);
+        }
+        if (isParamValid("vel_y"))
+        {
+          std::vector<std::string> vel_y = {"vel_y"};
+          params.applySpecificParameters(parameters(), vel_y);
+        }
+        if (isParamValid("vel_z"))
+        {
+          std::vector<std::string> vel_z = {"vel_z"};
+          params.applySpecificParameters(parameters(), vel_z);
         }
         _problem->addConstraint("MechanicalContactConstraint", name, params);
       }

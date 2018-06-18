@@ -146,6 +146,14 @@ protected:
   static Threads::spin_mutex _contact_set_mutex;
   const VariableValue & _lm;
   const unsigned _lm_id;
+  const VariableValue & _tangent_lm;
+  const unsigned _tangent_lm_id;
+  const VariableValue & _vel_x;
+  const unsigned _vel_x_id;
+  const VariableValue & _vel_y;
+  const unsigned _vel_y_id;
+  const VariableValue & _vel_z;
+  const unsigned _vel_z_id;
 };
 
 #endif

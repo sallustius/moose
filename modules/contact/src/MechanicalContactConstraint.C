@@ -45,6 +45,10 @@ validParams<MechanicalContactConstraint>()
   params.addCoupledVar("disp_y", "The y displacement");
   params.addCoupledVar("disp_z", "The z displacement");
   params.addCoupledVar("lm", "The lagrange multiplier");
+  params.addCoupledVar("tangent_lm", "The tangential lagrange multiplier");
+  params.addCoupledVar("vel_x", "The x velocity");
+  params.addCoupledVar("vel_y", "The y velocity");
+  params.addCoupledVar("vel_z", "The z velocity");
 
   params.addCoupledVar(
       "displacements",
@@ -146,7 +150,15 @@ MechanicalContactConstraint::MechanicalContactConstraint(const InputParameters &
         std::dynamic_pointer_cast<ContactLineSearchBase>(_fe_problem.getLineSearch())),
     _print_contact_nodes(getParam<bool>("print_contact_nodes")),
     _lm(isCoupled("lm") ? coupledValue("lm") : _zero),
-    _lm_id(isCoupled("lm") ? coupled("lm") : libMesh::invalid_uint)
+    _lm_id(isCoupled("lm") ? coupled("lm") : libMesh::invalid_uint),
+    _tangent_lm(isCoupled("tangent_lm") ? coupledValue("tangent_lm") : _zero),
+    _tangent_lm_id(isCoupled("tangent_lm") ? coupled("tangent_lm") : libMesh::invalid_uint),
+    _vel_x(isCoupled("vel_x") ? coupledValue("vel_x") : _zero),
+    _vel_x_id(isCoupled("vel_x") ? coupled("vel_x") : libMesh::invalid_uint),
+    _vel_y(isCoupled("vel_y") ? coupledValue("vel_y") : _zero),
+    _vel_y_id(isCoupled("vel_y") ? coupled("vel_y") : libMesh::invalid_uint),
+    _vel_z(isCoupled("vel_z") ? coupledValue("vel_z") : _zero),
+    _vel_z_id(isCoupled("vel_z") ? coupled("vel_z") : libMesh::invalid_uint)
 {
   _overwrite_slave_residual = false;
 
@@ -808,7 +820,11 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
   PenetrationInfo * pinfo = _penetration_locator._penetration_info[_current_node->id()];
   Real resid;
   if (_formulation == CF_LAGRANGE)
+  {
     resid = _lm[_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component);
+    resid += -_tangent_lm[_qp] * -pinfo->_normal.cross(pinfo->_normal.cross(RealVectorValue(
+                                     _vel_x[_qp], _vel_y[_qp], _vel_z[_qp])))(_component);
+  }
   else
     resid = pinfo->_contact_force(_component);
   switch (type)
