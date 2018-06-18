@@ -20,6 +20,7 @@ mesh curve all
 mesh surface all
 sideset 30 curve 5
 sideset 40 curve 3
+# left
 sideset 50 curve 6
 
 export mesh "two-body-no-sep.e" overwrite

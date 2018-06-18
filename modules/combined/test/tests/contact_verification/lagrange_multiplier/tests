@@ -119,4 +119,19 @@
     delete_output_before_running = false
     prereq = 'jac_315_rot'
   [../]
+
+  [./jac_pressure]
+    type = 'PetscJacobianTester'
+    input = 'two-body-pressure.i'
+    ratio_tol = 1e-4
+    difference_tol = 1e15
+  [../]
+  [./res_pressure]
+    type = 'Exodiff'
+    exodiff = 'two-body-pressure_out.e'
+    input = 'two-body-pressure.i'
+    should_execute = false
+    delete_output_before_running = false
+    prereq = 'jac_pressure'
+  [../]
 []

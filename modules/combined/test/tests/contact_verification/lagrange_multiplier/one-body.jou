@@ -1,0 +1,17 @@
+reset
+create surface rectangle width 1
+curve all interval 2
+mesh curve all
+mesh surface all
+block 1 surface 1
+
+# bottom
+sideset 10 curve 3
+# right
+sideset 20 curve 4
+# top
+sideset 30 curve 1
+# left
+sideset 40 curve 2
+
+export mesh "one-body.e" overwrite
