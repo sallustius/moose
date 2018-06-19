@@ -1,7 +1,8 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  D_name = 1e0
+  D_name = 1e4
   scaling = 1e0
+  use_displaced_mesh = true
 []
 
 [Mesh]
@@ -15,38 +16,43 @@
 [Variables]
   [./disp_x]
     block = '1 2'
+    # scaling = 1e-3
   [../]
   [./disp_y]
     block = '1 2'
+    # scaling = 1e-3
   [../]
   [./lm]
     block = 3
+    # scaling = 1e3
   [../]
   [./tangent_lm]
     block = 3
+    # scaling = 1e3
   [../]
   [./vel_x]
-    block = 2
+    block = '2'
   [../]
   [./vel_y]
-    block = 2
+    block = '2'
   [../]
 []
 
-# [ICs]
-#   [./block2y]
-#     block = 2
-#     variable = disp_y
-#     type = ConstantIC
-#     value = -1
-#   [../]
-#   [./block2x]
-#     block = 2
-#     variable = disp_x
-#     type = ConstantIC
-#     value = 0
-#   [../]
-# []
+[ICs]
+  [./block2y]
+    block = 2
+    variable = disp_y
+    type = ConstantIC
+    # value = -.001
+    value = 0
+  [../]
+  # [./block2x]
+  #   block = 2
+  #   variable = disp_x
+  #   type = ConstantIC
+  #   value = 0
+  # [../]
+[]
 
 [Kernels]
   [./disp_x]
@@ -139,7 +145,7 @@
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = 4e-6
+    value = 7e-6
   [../]
 []
 
@@ -149,18 +155,20 @@
   dt = 10
   dtmin = 1
   solve_type = 'NEWTON'
-  line_search = 'basic'
+  line_search = 'bt'
   petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian -snes_fd -pc_svd_monitor'# -snes_test_jacobian_view'
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'svd'
+  petsc_options_iname = '-pc_type -snes_max_funcs'
+  petsc_options_value = 'svd      100000'
+  # nl_rel_tol = 1e-6
 
   l_max_its = 100
-  nl_max_its = 20
+  nl_max_its = 1000
 []
 
 [Outputs]
   exodus = true
-  checkpoint = true
+  # checkpoint = true
+  dofmap = true
 []
 
 [Contact]

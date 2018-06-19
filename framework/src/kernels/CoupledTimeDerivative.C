@@ -15,7 +15,7 @@ template <>
 InputParameters
 validParams<CoupledTimeDerivative>()
 {
-  InputParameters params = validParams<Kernel>();
+  InputParameters params = validParams<TimeDerivative>();
   params.addClassDescription("Time derivative Kernel that acts on a coupled variable. Weak form: "
                              "$(\\psi_i, \\frac{\\partial v_h}{\\partial t})$.");
   params.addRequiredCoupledVar("v", "Coupled variable");
@@ -23,7 +23,10 @@ validParams<CoupledTimeDerivative>()
 }
 
 CoupledTimeDerivative::CoupledTimeDerivative(const InputParameters & parameters)
-  : Kernel(parameters), _v_dot(coupledDot("v")), _dv_dot(coupledDotDu("v")), _v_var(coupled("v"))
+  : TimeDerivative(parameters),
+    _v_dot(coupledDot("v")),
+    _dv_dot(coupledDotDu("v")),
+    _v_var(coupled("v"))
 {
 }
 

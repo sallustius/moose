@@ -1868,6 +1868,7 @@ FEProblemBase::addConstraint(const std::string & c_name,
   {
     parameters.set<SubProblem *>("_subproblem") = _displaced_problem.get();
     parameters.set<SystemBase *>("_sys") = &_displaced_problem->nlSys();
+    parameters.set<SystemBase *>("_nl_sys") = _nl.get();
     _reinit_displaced_face = true;
   }
   else
@@ -1878,6 +1879,7 @@ FEProblemBase::addConstraint(const std::string & c_name,
 
     parameters.set<SubProblem *>("_subproblem") = this;
     parameters.set<SystemBase *>("_sys") = _nl.get();
+    parameters.set<SystemBase *>("_nl_sys") = _nl.get();
   }
 
   // Check that "variable" is in the NonlinearSystem.

@@ -10,7 +10,7 @@
 #ifndef COUPLEDTIMEDERIVATIVE_H
 #define COUPLEDTIMEDERIVATIVE_H
 
-#include "Kernel.h"
+#include "TimeDerivative.h"
 
 // Forward Declaration
 class CoupledTimeDerivative;
@@ -21,7 +21,7 @@ InputParameters validParams<CoupledTimeDerivative>();
 /**
  * This calculates the time derivative for a coupled variable
  **/
-class CoupledTimeDerivative : public Kernel
+class CoupledTimeDerivative : public TimeDerivative
 {
 public:
   CoupledTimeDerivative(const InputParameters & parameters);

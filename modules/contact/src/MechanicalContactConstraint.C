@@ -14,7 +14,7 @@
 #include "AuxiliarySystem.h"
 #include "PenetrationLocator.h"
 #include "NearestNodeLocator.h"
-#include "SystemBase.h"
+#include "NonlinearSystemBase.h"
 #include "Assembly.h"
 #include "MooseMesh.h"
 #include "AugmentedLagrangianContactProblem.h"
@@ -136,7 +136,8 @@ MechanicalContactConstraint::MechanicalContactConstraint(const InputParameters &
     _stick_lock_iterations(getParam<unsigned int>("stick_lock_iterations")),
     _stick_unlock_factor(getParam<Real>("stick_unlock_factor")),
     _update_stateful_data(true),
-    _residual_copy(_sys.residualGhosted()),
+    _residual_copy(static_cast<NonlinearSystemBase &>(*getParam<SystemBase *>("_nl_sys"))
+                       .getResidualNonTimeVector()),
     _mesh_dimension(_mesh.dimension()),
     _vars(3, libMesh::invalid_uint),
     _var_objects(3, nullptr),
@@ -822,11 +823,32 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
   if (_formulation == CF_LAGRANGE)
   {
     resid = _lm[_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component);
-    resid += -_tangent_lm[_qp] * -pinfo->_normal.cross(pinfo->_normal.cross(RealVectorValue(
-                                     _vel_x[_qp], _vel_y[_qp], _vel_z[_qp])))(_component);
+
+    RealVectorValue velocity(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]);
+    RealVectorValue tangential_velocity(-pinfo->_normal.cross(pinfo->_normal.cross(velocity)));
+    Real contact_tangential_force_comp = 0;
+    if (std::abs(tangential_velocity(_component)) < std::numeric_limits<Real>::epsilon())
+    {
+      RealVectorValue force_vec;
+      for (unsigned int i = 0; i < _mesh_dimension; ++i)
+      {
+        dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
+        force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
+      }
+      RealVectorValue tangential_force_vec(-pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
+      if (std::abs(tangential_force_vec(_component)) > std::numeric_limits<Real>::epsilon())
+        contact_tangential_force_comp =
+            -_tangent_lm[_qp] * tangential_force_vec(_component) / tangential_force_vec.norm();
+    }
+    else
+      contact_tangential_force_comp =
+          -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();
+
+    resid -= contact_tangential_force_comp;
   }
   else
     resid = pinfo->_contact_force(_component);
+
   switch (type)
   {
     case Moose::Slave:
