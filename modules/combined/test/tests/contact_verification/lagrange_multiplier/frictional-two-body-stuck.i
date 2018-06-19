@@ -31,10 +31,10 @@
     # scaling = 1e3
   [../]
   [./vel_x]
-    block = '2'
+    block = '1 2'
   [../]
   [./vel_y]
-    block = '2'
+    block = '1 2'
   [../]
 []
 
@@ -67,37 +67,37 @@
     type = CoupledTimeDerivative
     variable = disp_x
     v = vel_x
-    block = 2
+    # block = 2
   [../]
   [./accel_y]
     type = CoupledTimeDerivative
     variable = disp_y
     v = vel_y
-    block = 2
+    # block = 2
   [../]
   [./coupled_time_velx]
     type = CoupledTimeDerivative
     variable = vel_x
     v = disp_x
-    block = 2
+    # block = 2
   [../]
   [./coupled_time_vely]
     type = CoupledTimeDerivative
     variable = vel_y
     v = disp_y
-    block = 2
+    # block = 2
   [../]
   [./source_velx]
     type = MatReaction
     variable = vel_x
     mob_name = 1
-    block = 2
+    # block = 2
   [../]
   [./source_vely]
     type = MatReaction
     variable = vel_y
     mob_name = 1
-    block = 2
+    # block = 2
   [../]
 []
 
@@ -114,7 +114,7 @@
 [Materials]
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1e0
+    youngs_modulus = 1e3
     poissons_ratio = 0.3
     block = '1 2'
   [../]
@@ -148,7 +148,7 @@
     contact_pressure = lm
     master_variable = vel_x
     vel_y = vel_y
-    mu = 0.3
+    mu = 0.1
   [../]
 []
 
@@ -175,13 +175,13 @@
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = 7e-4
+    value = 5e-4
   [../]
 []
 
 [Executioner]
   type = Transient
-  num_steps = 10
+  num_steps = 18
   dt = 10
   dtmin = 1
   solve_type = 'NEWTON'
