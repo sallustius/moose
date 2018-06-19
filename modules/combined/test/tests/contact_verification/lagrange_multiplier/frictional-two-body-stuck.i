@@ -1,8 +1,8 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  D_name = 1e4
+  # D_name = 1e4
   scaling = 1e0
-  use_displaced_mesh = true
+  # use_displaced_mesh = true
 []
 
 [Mesh]
@@ -55,14 +55,14 @@
 []
 
 [Kernels]
-  [./disp_x]
-    type = MatDiffusion
-    variable = disp_x
-  [../]
-  [./disp_y]
-    type = MatDiffusion
-    variable = disp_y
-  [../]
+  # [./disp_x]
+  #   type = MatDiffusion
+  #   variable = disp_x
+  # [../]
+  # [./disp_y]
+  #   type = MatDiffusion
+  #   variable = disp_y
+  # [../]
   [./accel_x]
     type = CoupledTimeDerivative
     variable = disp_x
@@ -100,6 +100,36 @@
     block = 2
   [../]
 []
+
+[Modules/TensorMechanics/Master]
+  [./all]
+    strain = SMALL
+    incremental = false
+    add_variables = true
+    generate_output = 'strain_xx strain_yy strain_zz' ## Not at all necessary, but nice
+    block = '1 2'
+  [../]
+[]
+
+[Materials]
+  [./elasticity_tensor]
+    type = ComputeIsotropicElasticityTensor
+    youngs_modulus = 1e0
+    poissons_ratio = 0.3
+    block = '1 2'
+  [../]
+  [./small_stress]
+    type = ComputeLinearElasticStress
+    block = '1 2'
+  [../]
+  [./dummy]
+    type = GenericConstantMaterial
+    prop_names = 'dumb'
+    prop_values = '0'
+    block = 3
+  [../]
+[]
+
 
 [Constraints]
   [./lm]
@@ -139,13 +169,13 @@
     type = NeumannBC
     variable = disp_y
     boundary = 30
-    value = -10e-6
+    value = -10e-4
   [../]
   [./leftx]
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = 7e-6
+    value = 7e-4
   [../]
 []
 
