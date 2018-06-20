@@ -129,6 +129,7 @@
     master_variable = vel_x
     vel_y = vel_y
     mu = 0.1
+    lambda = 0.5
   [../]
 []
 

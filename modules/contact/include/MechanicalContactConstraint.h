@@ -154,6 +154,8 @@ protected:
   const unsigned _vel_y_id;
   const VariableValue & _vel_z;
   const unsigned _vel_z_id;
+
+  const Real _eps;
 };
 
 #endif
