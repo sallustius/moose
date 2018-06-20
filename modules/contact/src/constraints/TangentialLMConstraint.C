@@ -99,14 +99,14 @@ TangentialLMConstraint::computeOffDiagJacobian(unsigned jvar)
   _Kee.resize(1, 1);
   _Kee(0, 0) += computeQpOffDiagJacobian(Moose::SlaveSlave, jvar);
 
-  if (jvar == _contact_pressure_id)
-    return;
+  // if (jvar == _contact_pressure_id)
+  //   return;
 
-  DenseMatrix<Number> & Ken =
-      _assembly.jacobianBlockNeighbor(Moose::ElementNeighbor, _var.number(), jvar);
+  // DenseMatrix<Number> & Ken =
+  //     _assembly.jacobianBlockNeighbor(Moose::ElementNeighbor, _var.number(), jvar);
 
-  for (_j = 0; _j < _phi_master.size(); ++_j)
-    Ken(0, _j) += computeQpOffDiagJacobian(Moose::SlaveMaster, jvar);
+  // for (_j = 0; _j < _phi_master.size(); ++_j)
+  //   Ken(0, _j) += computeQpOffDiagJacobian(Moose::SlaveMaster, jvar);
 }
 
 Real TangentialLMConstraint::computeQpResidual(Moose::ConstraintType /*type*/)
@@ -123,10 +123,11 @@ Real TangentialLMConstraint::computeQpResidual(Moose::ConstraintType /*type*/)
       else
       {
         // Tangential slip velocity
-        Real a =
-            pinfo->_normal
-                .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp])))
-                .norm();
+        // Real a =
+        //     pinfo->_normal
+        //         .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp],
+        //         _vel_z[_qp]))) .norm();
+        Real a = std::abs(_vel_x[_qp]);
         Real b = _mu * _contact_pressure[_qp] - _u_slave[_qp];
         return a + b - std::sqrt(a * a + b * b);
       }
@@ -144,7 +145,22 @@ Real TangentialLMConstraint::computeQpJacobian(Moose::ConstraintJacobianType /*t
     PenetrationInfo * pinfo = found->second;
     if (pinfo != NULL)
     {
-      return 0;
+      if (_contact_pressure[_qp] < _epsilon)
+        return 1.;
+      else
+      {
+        // Tangential slip velocity
+        // Real a =
+        //     pinfo->_normal
+        //         .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp],
+        //         _vel_z[_qp]))) .norm();
+        Real a = std::abs(_vel_x[_qp]);
+        Real b = _mu * _contact_pressure[_qp] - _u_slave[_qp];
+        if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
+          return -2.;
+        else
+          return -1. - b / std::sqrt(a * a + b * b) * -1.;
+      }
     }
   }
   return 0;
@@ -152,7 +168,7 @@ Real TangentialLMConstraint::computeQpJacobian(Moose::ConstraintJacobianType /*t
 
 Real
 TangentialLMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /*type*/,
-                                                 unsigned /*jvar*/)
+                                                 unsigned jvar)
 {
   std::map<dof_id_type, PenetrationInfo *>::iterator found =
       _penetration_locator._penetration_info.find(_current_node->id());
@@ -161,7 +177,25 @@ TangentialLMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /
     PenetrationInfo * pinfo = found->second;
     if (pinfo != NULL)
     {
-      return 0;
+      if (_contact_pressure[_qp] < _epsilon)
+        return 0.;
+
+      Real a = std::abs(_vel_x[_qp]);
+      Real b = _mu * _contact_pressure[_qp] - _u_slave[_qp];
+      if (jvar == _contact_pressure_id)
+      {
+        if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
+          return 0;
+        else
+          return _mu - b / std::sqrt(a * a + b * b) * _mu;
+      }
+      else if (jvar == _vel_x_id)
+      {
+        if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
+          return 0;
+        else
+          return (1. - a / std::sqrt(a * a + b * b)) * (_vel_x[_qp] >= 0 ? 1. : -1.);
+      }
     }
   }
   return 0.;

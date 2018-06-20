@@ -1,6 +1,6 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  # D_name = 1e4
+  D_name = 1e3
   scaling = 1e0
   # use_displaced_mesh = true
 []
@@ -38,31 +38,31 @@
   [../]
 []
 
-[ICs]
-  [./block2y]
-    block = 2
-    variable = disp_y
-    type = ConstantIC
-    # value = -.001
-    value = 0
-  [../]
-  # [./block2x]
-  #   block = 2
-  #   variable = disp_x
-  #   type = ConstantIC
-  #   value = 0
-  # [../]
-[]
+# [ICs]
+#   [./block2y]
+#     block = 2
+#     variable = disp_y
+#     type = ConstantIC
+#     # value = -.001
+#     value = 0
+#   [../]
+#   # [./block2x]
+#   #   block = 2
+#   #   variable = disp_x
+#   #   type = ConstantIC
+#   #   value = 0
+#   # [../]
+# []
 
 [Kernels]
-  # [./disp_x]
-  #   type = MatDiffusion
-  #   variable = disp_x
-  # [../]
-  # [./disp_y]
-  #   type = MatDiffusion
-  #   variable = disp_y
-  # [../]
+  [./disp_x]
+    type = MatDiffusion
+    variable = disp_x
+  [../]
+  [./disp_y]
+    type = MatDiffusion
+    variable = disp_y
+  [../]
   [./accel_x]
     type = CoupledTimeDerivative
     variable = disp_x
@@ -101,34 +101,34 @@
   [../]
 []
 
-[Modules/TensorMechanics/Master]
-  [./all]
-    strain = SMALL
-    incremental = false
-    add_variables = true
-    generate_output = 'strain_xx strain_yy strain_zz' ## Not at all necessary, but nice
-    block = '1 2'
-  [../]
-[]
+# [Modules/TensorMechanics/Master]
+#   [./all]
+#     strain = SMALL
+#     incremental = false
+#     add_variables = true
+#     generate_output = 'strain_xx strain_yy strain_zz' ## Not at all necessary, but nice
+#     block = '1 2'
+#   [../]
+# []
 
-[Materials]
-  [./elasticity_tensor]
-    type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1e3
-    poissons_ratio = 0.3
-    block = '1 2'
-  [../]
-  [./small_stress]
-    type = ComputeLinearElasticStress
-    block = '1 2'
-  [../]
-  [./dummy]
-    type = GenericConstantMaterial
-    prop_names = 'dumb'
-    prop_values = '0'
-    block = 3
-  [../]
-[]
+# [Materials]
+#   [./elasticity_tensor]
+#     type = ComputeIsotropicElasticityTensor
+#     youngs_modulus = 1e3
+#     poissons_ratio = 0.3
+#     block = '1 2'
+#   [../]
+#   [./small_stress]
+#     type = ComputeLinearElasticStress
+#     block = '1 2'
+#   [../]
+#   [./dummy]
+#     type = GenericConstantMaterial
+#     prop_names = 'dumb'
+#     prop_values = '0'
+#     block = 3
+#   [../]
+# []
 
 
 [Constraints]
@@ -181,14 +181,14 @@
 
 [Executioner]
   type = Transient
-  num_steps = 18
+  num_steps = 2
   dt = 10
-  dtmin = 1
+  dtmin = 10
   solve_type = 'NEWTON'
   line_search = 'bt'
-  petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian -snes_fd -pc_svd_monitor'# -snes_test_jacobian_view'
-  petsc_options_iname = '-pc_type -snes_max_funcs'
-  petsc_options_value = 'svd      100000'
+  petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian'# -snes_test_jacobian_view'
+  petsc_options_iname = '-pc_type -snes_max_funcs -pc_factor_shift_amount -pc_factor_shift_type'
+  petsc_options_value = 'lu      100000           1e-15                   NONZERO'
   # nl_rel_tol = 1e-6
 
   l_max_its = 100

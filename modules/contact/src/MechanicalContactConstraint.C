@@ -824,27 +824,32 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
   {
     resid = _lm[_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component);
 
-    RealVectorValue velocity(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]);
-    RealVectorValue tangential_velocity(-pinfo->_normal.cross(pinfo->_normal.cross(velocity)));
-    Real contact_tangential_force_comp = 0;
-    if (std::abs(tangential_velocity(_component)) < std::numeric_limits<Real>::epsilon())
+    if (_lm[_qp] > 0)
     {
-      RealVectorValue force_vec;
-      for (unsigned int i = 0; i < _mesh_dimension; ++i)
+      RealVectorValue velocity(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]);
+      // RealVectorValue tangential_velocity(-pinfo->_normal.cross(pinfo->_normal.cross(velocity)));
+      RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
+      Real contact_tangential_force_comp = 0;
+      if (std::abs(tangential_velocity(_component)) < std::numeric_limits<Real>::epsilon())
       {
-        dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
-        force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
+        RealVectorValue force_vec;
+        for (unsigned int i = 0; i < _mesh_dimension; ++i)
+        {
+          dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
+          force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
+        }
+        RealVectorValue tangential_force_vec(
+            -pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
+        if (std::abs(tangential_force_vec(_component)) > std::numeric_limits<Real>::epsilon())
+          contact_tangential_force_comp =
+              -_tangent_lm[_qp] * tangential_force_vec(_component) / tangential_force_vec.norm();
       }
-      RealVectorValue tangential_force_vec(-pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
-      if (std::abs(tangential_force_vec(_component)) > std::numeric_limits<Real>::epsilon())
+      else
         contact_tangential_force_comp =
-            -_tangent_lm[_qp] * tangential_force_vec(_component) / tangential_force_vec.norm();
-    }
-    else
-      contact_tangential_force_comp =
-          -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();
+            -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();
 
-    resid -= contact_tangential_force_comp;
+      resid -= contact_tangential_force_comp;
+    }
   }
   else
     resid = pinfo->_contact_force(_component);
@@ -1408,10 +1413,56 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
               if (jvar == _lm_id)
                 return _phi_slave[_j][_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) *
                        _test_slave[_i][_qp];
+              else if (jvar == _tangent_lm_id)
+              {
+                if (_lm[_qp] <= 0 ||
+                    _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
+                  return 0;
+
+                RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
+                Real d_contact_tangential_force_comp_d_tangent_lm = 0;
+                if (std::abs(tangential_velocity(_component)) <
+                    std::numeric_limits<Real>::epsilon())
+                {
+                  RealVectorValue force_vec;
+                  for (unsigned int i = 0; i < _mesh_dimension; ++i)
+                  {
+                    dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
+                    force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
+                  }
+                  RealVectorValue tangential_force_vec(
+                      -pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
+                  if (std::abs(tangential_force_vec(_component)) >
+                      std::numeric_limits<Real>::epsilon())
+                    d_contact_tangential_force_comp_d_tangent_lm =
+                        -1. * tangential_force_vec(_component) / tangential_force_vec.norm();
+                }
+                else
+                  d_contact_tangential_force_comp_d_tangent_lm =
+                      -1. * tangential_velocity(_component) / tangential_velocity.norm();
+                return -d_contact_tangential_force_comp_d_tangent_lm * _test_slave[_i][_qp];
+              }
+              else if (jvar == _vel_x_id)
+              {
+                if (_lm[_qp] <= 0 ||
+                    _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
+                  return 0;
+
+                RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
+                Real v_comp = tangential_velocity(_component);
+                Real d_contact_tangential_force_comp_d_vel_x = 0;
+                if (std::abs(v_comp) < std::numeric_limits<Real>::epsilon())
+                  return 0;
+                else
+                  d_contact_tangential_force_comp_d_vel_x =
+                      -_tangent_lm[_qp] *
+                      (tangential_velocity.norm() - v_comp * v_comp / tangential_velocity.norm()) /
+                      (tangential_velocity.norm() * tangential_velocity.norm());
+                return -d_contact_tangential_force_comp_d_vel_x * _test_slave[_i][_qp];
+              }
               else
                 return 0;
             }
-
             default:
               mooseError("Invalid contact formulation");
           }
@@ -1577,6 +1628,56 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
               if (jvar == _lm_id)
                 return _phi_slave[_j][_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) *
                        -_test_master[_i][_qp];
+              else if (jvar == _tangent_lm_id)
+              {
+                if (_lm[_qp] <= 0 ||
+                    _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
+                  return 0;
+
+                RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
+                Real d_contact_tangential_force_comp_d_tangent_lm = 0;
+                if (std::abs(tangential_velocity(_component)) <
+                    std::numeric_limits<Real>::epsilon())
+                {
+                  RealVectorValue force_vec;
+                  for (unsigned int i = 0; i < _mesh_dimension; ++i)
+                  {
+                    dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
+                    force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
+                  }
+                  RealVectorValue tangential_force_vec(
+                      -pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
+                  if (std::abs(tangential_force_vec(_component)) >
+                      std::numeric_limits<Real>::epsilon())
+                    d_contact_tangential_force_comp_d_tangent_lm =
+                        -1. * tangential_force_vec(_component) / tangential_force_vec.norm();
+                }
+                else
+                  d_contact_tangential_force_comp_d_tangent_lm =
+                      -1. * tangential_velocity(_component) / tangential_velocity.norm();
+                return -d_contact_tangential_force_comp_d_tangent_lm * -_test_master[_i][_qp];
+              }
+              else if (jvar == _vel_x_id)
+              {
+                if (_lm[_qp] <= 0 ||
+                    _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
+                  return 0;
+
+                RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
+                Real v_comp = tangential_velocity(_component);
+                Real d_contact_tangential_force_comp_d_vel_x = 0;
+                if (std::abs(v_comp) < std::numeric_limits<Real>::epsilon())
+                  return 0;
+                else
+                  d_contact_tangential_force_comp_d_vel_x =
+                      -_tangent_lm[_qp] *
+                      (tangential_velocity.norm() * (_component == 0 ? 1. : 0) -
+                       v_comp * v_comp / tangential_velocity.norm()) /
+                      (tangential_velocity.norm() * tangential_velocity.norm());
+                return -d_contact_tangential_force_comp_d_vel_x * -_test_master[_i][_qp];
+              }
+              else if (jvar == _vel_y_id || jvar == _vel_z_id)
+                return 0;
               else
               {
                 if (_connected_dof_indices[_j] != _current_node->dof_number(0, jvar, 0) ||
@@ -1850,7 +1951,9 @@ MechanicalContactConstraint::computeOffDiagJacobian(unsigned int jvar)
 
   if (_master_slave_jacobian)
   {
-    if (!isCoupled("lm") || jvar != _lm_id)
+    // if ((!isCoupled("lm") || jvar != _lm_id) &&
+    //     (!isCoupled("tangent_lm") || jvar != _tangent_lm_id))
+    if (std::find(_vars.begin(), _vars.end(), jvar) != _vars.end())
     {
       DenseMatrix<Number> & Ken =
           _assembly.jacobianBlockNeighbor(Moose::ElementNeighbor, _var.number(), jvar);
@@ -1867,7 +1970,9 @@ MechanicalContactConstraint::computeOffDiagJacobian(unsigned int jvar)
           _Kne(_i, _j) += computeQpOffDiagJacobian(Moose::MasterSlave, jvar);
   }
 
-  if (!isCoupled("lm") || jvar != _lm_id)
+  // if ((!isCoupled("lm") || jvar != _lm_id) && (!isCoupled("tangent_lm") || jvar !=
+  // _tangent_lm_id))
+  if (std::find(_vars.begin(), _vars.end(), jvar) != _vars.end())
   {
     for (_i = 0; _i < _test_master.size(); _i++)
       for (_j = 0; _j < _phi_master.size(); _j++)
@@ -2028,7 +2133,37 @@ MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
 
   Real dtest_duj = volume_node_to_side_node[_i] == 1 ? deta_duj : -deta_duj;
 
-  return _lm[_qp] * nodalArea(*pinfo) * pinfo->_normal(_component) * dtest_duj;
+  Real resid = _lm[_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) * -dtest_duj;
+
+  if (_lm[_qp] > 0)
+  {
+    RealVectorValue velocity(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]);
+    // RealVectorValue tangential_velocity(-pinfo->_normal.cross(pinfo->_normal.cross(velocity)));
+    RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
+    Real contact_tangential_force_comp = 0;
+    if (std::abs(tangential_velocity(_component)) < std::numeric_limits<Real>::epsilon())
+    {
+      RealVectorValue force_vec;
+      for (unsigned int i = 0; i < _mesh_dimension; ++i)
+      {
+        dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
+        force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
+      }
+      RealVectorValue tangential_force_vec(-pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
+      if (std::abs(tangential_force_vec(_component)) > std::numeric_limits<Real>::epsilon())
+        contact_tangential_force_comp =
+            -_tangent_lm[_qp] * tangential_force_vec(_component) / tangential_force_vec.norm();
+    }
+    else
+      contact_tangential_force_comp =
+          -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();
+
+    Real tangential_resid = -contact_tangential_force_comp;
+    tangential_resid *= -dtest_duj;
+    resid += tangential_resid;
+  }
+
+  return resid;
 }
 
 bool

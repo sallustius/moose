@@ -134,4 +134,19 @@
     delete_output_before_running = false
     prereq = 'jac_pressure'
   [../]
+
+  [./jac_tan_contact_slip]
+    type = 'PetscJacobianTester'
+    input = 'frictional-two-body-slip.i'
+    ratio_tol = 1e-8
+    difference_tol = 1e-7
+  [../]
+  [./res_tan_contact_slip]
+    type = 'Exodiff'
+    exodiff = 'frictional-two-body-slip_out.e'
+    input = 'frictional-two-body-slip.i'
+    should_execute = false
+    delete_output_before_running = false
+    prereq = 'jac_tan_contact_slip'
+  [../]
 []
