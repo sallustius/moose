@@ -122,6 +122,7 @@
   [../]
   [./tan_lm]
     type = TangentialLMConstraint
+    lambda = 1
     slave = 10
     master = 20
     variable = tangent_lm

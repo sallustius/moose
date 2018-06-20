@@ -29,6 +29,7 @@ validParams<TangentialLMConstraint>()
   params.addCoupledVar("vel_y", "The y velocity");
   params.addCoupledVar("vel_z", "The z velocity");
   params.addRequiredParam<Real>("mu", "The coefficient of friction.");
+  params.addParam<Real>("lambda", .95, "The weighting coefficient from Chen");
 
   return params;
 }
@@ -48,6 +49,7 @@ TangentialLMConstraint::TangentialLMConstraint(const InputParameters & parameter
     _vel_z_id(isCoupled("vel_z") ? coupled("vel_z") : libMesh::invalid_uint),
 
     _mu(getParam<Real>("mu")),
+    _lambda(getParam<Real>("lambda")),
     _epsilon(std::numeric_limits<Real>::epsilon())
 {
   _overwrite_slave_residual = false;
@@ -119,7 +121,7 @@ Real TangentialLMConstraint::computeQpResidual(Moose::ConstraintType /*type*/)
     if (pinfo != NULL)
     {
       if (_contact_pressure[_qp] < _epsilon)
-        return _u_slave[_qp];
+        return 1. * _u_slave[_qp];
       else
       {
         // Tangential slip velocity
@@ -129,7 +131,7 @@ Real TangentialLMConstraint::computeQpResidual(Moose::ConstraintType /*type*/)
         //         _vel_z[_qp]))) .norm();
         Real a = std::abs(_vel_x[_qp]);
         Real b = _mu * _contact_pressure[_qp] - _u_slave[_qp];
-        return a + b - std::sqrt(a * a + b * b);
+        return _lambda * (a + b - std::sqrt(a * a + b * b)) + (1. - _lambda) * a * std::max(0., b);
       }
     }
   }
@@ -157,9 +159,10 @@ Real TangentialLMConstraint::computeQpJacobian(Moose::ConstraintJacobianType /*t
         Real a = std::abs(_vel_x[_qp]);
         Real b = _mu * _contact_pressure[_qp] - _u_slave[_qp];
         if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
-          return -2.;
+          return -2. * _lambda;
         else
-          return -1. - b / std::sqrt(a * a + b * b) * -1.;
+          return -_lambda * (1. - b / std::sqrt(a * a + b * b)) +
+                 (1. - _lambda) * a * (b > 0 ? -1. : 0);
       }
     }
   }
@@ -187,14 +190,16 @@ TangentialLMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /
         if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
           return 0;
         else
-          return _mu - b / std::sqrt(a * a + b * b) * _mu;
+          return _mu * _lambda * (1. - b / std::sqrt(a * a + b * b)) +
+                 (1. - _lambda) * a * (b >= 0 ? _mu : 0);
       }
       else if (jvar == _vel_x_id)
       {
         if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
           return 0;
         else
-          return (1. - a / std::sqrt(a * a + b * b)) * (_vel_x[_qp] >= 0 ? 1. : -1.);
+          return _lambda * (1. - a / std::sqrt(a * a + b * b)) * (_vel_x[_qp] >= 0 ? 1. : -1.) +
+                 (1. - _lambda) * std::max(0., b) * (_vel_x[_qp] >= 0 ? 1. : -1.);
       }
     }
   }
