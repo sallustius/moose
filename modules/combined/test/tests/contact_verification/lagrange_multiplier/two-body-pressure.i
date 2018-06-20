@@ -1,11 +1,10 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
   D_name = 1e6
-  use_displaced_mesh = false
 []
 
 [Mesh]
-  file = two-body-no-sep.e
+  file = two-body-no-sep-4elem-blocks.e
 []
 
 [Problem]
@@ -15,11 +14,9 @@
 [Variables]
   [./disp_x]
     block = '1 2'
-    scaling = 1e-6
   [../]
   [./disp_y]
     block = '1 2'
-    scaling = 1e-6
   [../]
   [./lm]
     block = 3
@@ -117,7 +114,7 @@
     type = NeumannBC
     variable = disp_y
     boundary = 30
-    value = -10
+    value = -1
   [../]
 []
 
@@ -128,7 +125,9 @@
   dtmin = 1
   solve_type = 'NEWTON'
   line_search = 'basic'
-  petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian'# -snes_test_jacobian_view'
+  petsc_options = '-snes_converged_reason -ksp_converged_reason -pc_svd_monitor -snes_test_jacobian'# -snes_test_jacobian_view'
+  petsc_options_iname = '-pc_type'
+  petsc_options_value = 'svd'
 
   l_max_its = 30
   nl_max_its = 20

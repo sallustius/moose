@@ -838,8 +838,9 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
           dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
           force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
         }
-        RealVectorValue tangential_force_vec(
-            -pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
+        // RealVectorValue tangential_force_vec(
+        //     -pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
+        RealVectorValue tangential_force_vec(force_vec(0), 0, 0);
         if (std::abs(tangential_force_vec(_component)) > std::numeric_limits<Real>::epsilon())
           contact_tangential_force_comp =
               -_tangent_lm[_qp] * tangential_force_vec(_component) / tangential_force_vec.norm();

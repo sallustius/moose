@@ -16,19 +16,15 @@
 [Variables]
   [./disp_x]
     block = '1 2'
-    # scaling = 1e-3
   [../]
   [./disp_y]
     block = '1 2'
-    # scaling = 1e-3
   [../]
   [./lm]
     block = 3
-    # scaling = 1e3
   [../]
   [./tangent_lm]
     block = 3
-    # scaling = 1e3
   [../]
   [./vel_x]
     block = '1 2'
@@ -37,22 +33,6 @@
     block = '1 2'
   [../]
 []
-
-# [ICs]
-#   [./block2y]
-#     block = 2
-#     variable = disp_y
-#     type = ConstantIC
-#     # value = -.001
-#     value = 0
-#   [../]
-#   # [./block2x]
-#   #   block = 2
-#   #   variable = disp_x
-#   #   type = ConstantIC
-#   #   value = 0
-#   # [../]
-# []
 
 [Kernels]
   [./disp_x]
@@ -181,14 +161,14 @@
 
 [Executioner]
   type = Transient
-  num_steps = 2
+  num_steps = 10
   dt = 10
   dtmin = 10
   solve_type = 'NEWTON'
-  line_search = 'bt'
+  line_search = 'basic'
   petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian'# -snes_test_jacobian_view'
-  petsc_options_iname = '-pc_type -snes_max_funcs -pc_factor_shift_amount -pc_factor_shift_type'
-  petsc_options_value = 'lu      100000           1e-15                   NONZERO'
+  petsc_options_iname = '-pc_type -snes_max_funcs'
+  petsc_options_value = 'svd      100000'
   # nl_rel_tol = 1e-6
 
   l_max_its = 100

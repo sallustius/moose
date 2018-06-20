@@ -1,12 +1,12 @@
 reset
-create surface rectangle width 5 height 1
+create surface rectangle width 1.1 height 1
 create surface rectangle width 1
 surface 1 move 0  -0.5
-surface 2 move -1.5 0.5
+surface 2 move 0 0.5
 surface 1 size 1
 surface 2 size 1
 
-curve 1 2 3 4 5 6 7 8 interval 1
+curve 1 2 3 4 5 6 7 8 interval 2
 
 sideset 10 curve 7
 sideset 20 curve 1
@@ -23,4 +23,4 @@ sideset 40 curve 3
 # left
 sideset 50 curve 6
 
-export mesh "two-body-no-sep.e" overwrite
+export mesh "two-body-no-sep-4elem-blocks.e" overwrite
