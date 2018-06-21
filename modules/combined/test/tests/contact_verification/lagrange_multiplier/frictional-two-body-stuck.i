@@ -157,13 +157,13 @@
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = 5e-5
+    value = 3e-4
   [../]
 []
 
 [Executioner]
   type = Transient
-  num_steps = 10
+  num_steps = 1
   dt = 10
   dtmin = 1
   solve_type = 'NEWTON'
@@ -175,7 +175,7 @@
   # nl_abs_tol = 1e-11
 
   l_max_its = 100
-  nl_max_its = 10
+  nl_max_its = 50
 []
 
 [Outputs]
@@ -196,7 +196,8 @@
     tangent_lm = tangent_lm
     vel_x = vel_x
     vel_y = vel_y
-    regularization = 1e-5
+    # regularization = 1e-5
+    regularization = 1e-6
   [../]
 []
 
