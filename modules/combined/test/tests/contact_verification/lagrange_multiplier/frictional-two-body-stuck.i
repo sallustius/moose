@@ -1,12 +1,13 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  D_name = 1e0
+  D_name = 1e-1
   scaling = 1e0
   # use_displaced_mesh = true
 []
 
 [Mesh]
-  file = long-bottom-block-256elem-blocks.e
+  file = long-bottom-block-64elem-blocks.e
+  # uniform_refine = 1
 []
 
 [Problem]
@@ -129,7 +130,7 @@
     master_variable = vel_x
     vel_y = vel_y
     mu = 0.1
-    lambda = .1
+    lambda = 1
     # regularization = 1e0
   [../]
 []
@@ -157,7 +158,7 @@
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = 32e-5
+    value = .8e-5
   [../]
 []
 
@@ -173,10 +174,10 @@
   petsc_options_iname = '-pc_type -pc_factor_shift_type -pc_factor_shift_amount'
   petsc_options_value = 'lu       NONZERO               1e-15'
   # nl_rel_tol = 1e-6
-  # nl_abs_tol = 1e-16
+  nl_abs_tol = 1e-15
 
   l_max_its = 100
-  nl_max_its = 10
+  nl_max_its = 20
   steady_state_detection = true
 []
 
@@ -198,7 +199,7 @@
     tangent_lm = tangent_lm
     vel_x = vel_x
     vel_y = vel_y
-    regularization = 1e-4
+    regularization = 1e-3
   [../]
 []
 
