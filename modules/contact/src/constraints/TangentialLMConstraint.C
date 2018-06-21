@@ -30,6 +30,7 @@ validParams<TangentialLMConstraint>()
   params.addCoupledVar("vel_z", "The z velocity");
   params.addRequiredParam<Real>("mu", "The coefficient of friction.");
   params.addParam<Real>("lambda", .95, "The weighting coefficient from Chen");
+  params.addParam<Real>("regularization", 1e-6, "The regularization coefficient");
 
   return params;
 }
@@ -57,7 +58,8 @@ TangentialLMConstraint::TangentialLMConstraint(const InputParameters & parameter
 
     _mu(getParam<Real>("mu")),
     _lambda(getParam<Real>("lambda")),
-    _epsilon(std::numeric_limits<Real>::epsilon())
+    _epsilon(std::numeric_limits<Real>::epsilon()),
+    _regularization(getParam<Real>("regularization"))
 {
   _overwrite_slave_residual = false;
 }
@@ -137,8 +139,9 @@ Real TangentialLMConstraint::computeQpResidual(Moose::ConstraintType /*type*/)
         //         .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp],
         //         _vel_z[_qp]))) .norm();
         Real a = std::abs(_vel_x[_qp]);
-        Real b =
-            _mu * _contact_pressure[_qp] - (a < _epsilon ? std::abs(_u_slave[_qp]) : _u_slave[_qp]);
+        Real b_u_lambda = std::tanh(a / _regularization);
+        Real b_u = b_u_lambda * _u_slave[_qp] * (1 - b_u_lambda) * std::abs(_u_slave[_qp]);
+        Real b = _mu * _contact_pressure[_qp] - b_u;
         return _lambda * (a + b - std::sqrt(a * a + b * b)) + (1. - _lambda) * a * std::max(0., b);
       }
     }

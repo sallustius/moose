@@ -130,6 +130,7 @@
     vel_y = vel_y
     mu = 0.1
     lambda = 0
+    regularization = 1e0
   [../]
 []
 
@@ -150,13 +151,13 @@
     type = NeumannBC
     variable = disp_y
     boundary = 30
-    value = -1e-4
+    value = -2e-3
   [../]
   [./leftx]
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = 1e-7
+    value = 4e-2
   [../]
 []
 
@@ -174,7 +175,7 @@
   # nl_abs_tol = 1e-11
 
   l_max_its = 100
-  nl_max_its = 10
+  nl_max_its = 100
 []
 
 [Outputs]
