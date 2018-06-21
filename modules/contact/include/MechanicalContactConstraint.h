@@ -156,6 +156,7 @@ protected:
   const unsigned _vel_z_id;
 
   const Real _eps;
+  const Real _regularization;
 };
 
 #endif

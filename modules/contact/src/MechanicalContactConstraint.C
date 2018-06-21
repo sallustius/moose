@@ -116,6 +116,9 @@ validParams<MechanicalContactConstraint>()
                         "The tolerance of the frictional force for augmented Lagrangian method.");
   params.addParam<bool>(
       "print_contact_nodes", false, "Whether to print the number of nodes in contact.");
+  params.addParam<Real>("regularization",
+                        1e-6,
+                        "The regularization parameter controlling transition from stick to slip.");
   return params;
 }
 
@@ -160,7 +163,8 @@ MechanicalContactConstraint::MechanicalContactConstraint(const InputParameters &
     _vel_y_id(isCoupled("vel_y") ? coupled("vel_y") : libMesh::invalid_uint),
     _vel_z(isCoupled("vel_z") ? coupledValue("vel_z") : _zero),
     _vel_z_id(isCoupled("vel_z") ? coupled("vel_z") : libMesh::invalid_uint),
-    _eps(std::numeric_limits<Real>::epsilon())
+    _eps(std::numeric_limits<Real>::epsilon()),
+    _regularization(getParam<Real>("regularization"))
 {
   _overwrite_slave_residual = false;
 
@@ -830,25 +834,20 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
       RealVectorValue velocity(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]);
       // RealVectorValue tangential_velocity(-pinfo->_normal.cross(pinfo->_normal.cross(velocity)));
       RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
-      Real velocity_lambda = std::tanh(tangential_velocity(_component) / .00001);
+      Real v_comp = tangential_velocity(_component);
 
-      RealVectorValue force_vec;
-      for (unsigned int i = 0; i < _mesh_dimension; ++i)
-      {
-        dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
-        force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
-      }
-      // RealVectorValue tangential_force_vec(
-      //     -pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
-      RealVectorValue tangential_force_vec(force_vec(0), 0, 0);
-      Real force_lambda = std::tanh(tangential_force_vec(_component) / .00001);
+      Real contact_tangential_force_comp;
+      if (std::abs(v_comp) < _eps)
+        contact_tangential_force_comp = _component == 0 ? -_tangent_lm[_qp] : 0;
+      else
+        contact_tangential_force_comp =
+            -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();
 
-      Real contact_tangential_force_comp =
-          velocity_lambda * (-_tangent_lm[_qp] * tangential_velocity(_component) /
-                             (tangential_velocity.norm() + _eps)) +
-          (1. - velocity_lambda) *
-              (force_lambda * (-_tangent_lm[_qp] * tangential_force_vec(_component) /
-                               (tangential_force_vec.norm() + _eps)));
+      // Real velocity_lambda = std::tanh(tangential_velocity(_component) / _regularization);
+      // Real contact_tangential_force_comp =
+      //     velocity_lambda * (-std::abs(_tangent_lm[_qp]) * tangential_velocity(_component) /
+      //                        (tangential_velocity.norm() + _eps)) +
+      //     (1. - velocity_lambda) * (_component == 0 ? _tangent_lm[_qp] : 0);
 
       resid -= contact_tangential_force_comp;
     }
@@ -1423,23 +1422,8 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
 
                 RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
                 Real d_contact_tangential_force_comp_d_tangent_lm = 0;
-                if (std::abs(tangential_velocity(_component)) <
-                    std::numeric_limits<Real>::epsilon())
-                {
-                  RealVectorValue force_vec;
-                  for (unsigned int i = 0; i < _mesh_dimension; ++i)
-                  {
-                    dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
-                    force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
-                  }
-                  // RealVectorValue tangential_force_vec(
-                  //     -pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
-                  RealVectorValue tangential_force_vec(force_vec(0), 0, 0);
-                  if (std::abs(tangential_force_vec(_component)) >
-                      std::numeric_limits<Real>::epsilon())
-                    d_contact_tangential_force_comp_d_tangent_lm =
-                        -1. * tangential_force_vec(_component) / tangential_force_vec.norm();
-                }
+                if (std::abs(tangential_velocity(_component)) < _eps)
+                  d_contact_tangential_force_comp_d_tangent_lm = _component == 0 ? -1. : 0.;
                 else
                   d_contact_tangential_force_comp_d_tangent_lm =
                       -1. * tangential_velocity(_component) / tangential_velocity.norm();
@@ -1459,7 +1443,8 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                 else
                   d_contact_tangential_force_comp_d_vel_x =
                       -_tangent_lm[_qp] *
-                      (tangential_velocity.norm() - v_comp * v_comp / tangential_velocity.norm()) /
+                      (tangential_velocity.norm() * (_component == 0 ? 1. : 0) -
+                       v_comp * v_comp / tangential_velocity.norm()) /
                       (tangential_velocity.norm() * tangential_velocity.norm());
                 return -d_contact_tangential_force_comp_d_vel_x * _test_slave[_i][_qp];
               }
@@ -1639,23 +1624,8 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
 
                 RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
                 Real d_contact_tangential_force_comp_d_tangent_lm = 0;
-                if (std::abs(tangential_velocity(_component)) <
-                    std::numeric_limits<Real>::epsilon())
-                {
-                  RealVectorValue force_vec;
-                  for (unsigned int i = 0; i < _mesh_dimension; ++i)
-                  {
-                    dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
-                    force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
-                  }
-                  // RealVectorValue tangential_force_vec(
-                  //     -pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
-                  RealVectorValue tangential_force_vec(force_vec(0), 0, 0);
-                  if (std::abs(tangential_force_vec(_component)) >
-                      std::numeric_limits<Real>::epsilon())
-                    d_contact_tangential_force_comp_d_tangent_lm =
-                        -1. * tangential_force_vec(_component) / tangential_force_vec.norm();
-                }
+                if (std::abs(tangential_velocity(_component)) < _eps)
+                  d_contact_tangential_force_comp_d_tangent_lm = _component == 0 ? -1. : 0.;
                 else
                   d_contact_tangential_force_comp_d_tangent_lm =
                       -1. * tangential_velocity(_component) / tangential_velocity.norm();
@@ -2146,20 +2116,7 @@ MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
     RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
     Real contact_tangential_force_comp = 0;
     if (std::abs(tangential_velocity(_component)) < std::numeric_limits<Real>::epsilon())
-    {
-      RealVectorValue force_vec;
-      for (unsigned int i = 0; i < _mesh_dimension; ++i)
-      {
-        dof_id_type dof_number = pinfo->_node->dof_number(0, _vars[i], 0);
-        force_vec(i) = -_residual_copy(dof_number) / _var_objects[i]->scalingFactor();
-      }
-      // RealVectorValue
-      // tangential_force_vec(-pinfo->_normal.cross(pinfo->_normal.cross(force_vec)));
-      RealVectorValue tangential_force_vec(force_vec(0), 0, 0);
-      if (std::abs(tangential_force_vec(_component)) > std::numeric_limits<Real>::epsilon())
-        contact_tangential_force_comp =
-            -_tangent_lm[_qp] * tangential_force_vec(_component) / tangential_force_vec.norm();
-    }
+      contact_tangential_force_comp = _component == 0 ? -_tangent_lm[_qp] : 0;
     else
       contact_tangential_force_comp =
           -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();

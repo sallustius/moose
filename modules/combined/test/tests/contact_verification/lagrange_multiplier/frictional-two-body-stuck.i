@@ -6,7 +6,7 @@
 []
 
 [Mesh]
-  file = two-body-no-sep.e
+  file = long-bottom-block-1elem-blocks.e
 []
 
 [Problem]
@@ -129,7 +129,7 @@
     master_variable = vel_x
     vel_y = vel_y
     mu = 0.1
-    lambda = 0.5
+    lambda = 0
   [../]
 []
 
@@ -150,19 +150,19 @@
     type = NeumannBC
     variable = disp_y
     boundary = 30
-    value = -10e-4
+    value = -1e-4
   [../]
   [./leftx]
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = .5e-4
+    value = 1e-7
   [../]
 []
 
 [Executioner]
   type = Transient
-  num_steps = 10
+  num_steps = 1
   dt = 10
   dtmin = 10
   solve_type = 'NEWTON'
@@ -171,6 +171,7 @@
   petsc_options_iname = '-pc_type -snes_max_funcs'
   petsc_options_value = 'svd      100000'
   # nl_rel_tol = 1e-6
+  # nl_abs_tol = 1e-11
 
   l_max_its = 100
   nl_max_its = 10

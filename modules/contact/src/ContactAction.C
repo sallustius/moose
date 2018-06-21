@@ -93,6 +93,10 @@ validParams<ContactAction>()
 
   params.addParam<Real>("al_frictional_force_tolerance",
                         "The tolerance of the frictional force for augmented Lagrangian method.");
+  params.addParam<Real>(
+      "regularization",
+      1e-6,
+      "The regularization parameter controlling transition from sticking to slipping.");
   return params;
 }
 
@@ -165,6 +169,8 @@ ContactAction::act()
       params.set<std::vector<VariableName>>("displacements") = coupled_displacements;
       params.set<BoundaryName>("boundary") = _master;
       params.set<bool>("use_displaced_mesh") = true;
+      if (isParamValid("regularization"))
+        params.set<Real>("regularization") = getParam<Real>("regularization");
 
       for (unsigned int i = 0; i < ndisp; ++i)
       {

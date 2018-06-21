@@ -34,6 +34,13 @@ validParams<TangentialLMConstraint>()
   return params;
 }
 
+template <typename T>
+int
+sgn(T val)
+{
+  return (T(0) < val) - (val < T(0));
+}
+
 TangentialLMConstraint::TangentialLMConstraint(const InputParameters & parameters)
   : NodeFaceConstraint(parameters),
     _contact_pressure(getVar("contact_pressure", 0)->dofValues()),
@@ -130,7 +137,8 @@ Real TangentialLMConstraint::computeQpResidual(Moose::ConstraintType /*type*/)
         //         .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp],
         //         _vel_z[_qp]))) .norm();
         Real a = std::abs(_vel_x[_qp]);
-        Real b = _mu * _contact_pressure[_qp] - _u_slave[_qp];
+        Real b =
+            _mu * _contact_pressure[_qp] - (a < _epsilon ? std::abs(_u_slave[_qp]) : _u_slave[_qp]);
         return _lambda * (a + b - std::sqrt(a * a + b * b)) + (1. - _lambda) * a * std::max(0., b);
       }
     }
@@ -157,12 +165,16 @@ Real TangentialLMConstraint::computeQpJacobian(Moose::ConstraintJacobianType /*t
         //         .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp],
         //         _vel_z[_qp]))) .norm();
         Real a = std::abs(_vel_x[_qp]);
-        Real b = _mu * _contact_pressure[_qp] - _u_slave[_qp];
-        if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
-          return -2. * _lambda;
+        Real b =
+            _mu * _contact_pressure[_qp] - (a < _epsilon ? std::abs(_u_slave[_qp]) : _u_slave[_qp]);
+        Real db_duj = -(a < _epsilon ? sgn(_u_slave[_qp]) : 1.);
+
+        if (std::abs(a) < _epsilon)
+          return _lambda * (1. - sgn(b)) * db_duj;
+
         else
-          return -_lambda * (1. - b / std::sqrt(a * a + b * b)) +
-                 (1. - _lambda) * a * (b > 0 ? -1. : 0);
+          return _lambda * (1. - b / std::sqrt(a * a + b * b)) * db_duj +
+                 (1. - _lambda) * a * (b > 0 ? 1. : 0.) * db_duj;
       }
     }
   }
@@ -184,22 +196,25 @@ TangentialLMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /
         return 0.;
 
       Real a = std::abs(_vel_x[_qp]);
-      Real b = _mu * _contact_pressure[_qp] - _u_slave[_qp];
+      Real b =
+          _mu * _contact_pressure[_qp] - (a < _epsilon ? std::abs(_u_slave[_qp]) : _u_slave[_qp]);
       if (jvar == _contact_pressure_id)
       {
-        if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
-          return 0;
+        Real db_dlmj = _mu;
+        if (std::abs(a) < _epsilon)
+          return _lambda * (1. - sgn(b)) * db_dlmj;
         else
-          return _mu * _lambda * (1. - b / std::sqrt(a * a + b * b)) +
+          return _lambda * (1. - b / std::sqrt(a * a + b * b)) * db_dlmj +
                  (1. - _lambda) * a * (b >= 0 ? _mu : 0);
       }
       else if (jvar == _vel_x_id)
       {
-        if (std::abs(a) < _epsilon && std::abs(b) < _epsilon)
-          return 0;
+        Real da_dvxj = sgn(_vel_x[_qp]);
+        if (std::abs(b) < _epsilon)
+          return _lambda * (1. - sgn(a)) * da_dvxj;
         else
-          return _lambda * (1. - a / std::sqrt(a * a + b * b)) * (_vel_x[_qp] >= 0 ? 1. : -1.) +
-                 (1. - _lambda) * std::max(0., b) * (_vel_x[_qp] >= 0 ? 1. : -1.);
+          return _lambda * (1. - a / std::sqrt(a * a + b * b)) * da_dvxj +
+                 (1. - _lambda) * std::max(0., b) * da_dvxj;
       }
     }
   }
