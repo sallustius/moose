@@ -6,7 +6,7 @@ surface 2 move -1.5 0.5
 surface 1 size 1
 surface 2 size 1
 
-curve 1 2 3 4 5 6 7 8 interval 4
+curve 1 2 3 4 5 6 7 8 interval 16
 
 sideset 10 curve 7
 sideset 20 curve 1
@@ -23,4 +23,4 @@ sideset 40 curve 3
 # left
 sideset 50 curve 6
 
-export mesh "long-bottom-block-16elem-blocks.e" overwrite
+export mesh "long-bottom-block-256elem-blocks.e" overwrite
