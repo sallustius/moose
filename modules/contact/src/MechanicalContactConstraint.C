@@ -836,18 +836,18 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
       RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
       Real v_comp = tangential_velocity(_component);
 
-      Real contact_tangential_force_comp;
-      if (std::abs(v_comp) < _eps)
-        contact_tangential_force_comp = _component == 0 ? -_tangent_lm[_qp] : 0;
-      else
-        contact_tangential_force_comp =
-            -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();
+      // Real contact_tangential_force_comp;
+      // if (std::abs(v_comp) < _eps)
+      //   contact_tangential_force_comp = _component == 0 ? -_tangent_lm[_qp] : 0;
+      // else
+      //   contact_tangential_force_comp =
+      //       -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();
 
-      // Real velocity_lambda = std::tanh(tangential_velocity(_component) / _regularization);
-      // Real contact_tangential_force_comp =
-      //     velocity_lambda * (-std::abs(_tangent_lm[_qp]) * tangential_velocity(_component) /
-      //                        (tangential_velocity.norm() + _eps)) +
-      //     (1. - velocity_lambda) * (_component == 0 ? _tangent_lm[_qp] : 0);
+      Real velocity_lambda = std::tanh(std::abs(tangential_velocity(_component)) / _regularization);
+      Real contact_tangential_force_comp =
+          velocity_lambda * (-std::abs(_tangent_lm[_qp]) * tangential_velocity(_component) /
+                             (tangential_velocity.norm() + _eps)) +
+          (1. - velocity_lambda) * (_component == 0 ? _tangent_lm[_qp] : 0);
 
       resid -= contact_tangential_force_comp;
     }

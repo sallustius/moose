@@ -47,7 +47,6 @@ protected:
   const Real _mu;
   const Real _lambda;
   const Real _epsilon;
-  const Real _regularization;
 };
 
 #endif
