@@ -6,7 +6,7 @@
 []
 
 [Mesh]
-  file = long-bottom-block-1elem-blocks.e
+  file = long-bottom-block-16elem-blocks.e
 []
 
 [Problem]
@@ -157,25 +157,27 @@
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = 3e-4
+    value = 3e-3
   [../]
 []
 
 [Executioner]
   type = Transient
-  num_steps = 1
+  num_steps = 10
+  # end_time = 100
   dt = 10
   dtmin = 1
   solve_type = 'NEWTON'
-  line_search = 'basic'
-  petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian -pc_svd_monitor'# -snes_test_jacobian_view'
+  line_search = 'bt'
+  petsc_options = '-snes_converged_reason -ksp_converged_reason -pc_svd_monitor'# -snes_test_jacobian_view'
   petsc_options_iname = '-pc_type -snes_max_funcs'
   petsc_options_value = 'svd      100000'
   # nl_rel_tol = 1e-6
-  # nl_abs_tol = 1e-11
+  # nl_abs_tol = 1e-16
 
   l_max_its = 100
-  nl_max_its = 50
+  nl_max_its = 10
+  steady_state_detection = true
 []
 
 [Outputs]
@@ -197,7 +199,7 @@
     vel_x = vel_x
     vel_y = vel_y
     # regularization = 1e-5
-    regularization = 1e-6
+    regularization = 1e-3
   [../]
 []
 
