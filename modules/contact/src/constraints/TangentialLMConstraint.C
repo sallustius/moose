@@ -136,9 +136,10 @@ Real TangentialLMConstraint::computeQpResidual(Moose::ConstraintType /*type*/)
         //     pinfo->_normal
         //         .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp],
         //         _vel_z[_qp]))) .norm();
-        Real a = std::abs(_vel_x[_qp]);
-        Real b =
-            _mu * _contact_pressure[_qp] - (a < _epsilon ? std::abs(_u_slave[_qp]) : _u_slave[_qp]);
+        Real a = std::abs(_u_slave[_qp]) < _epsilon
+                     ? -_vel_x[_qp]
+                     : -_vel_x[_qp] * std::abs(_u_slave[_qp]) / _u_slave[_qp];
+        Real b = _mu * _contact_pressure[_qp] - std::abs(_u_slave[_qp]);
         return _lambda * (a + b - std::sqrt(a * a + b * b)) + (1. - _lambda) * a * std::max(0., b);
       }
     }

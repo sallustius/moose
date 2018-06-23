@@ -1,12 +1,12 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  D_name = 1e-1
+  D_name = 1e0
   scaling = 1e0
   # use_displaced_mesh = true
 []
 
 [Mesh]
-  file = long-bottom-block-64elem-blocks.e
+  file = long-bottom-block-1elem-blocks.e
   # uniform_refine = 1
 []
 
@@ -158,7 +158,7 @@
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = .8e-5
+    value = 1.1e-4
   [../]
 []
 

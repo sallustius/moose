@@ -838,23 +838,8 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
 
     if (_lm[_qp] > 0)
     {
-      RealVectorValue velocity(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]);
-      // RealVectorValue tangential_velocity(-pinfo->_normal.cross(pinfo->_normal.cross(velocity)));
-      RealVectorValue tangential_velocity(_vel_x[_qp], 0, 0);
-      Real v_comp = tangential_velocity(_component);
-
-      // Real contact_tangential_force_comp;
-      // if (std::abs(v_comp) < _eps)
-      //   contact_tangential_force_comp = _component == 0 ? -_tangent_lm[_qp] : 0;
-      // else
-      //   contact_tangential_force_comp =
-      //       -_tangent_lm[_qp] * tangential_velocity(_component) / tangential_velocity.norm();
-
-      Real velocity_lambda = std::tanh(std::abs(v_comp) / _regularization);
       Real contact_tangential_force_comp =
-          velocity_lambda *
-              (-std::abs(_tangent_lm[_qp]) * v_comp / (tangential_velocity.norm() + _eps)) +
-          (1. - velocity_lambda) * (_component == 0 ? _tangent_lm[_qp] : 0);
+          _component == 0 ? _tangent_lm[_qp] * nodalArea(*pinfo) : 0.;
 
       resid -= contact_tangential_force_comp;
     }
@@ -1454,11 +1439,10 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                 Real v_comp = tangential_velocity(_component);
 
                 Real velocity_lambda = std::tanh(std::abs(v_comp) / _regularization);
-                Real d_velocity_lambda_d_vel_x = 1. /
-                                                 (std::cosh(std::abs(v_comp) / _regularization) *
-                                                  std::cosh(std::abs(v_comp) / _regularization)) *
-                                                 sgn(v_comp) / _regularization *
-                                                 (_component == 0 ? 1. : 0);
+                Real d_velocity_lambda_d_vel_x =
+                    1. / (std::cosh(std::abs(v_comp) / _regularization) *
+                          std::cosh(std::abs(v_comp) / _regularization)) *
+                    sgn(v_comp) / _regularization * (_component == 0 ? 1. : 0);
                 Real d_contact_tangential_force_comp_d_vel_x =
                     d_velocity_lambda_d_vel_x * -std::abs(_tangent_lm[_qp]) * v_comp /
                         (tangential_velocity.norm() + _eps) +
@@ -1681,11 +1665,10 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                 Real v_comp = tangential_velocity(_component);
 
                 Real velocity_lambda = std::tanh(std::abs(v_comp) / _regularization);
-                Real d_velocity_lambda_d_vel_x = 1. /
-                                                 (std::cosh(std::abs(v_comp) / _regularization) *
-                                                  std::cosh(std::abs(v_comp) / _regularization)) *
-                                                 sgn(v_comp) / _regularization *
-                                                 (_component == 0 ? 1. : 0);
+                Real d_velocity_lambda_d_vel_x =
+                    1. / (std::cosh(std::abs(v_comp) / _regularization) *
+                          std::cosh(std::abs(v_comp) / _regularization)) *
+                    sgn(v_comp) / _regularization * (_component == 0 ? 1. : 0);
                 Real d_contact_tangential_force_comp_d_vel_x =
                     d_velocity_lambda_d_vel_x * -std::abs(_tangent_lm[_qp]) * v_comp /
                         (tangential_velocity.norm() + _eps) +
