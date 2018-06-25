@@ -164,12 +164,12 @@
 
 [Executioner]
   type = Transient
-  # num_steps = 10
-  end_time = 100
+  num_steps = 1
+  # end_time = 100
   dt = 10
   dtmin = .1
   solve_type = 'NEWTON'
-  line_search = 'bt'
+  line_search = 'basic'
   petsc_options = '-snes_converged_reason -ksp_converged_reason -pc_svd_monitor'# -snes_test_jacobian_view'
   petsc_options_iname = '-pc_type -pc_factor_shift_type -pc_factor_shift_amount'
   petsc_options_value = 'lu       NONZERO               1e-15'
