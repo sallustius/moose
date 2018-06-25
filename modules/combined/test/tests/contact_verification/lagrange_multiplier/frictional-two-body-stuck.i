@@ -1,12 +1,12 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  # D_name = 1e0
+  D_name = 1e0
   scaling = 1e0
   # use_displaced_mesh = true
 []
 
 [Mesh]
-  file = long-bottom-block-16elem-blocks.e
+  file = long-bottom-block-1elem-blocks.e
   # uniform_refine = 1
 []
 
@@ -36,14 +36,14 @@
 []
 
 [Kernels]
-  # [./disp_x]
-  #   type = MatDiffusion
-  #   variable = disp_x
-  # [../]
-  # [./disp_y]
-  #   type = MatDiffusion
-  #   variable = disp_y
-  # [../]
+  [./disp_x]
+    type = MatDiffusion
+    variable = disp_x
+  [../]
+  [./disp_y]
+    type = MatDiffusion
+    variable = disp_y
+  [../]
   [./accel_x]
     type = CoupledTimeDerivative
     variable = disp_x
@@ -82,34 +82,34 @@
   [../]
 []
 
-[Modules/TensorMechanics/Master]
-  [./all]
-    strain = SMALL
-    incremental = false
-    add_variables = true
-    generate_output = 'strain_xx strain_yy strain_zz' ## Not at all necessary, but nice
-    block = '1 2'
-  [../]
-[]
+# [Modules/TensorMechanics/Master]
+#   [./all]
+#     strain = SMALL
+#     incremental = false
+#     add_variables = true
+#     generate_output = 'strain_xx strain_yy strain_zz' ## Not at all necessary, but nice
+#     block = '1 2'
+#   [../]
+# []
 
-[Materials]
-  [./elasticity_tensor]
-    type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1e6
-    poissons_ratio = 0.3
-    block = '1 2'
-  [../]
-  [./small_stress]
-    type = ComputeLinearElasticStress
-    block = '1 2'
-  [../]
-  [./dummy]
-    type = GenericConstantMaterial
-    prop_names = 'dumb'
-    prop_values = '0'
-    block = 3
-  [../]
-[]
+# [Materials]
+#   [./elasticity_tensor]
+#     type = ComputeIsotropicElasticityTensor
+#     youngs_modulus = 1e6
+#     poissons_ratio = 0.3
+#     block = '1 2'
+#   [../]
+#   [./small_stress]
+#     type = ComputeLinearElasticStress
+#     block = '1 2'
+#   [../]
+#   [./dummy]
+#     type = GenericConstantMaterial
+#     prop_names = 'dumb'
+#     prop_values = '0'
+#     block = 3
+#   [../]
+# []
 
 
 [Constraints]
@@ -164,8 +164,8 @@
 
 [Executioner]
   type = Transient
-  # num_steps = 1
-  end_time = 100
+  num_steps = 1
+  # end_time = 100
   dtmin = 1e-6
   solve_type = 'NEWTON'
   line_search = 'bt'
@@ -179,7 +179,7 @@
   nl_max_its = 20
   steady_state_detection = true
   [./TimeStepper]
-    dt = 1e-3
+    dt = 10
     type = IterationAdaptiveDT
     cutback_factor = 0.4
     growth_factor = 1.2

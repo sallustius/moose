@@ -122,14 +122,11 @@ Real TangentialLMConstraint::computeQpResidual(Moose::ConstraintType /*type*/)
         return _u_slave[_qp];
       else
       {
-        // Tangential slip velocity
-        // Real a =
-        //     pinfo->_normal
-        //         .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp],
-        //         _vel_z[_qp]))) .norm();
+        RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
+        Real v_dot_tan = RealVectorValue(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]) * tangent_vec;
         Real a = std::abs(_u_slave[_qp]) < _epsilon
-                     ? -_vel_x[_qp]
-                     : -_vel_x[_qp] * std::abs(_u_slave[_qp]) / _u_slave[_qp];
+                     ? -v_dot_tan
+                     : -v_dot_tan * std::abs(_u_slave[_qp]) / _u_slave[_qp];
         Real b = _mu * _contact_pressure[_qp] - std::abs(_u_slave[_qp]);
         return _lambda * (a + b - std::sqrt(a * a + b * b)) +
                (1. - _lambda) * std::max(0., a) * std::max(0., b);
@@ -152,14 +149,12 @@ Real TangentialLMConstraint::computeQpJacobian(Moose::ConstraintJacobianType /*t
         return 1.;
       else
       {
-        // Tangential slip velocity
-        // Real a =
-        //     pinfo->_normal
-        //         .cross(pinfo->_normal.cross(RealVectorValue(_vel_x[_qp], _vel_y[_qp],
-        //         _vel_z[_qp]))) .norm();
+        RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
+        Real v_dot_tan = RealVectorValue(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]) * tangent_vec;
         Real a = std::abs(_u_slave[_qp]) < _epsilon
-                     ? -_vel_x[_qp]
-                     : -_vel_x[_qp] * std::abs(_u_slave[_qp]) / _u_slave[_qp];
+                     ? -v_dot_tan
+                     : -v_dot_tan * std::abs(_u_slave[_qp]) / _u_slave[_qp];
+
         Real b = _mu * _contact_pressure[_qp] - std::abs(_u_slave[_qp]);
         Real db_duj = -(_u_slave[_qp] >= 0 ? 1. : -1.);
 
@@ -189,9 +184,11 @@ TangentialLMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /
       if (_contact_pressure[_qp] < _epsilon)
         return 0.;
 
+      RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
+      Real v_dot_tan = RealVectorValue(_vel_x[_qp], _vel_y[_qp], _vel_z[_qp]) * tangent_vec;
       Real a = std::abs(_u_slave[_qp]) < _epsilon
-                   ? -_vel_x[_qp]
-                   : -_vel_x[_qp] * std::abs(_u_slave[_qp]) / _u_slave[_qp];
+                   ? -v_dot_tan
+                   : -v_dot_tan * std::abs(_u_slave[_qp]) / _u_slave[_qp];
       Real b = _mu * _contact_pressure[_qp] - std::abs(_u_slave[_qp]);
       if (jvar == _contact_pressure_id)
       {
@@ -204,12 +201,23 @@ TangentialLMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /
       }
       else if (jvar == _vel_x_id)
       {
-        Real da_dvxj = std::abs(_u_slave[_qp]) < _epsilon ? -1. : -1. * sgn(_u_slave[_qp]);
+        Real da_dvxj = std::abs(_u_slave[_qp]) < _epsilon ? -pinfo->_normal(1)
+                                                          : -pinfo->_normal(1) * sgn(_u_slave[_qp]);
         if (std::abs(b) < _epsilon)
-          return _lambda * (1. - (a > 0 ? 1. : -1.)) * da_dvxj;
+          return _lambda * (1. - sgn(a)) * da_dvxj;
         else
           return _lambda * (1. - a / std::sqrt(a * a + b * b)) * da_dvxj +
                  (1. - _lambda) * std::max(0., b) * (a > 0 ? 1. : 0.) * da_dvxj;
+      }
+      else if (jvar == _vel_y_id)
+      {
+        Real da_dvyj = std::abs(_u_slave[_qp]) < _epsilon ? pinfo->_normal(0)
+                                                          : pinfo->_normal(0) * sgn(_u_slave[_qp]);
+        if (std::abs(b) < _epsilon)
+          return _lambda * (1. - sgn(a)) * da_dvyj;
+        else
+          return _lambda * (1. - a / std::sqrt(a * a + b * b)) * da_dvyj +
+                 (1. - _lambda) * std::max(0., b) * (a > 0 ? 1. : 0.) * da_dvyj;
       }
     }
   }

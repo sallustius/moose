@@ -838,8 +838,9 @@ MechanicalContactConstraint::computeQpResidual(Moose::ConstraintType type)
 
     if (_lm[_qp] > 0)
     {
+      RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
       Real contact_tangential_force_comp =
-          _component == 0 ? _tangent_lm[_qp] * nodalArea(*pinfo) : 0.;
+          _tangent_lm[_qp] * tangent_vec(_component) * nodalArea(*pinfo);
 
       resid -= contact_tangential_force_comp;
     }
@@ -1412,8 +1413,9 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                     _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
                   return 0;
 
+                RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
                 Real d_contact_tangential_force_comp_d_tangent_lm =
-                    _component == 0 ? nodalArea(*pinfo) : 0.;
+                    tangent_vec(_component) * nodalArea(*pinfo);
 
                 return -d_contact_tangential_force_comp_d_tangent_lm * _test_slave[_i][_qp];
               }
@@ -1591,8 +1593,9 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
                     _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
                   return 0;
 
+                RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
                 Real d_contact_tangential_force_comp_d_tangent_lm =
-                    _component == 0 ? nodalArea(*pinfo) : 0.;
+                    tangent_vec(_component) * nodalArea(*pinfo);
 
                 return -d_contact_tangential_force_comp_d_tangent_lm * -_test_master[_i][_qp];
               }
@@ -2053,8 +2056,9 @@ MechanicalContactConstraint::testPerturbations(PenetrationInfo * pinfo,
 
   if (_lm[_qp] > 0)
   {
+    RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
     Real contact_tangential_force_comp =
-        _component == 0 ? _tangent_lm[_qp] * nodalArea(*pinfo) : 0.;
+        _tangent_lm[_qp] * tangent_vec(_component) * nodalArea(*pinfo);
 
     Real tangential_resid = -contact_tangential_force_comp;
     tangential_resid *= -dtest_duj;
