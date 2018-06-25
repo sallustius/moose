@@ -21,17 +21,17 @@
 
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  youngs_modulus = 1e12
+  youngs_modulus = 1e6
 []
 
 [Variables]
   [./disp_x]
     block = '1 2'
-    scaling = 1e-12
+    # scaling = 1e-12
   [../]
   [./disp_y]
     block = '1 2'
-    scaling = 1e-12
+    # scaling = 1e-12
   [../]
   [./lm]
     block = 30
@@ -181,11 +181,11 @@
 
 [Executioner]
   type = Transient
-  solve_type = 'NEWTON'
+  solve_type = 'PJFNK'
 
   petsc_options = '-options_left'
-  petsc_options_iname = '-ksp_gmres_restart'
-  petsc_options_value = '30'
+  petsc_options_iname = '-ksp_gmres_restart -pc_type -mat_mffd_err -pc_factor_shift_type -pc_factor_shift_amount'
+  petsc_options_value = '30                 lu       1e-5          NONZERO               1e-15'
   line_search = basic
 
   l_max_its = 30
