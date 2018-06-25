@@ -161,10 +161,10 @@ Real TangentialLMConstraint::computeQpJacobian(Moose::ConstraintJacobianType /*t
                      ? -_vel_x[_qp]
                      : -_vel_x[_qp] * std::abs(_u_slave[_qp]) / _u_slave[_qp];
         Real b = _mu * _contact_pressure[_qp] - std::abs(_u_slave[_qp]);
-        Real db_duj = -sgn(_u_slave[_qp]);
+        Real db_duj = -(_u_slave[_qp] >= 0 ? 1. : -1.);
 
         if (std::abs(a) < _epsilon)
-          return _lambda * (1. - sgn(b)) * db_duj;
+          return _lambda * (1. - (b > 0 ? 1. : -1.)) * db_duj;
 
         else
           return _lambda * (1. - b / std::sqrt(a * a + b * b)) * db_duj +
@@ -197,7 +197,7 @@ TangentialLMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /
       {
         Real db_dlmj = _mu;
         if (std::abs(a) < _epsilon)
-          return _lambda * (1. - sgn(b)) * db_dlmj;
+          return _lambda * (1. - (b >= 0 ? 1. : -1.)) * db_dlmj;
         else
           return _lambda * (1. - b / std::sqrt(a * a + b * b)) * db_dlmj +
                  (1. - _lambda) * std::max(0., a) * (b >= 0 ? 1. : 0.) * db_dlmj;
@@ -206,7 +206,7 @@ TangentialLMConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /
       {
         Real da_dvxj = std::abs(_u_slave[_qp]) < _epsilon ? -1. : -1. * sgn(_u_slave[_qp]);
         if (std::abs(b) < _epsilon)
-          return _lambda * (1. - sgn(a)) * da_dvxj;
+          return _lambda * (1. - (a > 0 ? 1. : -1.)) * da_dvxj;
         else
           return _lambda * (1. - a / std::sqrt(a * a + b * b)) * da_dvxj +
                  (1. - _lambda) * std::max(0., b) * (a > 0 ? 1. : 0.) * da_dvxj;
