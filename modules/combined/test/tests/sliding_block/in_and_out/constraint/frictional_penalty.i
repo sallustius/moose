@@ -32,12 +32,12 @@
     block = '1 2'
     # scaling = 1e-12
   [../]
-  [./lm]
-    block = 30
-  [../]
-  [./tangent_lm]
-    block = 30
-  [../]
+  # [./lm]
+  #   block = 30
+  # [../]
+  # [./tangent_lm]
+  #   block = 30
+  # [../]
   [./vel_x]
     block = '2'
   [../]
@@ -139,27 +139,27 @@
 []
 
 
-[Constraints]
-  [./lm]
-    type = LMConstraint
-    slave = 3
-    master = 2
-    variable = lm
-    master_variable = disp_x
-  [../]
-  [./tan_lm]
-    type = TangentialLMConstraint
-    slave = 3
-    master = 2
-    variable = tangent_lm
-    contact_pressure = lm
-    master_variable = vel_x
-    vel_y = vel_y
-    mu = 0.4
-    lambda = 1
-    # regularization = 1e0
-  [../]
-[]
+# [Constraints]
+#   [./lm]
+#     type = LMConstraint
+#     slave = 3
+#     master = 2
+#     variable = lm
+#     master_variable = disp_x
+#   [../]
+#   [./tan_lm]
+#     type = TangentialLMConstraint
+#     slave = 3
+#     master = 2
+#     variable = tangent_lm
+#     contact_pressure = lm
+#     master_variable = vel_x
+#     vel_y = vel_y
+#     mu = 0.4
+#     lambda = 1
+#     # regularization = 1e0
+#   [../]
+# []
 
 [AuxKernels]
   [./zeroslip_x]
@@ -283,11 +283,14 @@
   [./leftright]
     slave = 3
     master = 2
-    model = frictionless
-    formulation = lagrange
+    model = coulomb
+    formulation = penalty
+    penalty = 1e7
+    friction_coefficient = 0.4
+    normal_smoothing_distance = 0.1
     system = constraint
-    lm = lm
-    tangent_lm = tangent_lm
+    # lm = lm
+    # tangent_lm = tangent_lm
   [../]
 []
 
