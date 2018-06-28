@@ -67,4 +67,9 @@
     # The linesearch used by this test requires PETSc >= 3.6.0.
     petsc_version = '>=3.6.0'
   [../]
+  [./frictional_lagrange]
+    type = 'Exodiff'
+    input = 'frictional_lagrange.i'
+    exodiff = 'frictional_lagrange_exodus.e'
+  [../]
 []

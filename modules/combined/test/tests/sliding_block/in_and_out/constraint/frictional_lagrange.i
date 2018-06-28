@@ -13,6 +13,7 @@
 [Mesh]
   file = sliding_elastic_blocks_2d_with_lagrange.e
   patch_size = 80
+  # second_order = true
 []
 
 [Problem]
@@ -26,11 +27,11 @@
 [Variables]
   [./disp_x]
     block = '1 2'
-    # scaling = 1e-12
+    # order = SECOND
   [../]
   [./disp_y]
     block = '1 2'
-    # scaling = 1e-12
+    # order = SECOND
   [../]
   [./lm]
     block = 30
@@ -74,7 +75,6 @@
   [./all]
     strain = SMALL
     incremental = false
-    add_variables = true
     generate_output = 'strain_xx strain_yy strain_zz' ## Not at all necessary, but nice
     block = '1 2'
   [../]
