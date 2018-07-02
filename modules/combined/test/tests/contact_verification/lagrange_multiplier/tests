@@ -5,6 +5,7 @@
     ratio_tol = 1e-7
     difference_tol = 1e-6
     cli_args = "Outputs/file_base=0"
+    run_sim = True
   [../]
   [./jac_45_rot]
     type = 'PetscJacobianTester'
@@ -12,6 +13,7 @@
     ratio_tol = 1e-7
     difference_tol = 1e-6
     cli_args = "Mesh/file='two-body-45.e' ICs/block2x/value=0.7071067811865475 ICs/block2y/value=-0.7071067811865475 BCs/topx/value=1.0606601717798212 BCs/topy/value=-1.0606601717798212 Outputs/file_base=45"
+    run_sim = True
   [../]
   [./jac_90_rot]
     type = 'PetscJacobianTester'
@@ -19,6 +21,7 @@
     ratio_tol = 1e-7
     difference_tol = 1e-6
     cli_args = "Mesh/file='two-body-90.e' ICs/block2x/value=1 ICs/block2y/value=0 BCs/topx/value=1.5 BCs/topy/value=0 Outputs/file_base=90"
+    run_sim = True
   [../]
   [./jac_135_rot]
     type = 'PetscJacobianTester'
@@ -26,6 +29,7 @@
     ratio_tol = 1e-7
     difference_tol = 1e-6
     cli_args = "Mesh/file='two-body-135.e' ICs/block2x/value=0.7071067811865475 ICs/block2y/value=0.7071067811865475 BCs/topx/value=1.0606601717798212 BCs/topy/value=1.0606601717798212 Outputs/file_base=135"
+    run_sim = True
   [../]
   [./jac_180_rot]
     type = 'PetscJacobianTester'
@@ -33,6 +37,7 @@
     ratio_tol = 1e-7
     difference_tol = 1e-6
     cli_args = "Mesh/file='two-body-180.e' ICs/block2x/value=0 ICs/block2y/value=1 BCs/topx/value=0 BCs/topy/value=1.5 Outputs/file_base=180"
+    run_sim = True
   [../]
   [./jac_225_rot]
     type = 'PetscJacobianTester'
@@ -40,6 +45,7 @@
     ratio_tol = 1e-7
     difference_tol = 1e-6
     cli_args = "Mesh/file='two-body-225.e' ICs/block2x/value=-0.7071067811865475 ICs/block2y/value=0.7071067811865475 BCs/topx/value=-1.0606601717798212 BCs/topy/value=1.0606601717798212 Outputs/file_base=225"
+    run_sim = True
   [../]
   [./jac_270_rot]
     type = 'PetscJacobianTester'
@@ -47,6 +53,7 @@
     ratio_tol = 1e-7
     difference_tol = 1e-6
     cli_args = "Mesh/file='two-body-270.e' ICs/block2x/value=-1 ICs/block2y/value=0 BCs/topx/value=-1.5 BCs/topy/value=0 Outputs/file_base=270"
+    run_sim = True
   [../]
   [./jac_315_rot]
     type = 'PetscJacobianTester'
@@ -54,6 +61,7 @@
     ratio_tol = 1e-7
     difference_tol = 1e-6
     cli_args = "Mesh/file='two-body-315.e' ICs/block2x/value=-0.7071067811865475 ICs/block2y/value=-0.7071067811865475 BCs/topx/value=-1.0606601717798212 BCs/topy/value=-1.0606601717798212 Outputs/file_base=315"
+    run_sim = True
   [../]
   [./res_no_rot]
     type = 'Exodiff'
@@ -125,6 +133,7 @@
     input = 'two-body-pressure.i'
     ratio_tol = 1e-8
     difference_tol = 1e-2
+    run_sim = True
   [../]
   [./res_pressure]
     type = 'Exodiff'
@@ -138,15 +147,14 @@
   [./jac_tan_contact_slip]
     type = 'PetscJacobianTester'
     input = 'frictional-two-body-slip.i'
-    ratio_tol = 1e-8
-    difference_tol = 1e-4
+    ratio_tol = 3e-5
+    difference_tol = 1
+    run_sim = True
+    cli_args = 'Executioner/num_steps=1 Outputs/exodus=false'
   [../]
   [./res_tan_contact_slip]
     type = 'Exodiff'
     exodiff = 'frictional-two-body-slip_out.e'
     input = 'frictional-two-body-slip.i'
-    should_execute = false
-    delete_output_before_running = false
-    prereq = 'jac_tan_contact_slip'
   [../]
 []

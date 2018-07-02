@@ -6,7 +6,7 @@
 []
 
 [Mesh]
-  file = two-body-no-sep.e
+  file = long-bottom-block-1elem-blocks.e
 []
 
 [Problem]
@@ -31,6 +31,21 @@
   [../]
   [./vel_y]
     block = '1 2'
+  [../]
+[]
+
+[ICs]
+  [./disp_y]
+    block = 2
+    variable = disp_y
+    value = -0.1
+    type = ConstantIC
+  [../]
+  [./lm]
+    block = 3
+    variable = lm
+    value = 1e-6
+    type = ConstantIC
   [../]
 []
 
@@ -162,9 +177,9 @@
 
 [Executioner]
   type = Transient
-  num_steps = 10
+  end_time = 100
   dt = 10
-  dtmin = 10
+  dtmin = 1
   solve_type = 'NEWTON'
   line_search = 'basic'
   petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian'# -snes_test_jacobian_view'
@@ -173,13 +188,16 @@
   # nl_rel_tol = 1e-6
 
   l_max_its = 100
-  nl_max_its = 1000
+  nl_max_its = 10
 []
 
 [Outputs]
   exodus = true
   # checkpoint = true
-  dofmap = true
+  [./dofmap]
+    type = DOFMap
+    execute_on = 'initial'
+  [../]
 []
 
 [Contact]
@@ -205,5 +223,15 @@
   [./smp]
     type = SMP
     full = true
+  [../]
+[]
+
+[Postprocessors]
+  [./num_nl]
+    type = NumNonlinearIterations
+  [../]
+  [./cumulative]
+    type = CumulativeValuePostprocessor
+    postprocessor = num_nl
   [../]
 []
