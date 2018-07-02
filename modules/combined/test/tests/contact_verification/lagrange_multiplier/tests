@@ -1,6 +1,7 @@
 [Tests]
   [./jac_no_rot]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-dirichlet.i'
     ratio_tol = 1e-7
     difference_tol = 1e-6
@@ -9,6 +10,7 @@
   [../]
   [./jac_45_rot]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-dirichlet.i'
     ratio_tol = 1e-7
     difference_tol = 1e-6
@@ -17,6 +19,7 @@
   [../]
   [./jac_90_rot]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-dirichlet.i'
     ratio_tol = 1e-7
     difference_tol = 1e-6
@@ -25,6 +28,7 @@
   [../]
   [./jac_135_rot]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-dirichlet.i'
     ratio_tol = 1e-7
     difference_tol = 1e-6
@@ -33,6 +37,7 @@
   [../]
   [./jac_180_rot]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-dirichlet.i'
     ratio_tol = 1e-7
     difference_tol = 1e-6
@@ -41,6 +46,7 @@
   [../]
   [./jac_225_rot]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-dirichlet.i'
     ratio_tol = 1e-7
     difference_tol = 1e-6
@@ -49,6 +55,7 @@
   [../]
   [./jac_270_rot]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-dirichlet.i'
     ratio_tol = 1e-7
     difference_tol = 1e-6
@@ -57,6 +64,7 @@
   [../]
   [./jac_315_rot]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-dirichlet.i'
     ratio_tol = 1e-7
     difference_tol = 1e-6
@@ -65,6 +73,7 @@
   [../]
   [./res_no_rot]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = '0.e'
     input = 'two-body-dirichlet.i'
     should_execute = false
@@ -73,6 +82,7 @@
   [../]
   [./res_45_rot]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = '45.e'
     input = 'two-body-dirichlet.i'
     should_execute = false
@@ -81,6 +91,7 @@
   [../]
   [./res_90_rot]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = '90.e'
     input = 'two-body-dirichlet.i'
     should_execute = false
@@ -89,6 +100,7 @@
   [../]
   [./res_135_rot]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = '135.e'
     input = 'two-body-dirichlet.i'
     should_execute = false
@@ -97,6 +109,7 @@
   [../]
   [./res_180_rot]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = '180.e'
     input = 'two-body-dirichlet.i'
     should_execute = false
@@ -105,6 +118,7 @@
   [../]
   [./res_225_rot]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = '225.e'
     input = 'two-body-dirichlet.i'
     should_execute = false
@@ -113,6 +127,7 @@
   [../]
   [./res_270_rot]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = '270.e'
     input = 'two-body-dirichlet.i'
     should_execute = false
@@ -121,6 +136,7 @@
   [../]
   [./res_315_rot]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = '315.e'
     input = 'two-body-dirichlet.i'
     should_execute = false
@@ -130,6 +146,7 @@
 
   [./jac_pressure]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'two-body-pressure.i'
     ratio_tol = 1e-8
     difference_tol = 1e-2
@@ -137,6 +154,7 @@
   [../]
   [./res_pressure]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = 'two-body-pressure_out.e'
     input = 'two-body-pressure.i'
     should_execute = false
@@ -146,6 +164,7 @@
 
   [./jac_tan_contact_slip]
     type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
     input = 'frictional-two-body-slip.i'
     ratio_tol = 3e-5
     difference_tol = 1
@@ -154,6 +173,7 @@
   [../]
   [./res_tan_contact_slip]
     type = 'Exodiff'
+    group = 'contact_lagrange'
     exodiff = 'frictional-two-body-slip_out.e'
     input = 'frictional-two-body-slip.i'
   [../]

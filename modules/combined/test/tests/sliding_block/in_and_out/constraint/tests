@@ -71,5 +71,6 @@
     type = 'Exodiff'
     input = 'frictional_lagrange.i'
     exodiff = 'frictional_lagrange_exodus.e'
+    group = 'contact_lagrange'
   [../]
 []
