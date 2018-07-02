@@ -177,4 +177,19 @@
     exodiff = 'frictional-two-body-slip_out.e'
     input = 'frictional-two-body-slip.i'
   [../]
+  [./jac_tan_contact_stuck]
+    type = 'PetscJacobianTester'
+    group = 'contact_lagrange'
+    input = 'frictional-two-body-stuck.i'
+    ratio_tol = 3e-5
+    difference_tol = 1
+    run_sim = True
+    cli_args = 'Executioner/num_steps=1 Outputs/exodus=false'
+  [../]
+  [./res_tan_contact_stuck]
+    type = 'Exodiff'
+    group = 'contact_lagrange'
+    exodiff = 'frictional-two-body-stuck_out.e'
+    input = 'frictional-two-body-stuck.i'
+  [../]
 []

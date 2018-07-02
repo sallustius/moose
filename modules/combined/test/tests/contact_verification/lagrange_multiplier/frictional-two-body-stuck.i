@@ -1,13 +1,12 @@
 [GlobalParams]
   displacements = 'disp_x disp_y'
-  D_name = 1e0
+  D_name = 1e3
   scaling = 1e0
   # use_displaced_mesh = true
 []
 
 [Mesh]
   file = long-bottom-block-1elem-blocks.e
-  # uniform_refine = 1
 []
 
 [Problem]
@@ -32,6 +31,21 @@
   [../]
   [./vel_y]
     block = '1 2'
+  [../]
+[]
+
+[ICs]
+  [./disp_y]
+    block = 2
+    variable = disp_y
+    value = -0.1
+    type = ConstantIC
+  [../]
+  [./lm]
+    block = 3
+    variable = lm
+    value = 1e-6
+    type = ConstantIC
   [../]
 []
 
@@ -95,7 +109,7 @@
 # [Materials]
 #   [./elasticity_tensor]
 #     type = ComputeIsotropicElasticityTensor
-#     youngs_modulus = 1e6
+#     youngs_modulus = 1e3
 #     poissons_ratio = 0.3
 #     block = '1 2'
 #   [../]
@@ -123,6 +137,7 @@
   [../]
   [./tan_lm]
     type = TangentialLMConstraint
+    lambda = 1
     slave = 10
     master = 20
     variable = tangent_lm
@@ -130,8 +145,6 @@
     master_variable = vel_x
     vel_y = vel_y
     mu = 0.1
-    lambda = 1
-    # regularization = 1e0
   [../]
 []
 
@@ -152,45 +165,40 @@
     type = NeumannBC
     variable = disp_y
     boundary = 30
-    value = -1e-3
+    value = -10e-4
   [../]
   [./leftx]
     type = NeumannBC
     variable = disp_x
     boundary = 50
-    value = 1.1e-4
+    value = 5e-5
   [../]
 []
 
 [Executioner]
   type = Transient
-  num_steps = 1
-  # end_time = 100
-  dtmin = 1e-6
+  end_time = 100
+  dt = 10
+  dtmin = 1
   solve_type = 'NEWTON'
   line_search = 'bt'
-  petsc_options = '-snes_converged_reason -ksp_converged_reason -pc_svd_monitor'# -snes_test_jacobian_view'
-  petsc_options_iname = '-pc_type -pc_factor_shift_type -pc_factor_shift_amount'
-  petsc_options_value = 'lu       NONZERO               1e-15'
+  petsc_options = '-snes_converged_reason -ksp_converged_reason -snes_test_jacobian'# -snes_test_jacobian_view'
+  petsc_options_iname = '-pc_type -snes_max_funcs'
+  petsc_options_value = 'svd      100000'
   nl_abs_tol = 1e-15
-  nl_rel_tol = 1e-6
+  detect_steady_state = true
 
   l_max_its = 100
-  nl_max_its = 20
-  steady_state_detection = true
-  [./TimeStepper]
-    dt = 10
-    type = IterationAdaptiveDT
-    cutback_factor = 0.4
-    growth_factor = 1.2
-    optimal_iterations = 8
-  [../]
+  nl_max_its = 10
 []
 
 [Outputs]
   exodus = true
-  checkpoint = true
-  dofmap = true
+  # checkpoint = true
+  [./dofmap]
+    type = DOFMap
+    execute_on = 'initial'
+  [../]
 []
 
 [Contact]
@@ -205,7 +213,6 @@
     tangent_lm = tangent_lm
     vel_x = vel_x
     vel_y = vel_y
-    regularization = 1e-3
   [../]
 []
 
@@ -217,5 +224,15 @@
   [./smp]
     type = SMP
     full = true
+  [../]
+[]
+
+[Postprocessors]
+  [./num_nl]
+    type = NumNonlinearIterations
+  [../]
+  [./cumulative]
+    type = CumulativeValuePostprocessor
+    postprocessor = num_nl
   [../]
 []
