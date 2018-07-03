@@ -260,9 +260,35 @@ MechanicalContactConstraint::MechanicalContactConstraint(const InputParameters &
       }
     }
   }
-  if (_formulation == CF_LAGRANGE && !isCoupled("lm"))
-    mooseError(
-        "If using the Lagrange formulation, you must couple in a lagrange multiplier variable");
+  else if (_formulation == CF_LAGRANGE)
+  {
+    if (!isCoupled("lm"))
+      mooseError(
+          "If using the Lagrange formulation, you must couple in a lagrange multiplier variable");
+    if (_mesh.dimension() != 2)
+      mooseError("The current lagrange multiplier implementation only works in two dimensions.");
+    for (auto && var : _var_objects)
+    {
+      if (var)
+      {
+        const FEType & fe_family = var->feType();
+        if (fe_family.order != FIRST || fe_family.family != LAGRANGE)
+          mooseError(
+              "The current lagrange multiplier implementation currently relies on first-order "
+              "Lagrange shape functions for the displacements in order to generate the best "
+              "preconditioner.");
+      }
+    }
+    if (isCoupled("tangent_lm"))
+    {
+      if (_model != CM_COULOMB)
+        mooseError("The current tangential lagrange multiplier implementation only supports the "
+                   "Coulomb frictional model.");
+    }
+    else if (_model != CM_FRICTIONLESS)
+      mooseError("The model options for lagrange multiplier options are frictionless or Coulomb "
+                 "with coupled tangential lagrange multipliers.");
+  }
 }
 
 void
@@ -897,6 +923,9 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
   const Real penalty = getPenalty(*pinfo);
   const Real penalty_slip = getTangentialPenalty(*pinfo);
 
+  if (_formulation == CF_LAGRANGE)
+    return computeLMOnDiagJacobian(type, pinfo);
+
   switch (type)
   {
     case Moose::SlaveSlave:
@@ -922,9 +951,6 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
             case CF_AUGMENTED_LAGRANGE:
               return _phi_slave[_j][_qp] * penalty * _test_slave[_i][_qp] *
                      pinfo->_normal(_component) * pinfo->_normal(_component);
-
-            case CF_LAGRANGE:
-              return 0.;
 
             default:
               mooseError("Invalid contact formulation");
@@ -1048,12 +1074,6 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
             case CF_AUGMENTED_LAGRANGE:
               return -_phi_master[_j][_qp] * penalty * _test_slave[_i][_qp] *
                      pinfo->_normal(_component) * pinfo->_normal(_component);
-
-            case CF_LAGRANGE:
-              if (_mesh.dimension() == 2)
-                return onDiagNormalsJacContrib(pinfo);
-              else
-                return 0.;
 
             default:
               mooseError("Invalid contact formulation");
@@ -1184,13 +1204,6 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
               return -_test_master[_i][_qp] * penalty * _phi_slave[_j][_qp] *
                      pinfo->_normal(_component) * pinfo->_normal(_component);
 
-            case CF_LAGRANGE:
-              if (_connected_dof_indices[_j] != _current_node->dof_number(0, _var.number(), 0) ||
-                  !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
-                return 0;
-              else
-                return testPerturbations(pinfo, true, true);
-
             default:
               mooseError("Invalid contact formulation");
           }
@@ -1299,16 +1312,6 @@ MechanicalContactConstraint::computeQpJacobian(Moose::ConstraintJacobianType typ
               return _test_master[_i][_qp] * penalty * _phi_master[_j][_qp] *
                      pinfo->_normal(_component) * pinfo->_normal(_component);
 
-            case CF_LAGRANGE:
-              if (_mesh.dimension() == 2)
-              {
-                Real resid = onDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
-                resid += testPerturbations(pinfo, true, false);
-                return resid;
-              }
-              else
-                return 0.;
-
             default:
               mooseError("Invalid contact formulation");
           }
@@ -1377,6 +1380,9 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
   if (getCoupledVarComponent(jvar, coupled_component))
     normal_component_in_coupled_var_dir = pinfo->_normal(coupled_component);
 
+  if (_formulation == CF_LAGRANGE)
+    return computeLMOffDiagJacobian(type, jvar, pinfo);
+
   switch (type)
   {
     case Moose::SlaveSlave:
@@ -1402,26 +1408,6 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
             case CF_AUGMENTED_LAGRANGE:
               return _phi_slave[_j][_qp] * penalty * _test_slave[_i][_qp] *
                      pinfo->_normal(_component) * normal_component_in_coupled_var_dir;
-            case CF_LAGRANGE:
-            {
-              if (jvar == _lm_id)
-                return _phi_slave[_j][_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) *
-                       _test_slave[_i][_qp];
-              else if (jvar == _tangent_lm_id)
-              {
-                if (_lm[_qp] <= 0 ||
-                    _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
-                  return 0;
-
-                RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
-                Real d_contact_tangential_force_comp_d_tangent_lm =
-                    tangent_vec(_component) * nodalArea(*pinfo);
-
-                return -d_contact_tangential_force_comp_d_tangent_lm * _test_slave[_i][_qp];
-              }
-              else
-                return 0;
-            }
             default:
               mooseError("Invalid contact formulation");
           }
@@ -1504,12 +1490,6 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
               return -_phi_master[_j][_qp] * penalty * _test_slave[_i][_qp] *
                      pinfo->_normal(_component) * normal_component_in_coupled_var_dir;
 
-            case CF_LAGRANGE:
-              if (_mesh.dimension() == 2 && jvar != _lm_id)
-                return offDiagNormalsJacContrib(pinfo);
-              else
-                return 0.;
-
             default:
               mooseError("Invalid contact formulation");
           }
@@ -1581,35 +1561,6 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
             case CF_AUGMENTED_LAGRANGE:
               return -_test_master[_i][_qp] * penalty * _phi_slave[_j][_qp] *
                      pinfo->_normal(_component) * normal_component_in_coupled_var_dir;
-
-            case CF_LAGRANGE:
-            {
-              if (jvar == _lm_id)
-                return _phi_slave[_j][_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) *
-                       -_test_master[_i][_qp];
-              else if (jvar == _tangent_lm_id)
-              {
-                if (_lm[_qp] <= 0 ||
-                    _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
-                  return 0;
-
-                RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
-                Real d_contact_tangential_force_comp_d_tangent_lm =
-                    tangent_vec(_component) * nodalArea(*pinfo);
-
-                return -d_contact_tangential_force_comp_d_tangent_lm * -_test_master[_i][_qp];
-              }
-              else if (jvar == _vel_x_id || jvar == _vel_y_id || jvar == _vel_z_id)
-                return 0;
-              else
-              {
-                if (_connected_dof_indices[_j] != _current_node->dof_number(0, jvar, 0) ||
-                    !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
-                  return 0;
-                else
-                  return testPerturbations(pinfo, false, true);
-              }
-            }
 
             default:
               mooseError("Invalid contact formulation");
@@ -1716,16 +1667,6 @@ MechanicalContactConstraint::computeQpOffDiagJacobian(Moose::ConstraintJacobianT
             case CF_AUGMENTED_LAGRANGE:
               return _test_master[_i][_qp] * penalty * _phi_master[_j][_qp] *
                      pinfo->_normal(_component) * normal_component_in_coupled_var_dir;
-
-            case CF_LAGRANGE:
-              if (_mesh.dimension() == 2 && jvar != _lm_id)
-              {
-                Real resid = offDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
-                resid += testPerturbations(pinfo, false, false);
-                return resid;
-              }
-              else
-                return 0.;
 
             default:
               mooseError("Invalid contact formulation");
@@ -2101,4 +2042,91 @@ MechanicalContactConstraint::signAndABar(PenetrationInfo * pinfo,
   abar = master_node1 - master_node0;
 
   return true;
+}
+
+Real
+MechanicalContactConstraint::computeLMOnDiagJacobian(Moose::ConstraintJacobianType type,
+                                                     PenetrationInfo *& pinfo)
+{
+  switch (type)
+  {
+    case Moose::SlaveSlave:
+      return 0.;
+
+    case Moose::SlaveMaster:
+      return onDiagNormalsJacContrib(pinfo);
+
+    case Moose::MasterSlave:
+      if (_connected_dof_indices[_j] != _current_node->dof_number(0, _var.number(), 0) ||
+          !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
+        return 0;
+      else
+        return testPerturbations(pinfo, true, true);
+
+    case Moose::MasterMaster:
+      Real resid = onDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
+      resid += testPerturbations(pinfo, true, false);
+      return resid;
+  }
+}
+
+Real
+MechanicalContactConstraint::computeLMOffDiagJacobian(Moose::ConstraintJacobianType type,
+                                                      unsigned int jvar,
+                                                      PenetrationInfo *& pinfo)
+{
+  switch (type)
+  {
+    case Moose::SlaveSlave:
+      if (jvar == _lm_id)
+        return _phi_slave[_j][_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) *
+               _test_slave[_i][_qp];
+      else if (jvar == _tangent_lm_id)
+      {
+        if (_lm[_qp] <= 0 || _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
+          return 0;
+
+        RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
+        Real d_contact_tangential_force_comp_d_tangent_lm =
+            tangent_vec(_component) * nodalArea(*pinfo);
+
+        return -d_contact_tangential_force_comp_d_tangent_lm * _test_slave[_i][_qp];
+      }
+      else
+        return 0;
+
+    case Moose::SlaveMaster:
+      return offDiagNormalsJacContrib(pinfo);
+
+    case Moose::MasterSlave:
+      if (jvar == _lm_id)
+        return _phi_slave[_j][_qp] * nodalArea(*pinfo) * -pinfo->_normal(_component) *
+               -_test_master[_i][_qp];
+      else if (jvar == _tangent_lm_id)
+      {
+        if (_lm[_qp] <= 0 || _current_node->dof_number(0, jvar, 0) != _connected_dof_indices[_j])
+          return 0;
+
+        RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
+        Real d_contact_tangential_force_comp_d_tangent_lm =
+            tangent_vec(_component) * nodalArea(*pinfo);
+
+        return -d_contact_tangential_force_comp_d_tangent_lm * -_test_master[_i][_qp];
+      }
+      else if (jvar == _vel_x_id || jvar == _vel_y_id || jvar == _vel_z_id)
+        return 0;
+      else // displacements
+      {
+        if (_connected_dof_indices[_j] != _current_node->dof_number(0, jvar, 0) ||
+            !pinfo->_elem->is_node_on_side(_i, pinfo->_side_num))
+          return 0;
+        else
+          return testPerturbations(pinfo, false, true);
+      }
+
+    case Moose::MasterMaster:
+      Real resid = offDiagNormalsJacContrib(pinfo) * -_test_master[_i][_qp];
+      resid += testPerturbations(pinfo, false, false);
+      return resid;
+  }
 }

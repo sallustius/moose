@@ -283,7 +283,7 @@
   [./leftright]
     slave = 3
     master = 2
-    model = frictionless
+    model = coulomb
     formulation = lagrange
     system = constraint
     lm = lm

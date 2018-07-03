@@ -90,6 +90,10 @@ public:
   Real offDiagNormalsJacContrib(PenetrationInfo * pinfo);
   Real testPerturbations(PenetrationInfo * pinfo, bool on_diagonal, bool slave);
   bool signAndABar(PenetrationInfo * pinfo, Real & sign, RealVectorValue & abar);
+  Real computeLMOnDiagJacobian(Moose::ConstraintJacobianType type, PenetrationInfo *& pinfo);
+  Real computeLMOffDiagJacobian(Moose::ConstraintJacobianType type,
+                                unsigned int jvar,
+                                PenetrationInfo *& pinfo);
 
 protected:
   MooseSharedPointer<DisplacedProblem> _displaced_problem;

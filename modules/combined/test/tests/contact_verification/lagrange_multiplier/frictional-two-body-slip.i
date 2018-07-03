@@ -204,7 +204,7 @@
   [./leftright]
     master = 20
     slave = 10
-    model = frictionless
+    model = coulomb
     formulation = lagrange
     # penalty = 1e6
     system = constraint
