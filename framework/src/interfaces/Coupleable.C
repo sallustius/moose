@@ -292,7 +292,7 @@ Coupleable::getADDefaultValue(const std::string & var_name)
   if (default_value_it == _ad_default_value.end())
   {
     ADVariableValue * value =
-        new ADVariableValue(_coupleable_max_qps, _coupleable_params.defaultCoupledValue(var_name));
+        new ADVariableValue(_coupleable_max_qps, _c_parameters.defaultCoupledValue(var_name));
     default_value_it = _ad_default_value.insert(std::make_pair(var_name, value)).first;
   }
 
@@ -341,7 +341,7 @@ Coupleable::coupledValue(const std::string & var_name, unsigned int comp)
   }
 }
 
-ADVariableValue &
+const ADVariableValue &
 Coupleable::adCoupledValue(const std::string & var_name, unsigned int comp)
 {
   if (!isCoupled(var_name))
@@ -352,7 +352,7 @@ Coupleable::adCoupledValue(const std::string & var_name, unsigned int comp)
 
   if (!_coupleable_neighbor)
   {
-    if (_nodal)
+    if (_c_nodal)
     {
       mooseError("Not implemented");
       // return (_c_is_implicit) ? var->nodalSln() : var->nodalSlnOld();
@@ -732,14 +732,14 @@ Coupleable::coupledGradient(const std::string & var_name, unsigned int comp)
     return (_c_is_implicit) ? var->gradSlnNeighbor() : var->gradSlnOldNeighbor();
 }
 
-ADVariableGradient &
+const ADVariableGradient &
 Coupleable::adCoupledGradient(const std::string & var_name, unsigned int comp)
 {
   if (!isCoupled(var_name)) // Return default 0
     return _ad_default_gradient;
 
   coupledCallback(var_name, false);
-  if (_nodal)
+  if (_c_nodal)
     mooseError("Nodal variables do not have gradients");
 
   MooseVariable * var = getVar(var_name, comp);
