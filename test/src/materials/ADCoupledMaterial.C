@@ -30,7 +30,8 @@ ADCoupledMaterial::ADCoupledMaterial(const InputParameters & parameters)
   : Material(parameters),
     _mat_prop_name(getParam<MaterialPropertyName>("mat_prop")),
     _mat_prop(declareProperty<ADReal>(_mat_prop_name)),
-    _coupled_var(adCoupledValue("coupled_var"))
+    _coupled_var(adCoupledValue("coupled_var")),
+    _mat_prop1(declareProperty<Real>("mat_prop1"))
 
 //_coupled_mat_prop(getParam<bool>("use_old_prop") ?
 // getMaterialPropertyOld<Real>("coupled_mat_prop") : getMaterialProperty<Real>("coupled_mat_prop"))
@@ -40,5 +41,6 @@ ADCoupledMaterial::ADCoupledMaterial(const InputParameters & parameters)
 void
 ADCoupledMaterial::computeQpProperties()
 {
-  _mat_prop[_qp] = 4.0 * _coupled_var[_qp];
+  _mat_prop1[_qp] = 2.;
+  _mat_prop[_qp] = _mat_prop1[_qp] * 4.0 * _coupled_var[_qp];
 }
