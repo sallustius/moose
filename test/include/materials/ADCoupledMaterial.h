@@ -31,6 +31,7 @@ protected:
   MaterialProperty<ADReal> & _mat_prop;
 
   const ADVariableValue & _coupled_var;
+  MaterialProperty<Real> & _mat_prop1;
 
   // const MaterialProperty<ADReal> & _coupled_mat_prop;
 };
