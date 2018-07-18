@@ -13,6 +13,7 @@
     type = 'Exodiff'
     input = 'dyn_euler_small_rayleigh_hht.i'
     exodiff = 'dyn_euler_small_rayleigh_hht_out.e'
+    rel_err = 6.5e-6
   [../]
   [./dyn_euler_added_mass]
     type = 'Exodiff'
