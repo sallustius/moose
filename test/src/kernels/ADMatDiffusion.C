@@ -24,7 +24,8 @@ validParams<ADMatDiffusion>()
   return params;
 }
 
-ADMatDiffusion::ADMatDiffusion(const InputParameters & parameters) : ADKernel(parameters)
+ADMatDiffusion::ADMatDiffusion(const InputParameters & parameters)
+  : ADKernel(parameters), _regular_mat_prop(getMaterialProperty<Real>("mat_prop1"))
 {
   MooseEnum prop_state = getParam<MooseEnum>("prop_state");
 
@@ -39,5 +40,5 @@ ADMatDiffusion::ADMatDiffusion(const InputParameters & parameters) : ADKernel(pa
 ADReal
 ADMatDiffusion::computeQpResidual()
 {
-  return (*_diff)[_qp] * (_grad_test[_i][_qp] * _grad_u[_qp]);
+  return (*_diff)[_qp] * _regular_mat_prop[_qp] * (_grad_test[_i][_qp] * _grad_u[_qp]);
 }
