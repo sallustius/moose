@@ -27,7 +27,7 @@ protected:
   virtual ADReal computeQpResidual();
 
   const MaterialProperty<Real> & _regular_mat_prop;
-  const MaterialProperty<ADReal> * _diff;
+  const ADMaterialProperty<Real> & _diff;
 };
 
 #endif // ADMATDIFFUSION_H

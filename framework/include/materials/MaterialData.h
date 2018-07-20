@@ -68,6 +68,15 @@ public:
   template <typename T>
   MaterialProperty<T> & declarePropertyOlder(const std::string & prop_name);
 
+  /**
+   * Declare the AD property named "name".
+   * Calling any of the declareProperty
+   * functions multiple times with the same property name is okay and
+   * will result in a single identical reference returned every time.
+   */
+  template <typename T>
+  ADMaterialProperty<T> & declareADProperty(const std::string & prop_name);
+
   /// copy material properties from one element to another
   void copy(const Elem & elem_to, const Elem & elem_from, unsigned int side);
 
@@ -108,6 +117,8 @@ public:
    */
   template <typename T>
   MaterialProperty<T> & getProperty(const std::string & prop_name);
+  template <typename T>
+  ADMaterialProperty<T> & getADProperty(const std::string & prop_name);
   template <typename T>
   MaterialProperty<T> & getPropertyOld(const std::string & prop_name);
   template <typename T>
@@ -151,12 +162,34 @@ protected:
   ///@}
 
   /**
-   * Resizes the number of properties to the specified size (including
-   * stateful old and older properties.  Newly added elements are set to
-   * default-constructed material properties.
+   * Helper function that resizes the number of properties to the specified size (including
+   * stateful old and older properties)
+   */
+  void resizePropsHelper(unsigned int size);
+
+  /**
+   * Calls resizeProps helper function for regular material properties
    */
   template <typename T>
   void resizeProps(unsigned int size);
+
+  /**
+   * Calls resizeProps helper function for AD material properties
+   */
+  template <typename T>
+  void resizeADProps(unsigned int size);
+
+  /**
+   * Creates material properties using default construction if they do not already exist
+   */
+  template <typename T>
+  void createProps(unsigned int size);
+
+  /**
+   * Creates AD material properties using default construction if they do not already exist
+   */
+  template <typename T>
+  void createADProps(unsigned int size);
 
   /// Status of storage swapping (calling swap sets this to true; swapBack sets it to false)
   bool _swapped;
@@ -165,7 +198,25 @@ private:
   template <typename T>
   MaterialProperty<T> &
   declareHelper(MaterialProperties & props, const std::string & prop_name, unsigned int prop_id);
+
+  template <typename T>
+  ADMaterialProperty<T> &
+  declareADHelper(MaterialProperties & props, const std::string & prop_name, unsigned int prop_id);
 };
+
+// template <typename T,
+//           typename std::enable_if<!std::is_same> const MaterialProperty<T> * castToMatProp(
+//               PropertyValue const * const & prop_to_be_cast)
+// {
+//   return dynamic_cast<const MaterialProperty<T> *>(prop_to_be_cast);
+// }
+
+// template <>
+// const MaterialProperty<Real> *
+// castToMatProp<ADReal, Real>(PropertyValue const * const & prop_to_be_cast)
+// {
+//   return dynamic_cast<const MaterialProperty<Real> *>(prop_to_be_cast);
+// }
 
 template <typename T>
 inline bool
@@ -182,9 +233,8 @@ MaterialData::haveProperty(const std::string & prop_name) const
   return dynamic_cast<const MaterialProperty<T> *>(_props[prop_id]) != nullptr;
 }
 
-template <typename T>
-void
-MaterialData::resizeProps(unsigned int size)
+inline void
+MaterialData::resizePropsHelper(unsigned int size)
 {
   auto n = size + 1;
   if (_props.size() < n)
@@ -193,7 +243,28 @@ MaterialData::resizeProps(unsigned int size)
     _props_old.resize(n, nullptr);
   if (_props_older.size() < n)
     _props_older.resize(n, nullptr);
+}
 
+template <typename T>
+void
+MaterialData::resizeProps(unsigned int size)
+{
+  resizePropsHelper(size);
+  createProps<T>(size);
+}
+
+template <typename T>
+void
+MaterialData::resizeADProps(unsigned int size)
+{
+  resizePropsHelper(size);
+  createADProps<T>(size);
+}
+
+template <typename T>
+void
+MaterialData::createProps(unsigned int size)
+{
   if (_props[size] == nullptr)
     _props[size] = new MaterialProperty<T>;
   if (_props_old[size] == nullptr)
@@ -203,10 +274,29 @@ MaterialData::resizeProps(unsigned int size)
 }
 
 template <typename T>
+void
+MaterialData::createADProps(unsigned int size)
+{
+  if (_props[size] == nullptr)
+    _props[size] = new ADMaterialProperty<T>;
+  if (_props_old[size] == nullptr)
+    _props_old[size] = new ADMaterialProperty<T>;
+  if (_props_older[size] == nullptr)
+    _props_older[size] = new ADMaterialProperty<T>;
+}
+
+template <typename T>
 MaterialProperty<T> &
 MaterialData::declareProperty(const std::string & prop_name)
 {
   return declareHelper<T>(_props, prop_name, _storage.addProperty(prop_name));
+}
+
+template <typename T>
+ADMaterialProperty<T> &
+MaterialData::declareADProperty(const std::string & prop_name)
+{
+  return declareADHelper<T>(_props, prop_name, _storage.addProperty(prop_name));
 }
 
 template <typename T>
@@ -238,12 +328,36 @@ MaterialData::declareHelper(MaterialProperties & props,
 }
 
 template <typename T>
+ADMaterialProperty<T> &
+MaterialData::declareADHelper(MaterialProperties & props,
+                              const std::string & libmesh_dbg_var(prop_name),
+                              unsigned int prop_id)
+{
+  resizeADProps<T>(prop_id);
+  auto prop = dynamic_cast<ADMaterialProperty<T> *>(props[prop_id]);
+  mooseAssert(prop != nullptr, "Internal error in declaring material property: " + prop_name);
+  return *prop;
+}
+
+template <typename T>
 MaterialProperty<T> &
 MaterialData::getProperty(const std::string & name)
 {
   auto prop_id = getPropertyId(name);
   resizeProps<T>(prop_id);
   auto prop = dynamic_cast<MaterialProperty<T> *>(_props[prop_id]);
+  if (!prop)
+    mooseError("Material has no property named: " + name);
+  return *prop;
+}
+
+template <typename T>
+ADMaterialProperty<T> &
+MaterialData::getADProperty(const std::string & name)
+{
+  auto prop_id = getPropertyId(name);
+  resizeADProps<T>(prop_id);
+  auto prop = dynamic_cast<ADMaterialProperty<T> *>(_props[prop_id]);
   if (!prop)
     mooseError("Material has no property named: " + name);
   return *prop;

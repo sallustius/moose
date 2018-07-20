@@ -129,6 +129,8 @@ public:
   MaterialProperty<T> & declarePropertyOld(const std::string & prop_name);
   template <typename T>
   MaterialProperty<T> & declarePropertyOlder(const std::string & prop_name);
+  template <typename T>
+  ADMaterialProperty<T> & declareADProperty(const std::string & prop_name);
   ///@}
 
   /**
@@ -386,6 +388,14 @@ Material::declarePropertyOlder(const std::string & prop_name)
                       "getMaterialPropertyOlder (only) if a reference is required in this class."));
   registerPropName(prop_name, false, Material::OLDER);
   return _material_data->declarePropertyOlder<T>(prop_name);
+}
+
+template <typename T>
+ADMaterialProperty<T> &
+Material::declareADProperty(const std::string & prop_name)
+{
+  registerPropName(prop_name, false, Material::CURRENT);
+  return _material_data->declareADProperty<T>(prop_name);
 }
 
 template <typename T>

@@ -116,6 +116,26 @@ struct CompareTypes<ADReal, double>
 };
 }
 
+template <typename ScalarType>
+struct AD
+{
+  typedef MetaPhysicL::DualNumber<ScalarType,
+                                  MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, ScalarType>>
+      type;
+};
+
+template <>
+struct AD<VectorValue<Real>>
+{
+  typedef VectorValue<ADReal> type;
+};
+
+template <>
+struct AD<TensorValue<Real>>
+{
+  typedef TensorValue<ADReal> type;
+};
+
 typedef VectorValue<ADReal> ADRealVectorValue;
 typedef ADRealVectorValue ADRealGradient;
 
