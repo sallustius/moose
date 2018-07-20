@@ -28,7 +28,7 @@ protected:
   virtual void computeQpProperties();
 
   std::string _mat_prop_name;
-  MaterialProperty<ADReal> & _mat_prop;
+  ADMaterialProperty<Real> & _mat_prop;
 
   const ADVariableValue & _coupled_var;
   MaterialProperty<Real> & _mat_prop1;

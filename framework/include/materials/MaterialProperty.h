@@ -107,7 +107,7 @@ public:
   /**
    * @returns a read-only reference to the parameter value.
    */
-  MooseArray<T> & get() { return _value; }
+  const MooseArray<T> & get() const { return _value; }
 
   /**
    * @returns a writable reference to the parameter value.
@@ -129,17 +129,17 @@ public:
    */
   virtual void resize(int n);
 
-  /**
-   * Get element i out of the array.
-   */
-  T & operator[](const unsigned int i) { return _value[i]; }
-
-  unsigned int size() const { return _value.size(); }
+  virtual unsigned int size() const { return _value.size(); }
 
   /**
-   * Get element i out of the array.
+   * Get element i out of the array as a writeable reference.
    */
-  const T & operator[](const unsigned int i) const { return _value[i]; }
+  T & operator[](const unsigned int i) { return currentData(i); }
+
+  /**
+   * Get element i out of the array as a ready-only reference.
+   */
+  const T & operator[](const unsigned int i) const { return currentData(i); }
 
   /**
    *
@@ -183,6 +183,9 @@ public:
   friend PropertyValue *
   _init_helper(int size, PropertyValue * prop, const std::vector<P> * the_type);
 
+  virtual const T & currentData(const unsigned int i) const { return _value[i]; }
+  virtual T & currentData(const unsigned int i) { return _value[i]; }
+
 private:
   /// private copy constructor to avoid shallow copying of material properties
   MaterialProperty(const MaterialProperty<T> & /*src*/)
@@ -198,6 +201,9 @@ private:
 
   /// Stored parameter value.
   MooseArray<T> _value;
+
+  /// Stored current data member
+  mutable T _current_data;
 };
 
 // ------------------------------------------------------------
@@ -245,7 +251,7 @@ template <typename T>
 inline void
 MaterialProperty<T>::store(std::ostream & stream)
 {
-  for (unsigned int i = 0; i < _value.size(); i++)
+  for (unsigned int i = 0; i < size(); i++)
     storeHelper(stream, _value[i], NULL);
 }
 
@@ -253,8 +259,93 @@ template <typename T>
 inline void
 MaterialProperty<T>::load(std::istream & stream)
 {
-  for (unsigned int i = 0; i < _value.size(); i++)
+  for (unsigned int i = 0; i < size(); i++)
     loadHelper(stream, _value[i], NULL);
+}
+
+template <typename T>
+class ADMaterialProperty : public MaterialProperty<T>
+{
+public:
+  ADMaterialProperty() : MaterialProperty<Real>() {}
+
+  virtual ~ADMaterialProperty() { _ad_value.release(); }
+
+  /**
+   * @returns a read-only reference to the parameter value.
+   */
+  const MooseArray<typename AD<T>::type> & get() const { return _ad_value; }
+  /**
+   * @returns a writable reference to the parameter value.
+   */
+  MooseArray<typename AD<T>::type> & set() { return _ad_value; }
+
+  /**
+   * Get element i out of the array as a writeable reference.
+   */
+  typename AD<T>::type & operator[](const unsigned int i) { return _ad_value[i]; }
+  /**
+   * Get element i out of the array as a read-only reference.
+   */
+  const typename AD<T>::type & operator[](const unsigned int i) const { return _ad_value[i]; }
+
+  virtual const T & currentData(const unsigned int i) const override
+  {
+    return _ad_value[i].value();
+  }
+  virtual T & currentData(const unsigned int i) override { return _ad_value[i].value(); }
+
+  virtual void resize(int n) override;
+  virtual unsigned int size() const override { return _ad_value.size(); }
+  virtual void swap(PropertyValue * rhs) override;
+  virtual void
+  qpCopy(const unsigned int to_qp, PropertyValue * rhs, const unsigned int from_qp) override;
+  virtual void store(std::ostream & stream) override;
+  virtual void load(std::istream & stream) override;
+
+private:
+  MooseArray<typename AD<T>::type> _ad_value;
+};
+
+template <typename T>
+inline void
+ADMaterialProperty<T>::resize(int n)
+{
+  _ad_value.resize(n);
+}
+
+template <typename T>
+inline void
+ADMaterialProperty<T>::swap(PropertyValue * rhs)
+{
+  mooseAssert(rhs != NULL, "Assigning NULL?");
+  _ad_value.swap(cast_ptr<ADMaterialProperty<T> *>(rhs)->_ad_value);
+}
+
+template <typename T>
+inline void
+ADMaterialProperty<T>::qpCopy(const unsigned int to_qp,
+                              PropertyValue * rhs,
+                              const unsigned int from_qp)
+{
+  mooseAssert(rhs != NULL, "Assigning NULL?");
+  _ad_value[to_qp] = cast_ptr<const ADMaterialProperty<T> *>(rhs)->_ad_value[from_qp];
+}
+
+template <typename T>
+inline void
+ADMaterialProperty<T>::store(std::ostream & stream)
+{
+  for (unsigned int i = 0; i < size(); i++)
+    storeHelper(stream, _ad_value[i], NULL);
+}
+
+template <typename T>
+inline void
+ADMaterialProperty<T>::load(std::istream & stream)
+{
+  for (unsigned int i = 0; i < size(); i++)
+    loadHelper(stream, _ad_value[i], NULL);
 }
 
 /**

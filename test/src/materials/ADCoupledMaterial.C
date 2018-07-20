@@ -29,7 +29,7 @@ validParams<ADCoupledMaterial>()
 ADCoupledMaterial::ADCoupledMaterial(const InputParameters & parameters)
   : Material(parameters),
     _mat_prop_name(getParam<MaterialPropertyName>("mat_prop")),
-    _mat_prop(declareProperty<ADReal>(_mat_prop_name)),
+    _mat_prop(declareADProperty<Real>(_mat_prop_name)),
     _coupled_var(adCoupledValue("coupled_var")),
     _mat_prop1(declareProperty<Real>("mat_prop1"))
 
