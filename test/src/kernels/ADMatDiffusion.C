@@ -15,20 +15,41 @@ InputParameters
 validParams<ADMatDiffusion>()
 {
   InputParameters params = validParams<ADKernel>();
-  params.addRequiredParam<MaterialPropertyName>(
-      "prop_name", "the name of the material property we are going to use");
+  params.addParam<MaterialPropertyName>(
+      "ad_mat_prop", "ad_diffusivity", "the name of the AD material property we are going to use");
+  params.addParam<MaterialPropertyName>("regular_mat_prop",
+                                        "regular_diffusivity",
+                                        "the name of the AD material property we are going to use");
+  MooseEnum prop_to_use("AdAd AdReg RegAd RegReg", "AdAd");
+  params.addParam<MooseEnum>("prop_to_use",
+                             prop_to_use,
+                             "What type of property to use. The prefix indicates the getter type "
+                             "in the kernel; the suffix indicates the declaration type in the "
+                             "material.");
   return params;
 }
 
 ADMatDiffusion::ADMatDiffusion(const InputParameters & parameters)
   : ADKernel(parameters),
-    _regular_mat_prop(getMaterialProperty<Real>("mat_prop1")),
-    _diff(getADMaterialProperty<Real>("prop_name"))
+    _ad_diff_from_ad_prop(getADMaterialProperty<Real>("ad_mat_prop")),
+    _regular_diff_from_ad_prop(getMaterialProperty<Real>("ad_mat_prop")),
+    _ad_diff_from_regular_prop(getADMaterialProperty<Real>("regular_mat_prop")),
+    _regular_diff_from_regular_prop(getMaterialProperty<Real>("regular_mat_prop")),
+    _prop_to_use(getParam<MooseEnum>("prop_to_use"))
 {
 }
 
 ADReal
 ADMatDiffusion::computeQpResidual()
 {
-  return _diff[_qp] * _regular_mat_prop[_qp] * (_grad_test[_i][_qp] * _grad_u[_qp]);
+  if (_prop_to_use == "AdAd")
+    return _ad_diff_from_ad_prop[_qp] * _grad_test[_i][_qp] * _grad_u[_qp];
+  else if (_prop_to_use == "AdReg")
+    return _ad_diff_from_regular_prop[_qp] * _grad_test[_i][_qp] * _grad_u[_qp];
+  else if (_prop_to_use == "RegAd")
+    return _regular_diff_from_ad_prop[_qp] * _grad_test[_i][_qp] * _grad_u[_qp];
+  else if (_prop_to_use == "RegReg")
+    return _regular_diff_from_regular_prop[_qp] * _grad_test[_i][_qp] * _grad_u[_qp];
+  else
+    mooseError("Oops");
 }
