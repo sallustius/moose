@@ -101,21 +101,6 @@ typedef StoredRange<std::vector<const Elem *>::iterator, const Elem *> ConstElem
 typedef MetaPhysicL::DualNumber<double, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, double>>
     ADReal;
 
-namespace libMesh
-{
-template <>
-struct CompareTypes<double, ADReal>
-{
-  typedef ADReal supertype;
-};
-
-template <>
-struct CompareTypes<ADReal, double>
-{
-  typedef ADReal supertype;
-};
-}
-
 template <typename T1, typename T2>
 auto operator*(const VectorValue<T1> & vec, const T2 & scalar) -> VectorValue<
     typename MetaPhysicL::boostcopy::
@@ -130,6 +115,96 @@ auto operator*(const T2 & scalar, const VectorValue<T1> & vec) -> VectorValue<
         enable_if_c<std::is_same<decltype(vec(0) * scalar), ADReal>::value, ADReal>::type>
 {
   return {vec(0) * scalar, vec(1) * scalar, vec(2) * scalar};
+}
+
+namespace MetaPhysicL
+{
+template <typename T>
+struct PlusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                VectorValue<T>,
+                true>
+{
+  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
+};
+template <typename T>
+struct PlusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                VectorValue<T>,
+                false>
+{
+  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
+};
+template <typename T>
+struct PlusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                true>
+{
+  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
+};
+template <typename T>
+struct PlusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                false>
+{
+  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
+};
+
+template <typename T>
+struct MinusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                 VectorValue<T>,
+                 true>
+{
+  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
+};
+template <typename T>
+struct MinusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                 VectorValue<T>,
+                 false>
+{
+  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
+};
+template <typename T>
+struct MinusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                 DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                 true>
+{
+  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
+};
+template <typename T>
+struct MinusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                 DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                 false>
+{
+  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
+};
+
+template <typename T>
+struct MultipliesType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                      VectorValue<T>,
+                      true>
+{
+  typedef DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> supertype;
+};
+template <typename T>
+struct MultipliesType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                      VectorValue<T>,
+                      false>
+{
+  typedef DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> supertype;
+};
+template <typename T>
+struct MultipliesType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                      DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                      true>
+{
+  typedef DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> supertype;
+};
+template <typename T>
+struct MultipliesType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                      DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
+                      false>
+{
+  typedef DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> supertype;
+};
 }
 
 // template <typename MatTemplateType, typename ScalarType, template MatType>
