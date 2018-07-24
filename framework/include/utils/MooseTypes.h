@@ -116,25 +116,92 @@ struct CompareTypes<ADReal, double>
 };
 }
 
-template <typename ScalarType>
-struct AD
+template <typename T1, typename T2>
+auto operator*(const VectorValue<T1> & vec, const T2 & scalar) -> VectorValue<
+    typename MetaPhysicL::boostcopy::
+        enable_if_c<std::is_same<decltype(vec(0) * scalar), ADReal>::value, ADReal>::type>
 {
-  typedef MetaPhysicL::DualNumber<ScalarType,
-                                  MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, ScalarType>>
-      type;
-};
+  return {vec(0) * scalar, vec(1) * scalar, vec(2) * scalar};
+}
 
-template <>
-struct AD<VectorValue<Real>>
+template <typename T1, typename T2>
+auto operator*(const T2 & scalar, const VectorValue<T1> & vec) -> VectorValue<
+    typename MetaPhysicL::boostcopy::
+        enable_if_c<std::is_same<decltype(vec(0) * scalar), ADReal>::value, ADReal>::type>
 {
-  typedef VectorValue<ADReal> type;
-};
+  return {vec(0) * scalar, vec(1) * scalar, vec(2) * scalar};
+}
 
-template <>
-struct AD<TensorValue<Real>>
-{
-  typedef TensorValue<ADReal> type;
-};
+// template <typename MatTemplateType, typename ScalarType, template MatType>
+//     > auto operator*(const typename MatType<MatTemplateType> & mat, const ScalarType & scalar)
+//           -> MatType<decltype(mat(0, 0) * scalar)>
+// {
+//   MatType<decltype(mat(0, 0) * scalar)> matrix{mat(0, 0) * scalar,
+//                                                mat(0, 1) * scalar,
+//                                                mat(0, 2) * scalar,
+//                                                mat(1, 0) * scalar,
+//                                                mat(1, 1) * scalar,
+//                                                mat(1, 2) * scalar,
+//                                                mat(2, 0) * scalar,
+//                                                mat(2, 1) * scalar,
+//                                                mat(2, 2) * scalar};
+//   return matrix;
+// }
+
+// template <typename T1,
+//           typename T2,
+//           typename MetaPhysicL::boostcopy::enable_if_c<MetaPhysicL::ScalarTraits<T2>::value,
+//                                                        int>::type = 0>
+// auto operator*(const T2 & scalar, const TensorValue<T1> & mat)
+//     -> TensorValue<decltype(mat(0, 0) * scalar)>
+// {
+//   return {mat(0, 0) * scalar,
+//           mat(0, 1) * scalar,
+//           mat(0, 2) * scalar,
+//           mat(1, 0) * scalar,
+//           mat(1, 1) * scalar,
+//           mat(1, 2) * scalar,
+//           mat(2, 0) * scalar,
+//           mat(2, 1) * scalar,
+//           mat(2, 2) * scalar};
+// }
+
+// template <typename T1,
+//           typename T2,
+//           typename MetaPhysicL::boostcopy::enable_if_c<MetaPhysicL::ScalarTraits<T2>::value,
+//                                                        int>::type = 0>
+// auto operator*(const TensorValue<T1> & mat, const T2 & scalar)
+//     -> TensorValue<decltype(mat(0, 0) * scalar)>
+// {
+
+//   return {mat(0, 0) * scalar,
+//           mat(0, 1) * scalar,
+//           mat(0, 2) * scalar,
+//           mat(1, 0) * scalar,
+//           mat(1, 1) * scalar,
+//           mat(1, 2) * scalar,
+//           mat(2, 0) * scalar,
+//           mat(2, 1) * scalar,
+//           mat(2, 2) * scalar};
+// }
+
+// template <typename T1,
+//           typename T2,
+//           typename MetaPhysicL::boostcopy::enable_if_c<MetaPhysicL::ScalarTraits<T2>::value,
+//                                                        int>::type = 0>
+// auto operator*(const T2 & scalar, const TensorValue<T1> & mat)
+//     -> TensorValue<decltype(mat(0, 0) * scalar)>
+// {
+//   return {mat(0, 0) * scalar,
+//           mat(0, 1) * scalar,
+//           mat(0, 2) * scalar,
+//           mat(1, 0) * scalar,
+//           mat(1, 1) * scalar,
+//           mat(1, 2) * scalar,
+//           mat(2, 0) * scalar,
+//           mat(2, 1) * scalar,
+//           mat(2, 2) * scalar};
+// }
 
 typedef VectorValue<ADReal> ADRealVectorValue;
 typedef ADRealVectorValue ADRealGradient;

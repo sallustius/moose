@@ -27,13 +27,10 @@ public:
 protected:
   virtual void computeQpProperties();
 
-  std::string _mat_prop_name;
-  ADMaterialProperty<Real> & _mat_prop;
+  ADMaterialProperty<Real> & _ad_mat_prop;
+  MaterialProperty<Real> & _regular_mat_prop;
 
   const ADVariableValue & _coupled_var;
-  MaterialProperty<Real> & _mat_prop1;
-
-  // const MaterialProperty<ADReal> & _coupled_mat_prop;
 };
 
 #endif // ADCOUPLEDMATERIAL_H

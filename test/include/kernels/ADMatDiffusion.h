@@ -26,8 +26,11 @@ public:
 protected:
   virtual ADReal computeQpResidual();
 
-  const MaterialProperty<Real> & _regular_mat_prop;
-  const ADMaterialProperty<Real> & _diff;
+  const ADMaterialProperty<Real> & _ad_diff_from_ad_prop;
+  const MaterialProperty<Real> & _regular_diff_from_ad_prop;
+  const ADMaterialProperty<Real> & _ad_diff_from_regular_prop;
+  const MaterialProperty<Real> & _regular_diff_from_regular_prop;
+  const MooseEnum _prop_to_use;
 };
 
 #endif // ADMATDIFFUSION_H
