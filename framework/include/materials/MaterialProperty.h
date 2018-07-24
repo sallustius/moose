@@ -107,12 +107,19 @@ public:
   /**
    * @returns a read-only reference to the parameter value.
    */
-  const MooseArray<T> & get() const { return _value; }
+  const MooseArray<MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
+  get() const
+  {
+    return _value;
+  }
 
   /**
    * @returns a writable reference to the parameter value.
    */
-  MooseArray<T> & set() { return _value; }
+  MooseArray<MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> & set()
+  {
+    return _value;
+  }
 
   /**
    * String identifying the type of parameter stored.
@@ -134,12 +141,12 @@ public:
   /**
    * Get element i out of the array as a writeable reference.
    */
-  T & operator[](const unsigned int i) { return currentData(i); }
+  T & operator[](const unsigned int i) { return _value[i].value(); }
 
   /**
    * Get element i out of the array as a ready-only reference.
    */
-  const T & operator[](const unsigned int i) const { return currentData(i); }
+  const T & operator[](const unsigned int i) const { return _value[i].value(); }
 
   /**
    *
@@ -183,9 +190,6 @@ public:
   friend PropertyValue *
   _init_helper(int size, PropertyValue * prop, const std::vector<P> * the_type);
 
-  virtual const T & currentData(const unsigned int i) const { return _value[i]; }
-  virtual T & currentData(const unsigned int i) { return _value[i]; }
-
 private:
   /// private copy constructor to avoid shallow copying of material properties
   MaterialProperty(const MaterialProperty<T> & /*src*/)
@@ -199,11 +203,9 @@ private:
     mooseError("Material properties must be assigned to references (missing '&')");
   }
 
+protected:
   /// Stored parameter value.
-  MooseArray<T> _value;
-
-  /// Stored current data member
-  mutable T _current_data;
+  MooseArray<MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> _value;
 };
 
 // ------------------------------------------------------------
@@ -267,86 +269,25 @@ template <typename T>
 class ADMaterialProperty : public MaterialProperty<T>
 {
 public:
-  ADMaterialProperty() : MaterialProperty<Real>() {}
-
-  virtual ~ADMaterialProperty() { _ad_value.release(); }
-
-  /**
-   * @returns a read-only reference to the parameter value.
-   */
-  const MooseArray<typename AD<T>::type> & get() const { return _ad_value; }
-  /**
-   * @returns a writable reference to the parameter value.
-   */
-  MooseArray<typename AD<T>::type> & set() { return _ad_value; }
+  ADMaterialProperty() : MaterialProperty<T>() {}
 
   /**
    * Get element i out of the array as a writeable reference.
    */
-  typename AD<T>::type & operator[](const unsigned int i) { return _ad_value[i]; }
+  typename MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
+  operator[](const unsigned int i)
+  {
+    return this->_value[i];
+  }
   /**
    * Get element i out of the array as a read-only reference.
    */
-  const typename AD<T>::type & operator[](const unsigned int i) const { return _ad_value[i]; }
-
-  virtual const T & currentData(const unsigned int i) const override
+  const typename MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
+  operator[](const unsigned int i) const
   {
-    return _ad_value[i].value();
+    return this->_value[i];
   }
-  virtual T & currentData(const unsigned int i) override { return _ad_value[i].value(); }
-
-  virtual void resize(int n) override;
-  virtual unsigned int size() const override { return _ad_value.size(); }
-  virtual void swap(PropertyValue * rhs) override;
-  virtual void
-  qpCopy(const unsigned int to_qp, PropertyValue * rhs, const unsigned int from_qp) override;
-  virtual void store(std::ostream & stream) override;
-  virtual void load(std::istream & stream) override;
-
-private:
-  MooseArray<typename AD<T>::type> _ad_value;
 };
-
-template <typename T>
-inline void
-ADMaterialProperty<T>::resize(int n)
-{
-  _ad_value.resize(n);
-}
-
-template <typename T>
-inline void
-ADMaterialProperty<T>::swap(PropertyValue * rhs)
-{
-  mooseAssert(rhs != NULL, "Assigning NULL?");
-  _ad_value.swap(cast_ptr<ADMaterialProperty<T> *>(rhs)->_ad_value);
-}
-
-template <typename T>
-inline void
-ADMaterialProperty<T>::qpCopy(const unsigned int to_qp,
-                              PropertyValue * rhs,
-                              const unsigned int from_qp)
-{
-  mooseAssert(rhs != NULL, "Assigning NULL?");
-  _ad_value[to_qp] = cast_ptr<const ADMaterialProperty<T> *>(rhs)->_ad_value[from_qp];
-}
-
-template <typename T>
-inline void
-ADMaterialProperty<T>::store(std::ostream & stream)
-{
-  for (unsigned int i = 0; i < size(); i++)
-    storeHelper(stream, _ad_value[i], NULL);
-}
-
-template <typename T>
-inline void
-ADMaterialProperty<T>::load(std::istream & stream)
-{
-  for (unsigned int i = 0; i < size(); i++)
-    loadHelper(stream, _ad_value[i], NULL);
-}
 
 /**
  * Container for storing material properties
@@ -416,25 +357,29 @@ PropertyValue *
 _init_helper(int size, PropertyValue * /*prop*/, const P *)
 {
   MaterialProperty<P> * copy = new MaterialProperty<P>;
-  copy->_value.resize(size, P{});
+  copy->_value.resize(
+      size, MetaPhysicL::DualNumber<P, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, P>>{});
   return copy;
 }
 
-// Vector Init Helper Function
-template <typename P>
-PropertyValue *
-_init_helper(int size, PropertyValue * /*prop*/, const std::vector<P> *)
-{
-  typedef MaterialProperty<std::vector<P>> PropType;
-  PropType * copy = new PropType;
-  copy->_value.resize(size, std::vector<P>{});
+  // // Vector Init Helper Function
+  // template <typename P>
+  // PropertyValue *
+  // _init_helper(int size, PropertyValue * /*prop*/, const std::vector<P> *)
+  // {
+  //   typedef MaterialProperty<std::vector<P>> PropType;
+  //   PropType * copy = new PropType;
+  //   copy->_value.resize(
+  //       size,
+  //       std::vector<MetaPhysicL::DualNumber<P, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM,
+  //       P>>>{});
 
-  // We don't know the size of the underlying vector at each
-  // quadrature point, the user will be responsible for resizing it
-  // and filling in the entries...
+  //   // We don't know the size of the underlying vector at each
+  //   // quadrature point, the user will be responsible for resizing it
+  //   // and filling in the entries...
 
-  // Return the copy we allocated
-  return copy;
-}
+  //   // Return the copy we allocated
+  //   return copy;
+  // }
 
 #endif

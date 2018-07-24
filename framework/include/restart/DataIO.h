@@ -22,6 +22,8 @@
 #ifdef LIBMESH_HAVE_CXX11_TYPE_TRAITS
 #include <type_traits>
 #endif
+#include "metaphysicl/dualnumber.h"
+#include "metaphysicl/numberarray.h"
 
 // C++ includes
 #include <string>
@@ -310,11 +312,21 @@ dataStore(std::ostream & stream, HashMap<T, U> & m, void * context)
   }
 }
 
+template <typename T>
+inline void
+dataStore(std::ostream & stream,
+          MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
+          void * context)
+{
+  dataStore(stream, dn.value(), context);
+
+  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
+    dataStore(stream, dn.derivatives()[i], context);
+}
+
 // Specializations (defined in .C)
 template <>
 void dataStore(std::ostream & stream, Real & v, void * /*context*/);
-template <>
-void dataStore(std::ostream & stream, ADReal & v, void * /*context*/);
 template <>
 void dataStore(std::ostream & stream, std::string & v, void * /*context*/);
 template <>
@@ -488,6 +500,18 @@ dataLoad(std::istream & stream, HashMap<T, U> & m, void * context)
     U & value = m[key];
     loadHelper(stream, value, context);
   }
+}
+
+template <typename T>
+inline void
+dataLoad(std::ostream & stream,
+         MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
+         void * context)
+{
+  dataLoad(stream, dn.value(), context);
+
+  for (auto & derivative : dn.derivatives())
+    dataLoad(stream, derivative, context);
 }
 
 // Specializations (defined in .C)
