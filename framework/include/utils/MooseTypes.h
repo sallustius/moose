@@ -11,6 +11,7 @@
 #define MOOSETYPES_H
 
 #include "Moose.h"
+#include "MooseADTypes.h"
 
 #include "libmesh/libmesh.h"
 #include "libmesh/id_types.h"
@@ -22,10 +23,6 @@
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
 #include "libmesh/type_n_tensor.h"
-
-// MetaPhysicL
-#include "metaphysicl/dualnumber.h"
-#include "metaphysicl/numberarray.h"
 
 // BOOST include
 #include "bitmask_operators.h"
@@ -94,198 +91,6 @@ typedef unsigned int TagID;
 
 typedef StoredRange<std::vector<dof_id_type>::iterator, dof_id_type> NodeIdRange;
 typedef StoredRange<std::vector<const Elem *>::iterator, const Elem *> ConstElemPointerRange;
-
-// The 100 here is for how many DoFs there are per element.
-#define AD_MAX_DOFS_PER_ELEM 100
-typedef MetaPhysicL::DualNumber<double, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, double>>
-    ADReal;
-
-template <typename T1, typename T2>
-auto operator*(const VectorValue<T1> & vec, const T2 & scalar) -> VectorValue<
-    typename MetaPhysicL::boostcopy::
-        enable_if_c<std::is_same<decltype(vec(0) * scalar), ADReal>::value, ADReal>::type>
-{
-  return {vec(0) * scalar, vec(1) * scalar, vec(2) * scalar};
-}
-
-template <typename T1, typename T2>
-auto operator*(const T2 & scalar, const VectorValue<T1> & vec) -> VectorValue<
-    typename MetaPhysicL::boostcopy::
-        enable_if_c<std::is_same<decltype(vec(0) * scalar), ADReal>::value, ADReal>::type>
-{
-  return {vec(0) * scalar, vec(1) * scalar, vec(2) * scalar};
-}
-
-namespace MetaPhysicL
-{
-template <typename T>
-struct PlusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                VectorValue<T>,
-                true>
-{
-  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
-};
-template <typename T>
-struct PlusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                VectorValue<T>,
-                false>
-{
-  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
-};
-template <typename T>
-struct PlusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                true>
-{
-  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
-};
-template <typename T>
-struct PlusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                false>
-{
-  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
-};
-
-template <typename T>
-struct MinusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                 VectorValue<T>,
-                 true>
-{
-  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
-};
-template <typename T>
-struct MinusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                 VectorValue<T>,
-                 false>
-{
-  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
-};
-template <typename T>
-struct MinusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                 DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                 true>
-{
-  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
-};
-template <typename T>
-struct MinusType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                 DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                 false>
-{
-  typedef DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>> supertype;
-};
-
-template <typename T>
-struct MultipliesType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                      VectorValue<T>,
-                      true>
-{
-  typedef DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> supertype;
-};
-template <typename T>
-struct MultipliesType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                      VectorValue<T>,
-                      false>
-{
-  typedef DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> supertype;
-};
-template <typename T>
-struct MultipliesType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                      DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                      true>
-{
-  typedef DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> supertype;
-};
-template <typename T>
-struct MultipliesType<DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                      DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>,
-                      false>
-{
-  typedef DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> supertype;
-};
-}
-
-// template <typename MatTemplateType, typename ScalarType, template MatType>
-//     > auto operator*(const typename MatType<MatTemplateType> & mat, const ScalarType & scalar)
-//           -> MatType<decltype(mat(0, 0) * scalar)>
-// {
-//   MatType<decltype(mat(0, 0) * scalar)> matrix{mat(0, 0) * scalar,
-//                                                mat(0, 1) * scalar,
-//                                                mat(0, 2) * scalar,
-//                                                mat(1, 0) * scalar,
-//                                                mat(1, 1) * scalar,
-//                                                mat(1, 2) * scalar,
-//                                                mat(2, 0) * scalar,
-//                                                mat(2, 1) * scalar,
-//                                                mat(2, 2) * scalar};
-//   return matrix;
-// }
-
-// template <typename T1,
-//           typename T2,
-//           typename MetaPhysicL::boostcopy::enable_if_c<MetaPhysicL::ScalarTraits<T2>::value,
-//                                                        int>::type = 0>
-// auto operator*(const T2 & scalar, const TensorValue<T1> & mat)
-//     -> TensorValue<decltype(mat(0, 0) * scalar)>
-// {
-//   return {mat(0, 0) * scalar,
-//           mat(0, 1) * scalar,
-//           mat(0, 2) * scalar,
-//           mat(1, 0) * scalar,
-//           mat(1, 1) * scalar,
-//           mat(1, 2) * scalar,
-//           mat(2, 0) * scalar,
-//           mat(2, 1) * scalar,
-//           mat(2, 2) * scalar};
-// }
-
-// template <typename T1,
-//           typename T2,
-//           typename MetaPhysicL::boostcopy::enable_if_c<MetaPhysicL::ScalarTraits<T2>::value,
-//                                                        int>::type = 0>
-// auto operator*(const TensorValue<T1> & mat, const T2 & scalar)
-//     -> TensorValue<decltype(mat(0, 0) * scalar)>
-// {
-
-//   return {mat(0, 0) * scalar,
-//           mat(0, 1) * scalar,
-//           mat(0, 2) * scalar,
-//           mat(1, 0) * scalar,
-//           mat(1, 1) * scalar,
-//           mat(1, 2) * scalar,
-//           mat(2, 0) * scalar,
-//           mat(2, 1) * scalar,
-//           mat(2, 2) * scalar};
-// }
-
-// template <typename T1,
-//           typename T2,
-//           typename MetaPhysicL::boostcopy::enable_if_c<MetaPhysicL::ScalarTraits<T2>::value,
-//                                                        int>::type = 0>
-// auto operator*(const T2 & scalar, const TensorValue<T1> & mat)
-//     -> TensorValue<decltype(mat(0, 0) * scalar)>
-// {
-//   return {mat(0, 0) * scalar,
-//           mat(0, 1) * scalar,
-//           mat(0, 2) * scalar,
-//           mat(1, 0) * scalar,
-//           mat(1, 1) * scalar,
-//           mat(1, 2) * scalar,
-//           mat(2, 0) * scalar,
-//           mat(2, 1) * scalar,
-//           mat(2, 2) * scalar};
-// }
-
-typedef VectorValue<ADReal> ADRealVectorValue;
-typedef ADRealVectorValue ADRealGradient;
-
-typedef TensorValue<ADReal> ADRealTensorValue;
-typedef ADRealTensorValue ADRealTensor;
-
-typedef MooseArray<ADReal> ADVariableValue;
-typedef MooseArray<ADRealGradient> ADVariableGradient;
-typedef MooseArray<ADRealTensor> ADVariableSecond;
 
 template <typename OutputType>
 struct OutputTools
