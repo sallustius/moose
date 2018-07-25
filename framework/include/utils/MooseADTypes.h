@@ -14,6 +14,9 @@ class MooseArray;
 #define AD_MAX_DOFS_PER_ELEM 100
 using MetaPhysicL::DualNumber;
 using MetaPhysicL::NumberArray;
+using libMesh::Real;
+using libMesh::TensorValue;
+using libMesh::VectorValue;
 
 template <typename T>
 using ScalarDN = DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>>;
