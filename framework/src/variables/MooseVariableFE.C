@@ -1059,7 +1059,11 @@ MooseVariableFE<Real>::computeAD(const unsigned int & num_dofs, const unsigned i
       _ad_grad_u[qp] = 0;
 
     if (_need_ad_second_u)
-      _ad_second_u[qp] = 0;
+    {
+      TensorValue<Real> value{};
+      NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<Real>> derivatives{};
+      _ad_second_u[qp] = TensorDN<Real>(value, derivatives);
+    }
   }
 
   for (unsigned int i = 0; i < num_dofs; i++)
@@ -1078,11 +1082,10 @@ MooseVariableFE<Real>::computeAD(const unsigned int & num_dofs, const unsigned i
       _ad_u[qp] += _ad_dofs[i] * _phi[i][qp];
 
       if (_need_ad_grad_u)
-        _ad_grad_u[qp].add_scaled(_grad_phi[i][qp], _ad_dofs[i]); // Note: += does NOT work here!
+        _ad_grad_u[qp] += _ad_dofs[i] * _grad_phi[i][qp]; // Note: += does NOT work here!
 
       if (_need_ad_second_u)
-        _ad_second_u[qp].add_scaled((*_second_phi)[i][qp],
-                                    _ad_dofs[i]); // Note: += does NOT work here!
+        _ad_second_u[qp] += _ad_dofs[i] * (*_second_phi)[i][qp];
     }
   }
 }

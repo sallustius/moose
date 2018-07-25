@@ -27,5 +27,5 @@ ADCoupledConvection::ADCoupledConvection(const InputParameters & parameters)
 ADReal
 ADCoupledConvection::computeQpResidual()
 {
-  return _test[_i][_qp] * (_velocity_vector[_qp] * _grad_u[_qp]);
+  return _test[_i][_qp] * (operator*<Real>(_velocity_vector[_qp], _grad_u[_qp]));
 }
