@@ -47,10 +47,15 @@ ADMatDiffusion::computeQpResidual()
   else if (_prop_to_use == "AdReg")
     return operator*<Real>(_ad_diff_from_regular_prop[_qp] * _grad_test[_i][_qp], _grad_u[_qp]);
   else if (_prop_to_use == "RegAd")
-    return operator*<Real>(_regular_diff_from_ad_prop[_qp] * _grad_test[_i][_qp], _grad_u[_qp]);
+  {
+    auto inter = _regular_diff_from_ad_prop[_qp] * _grad_test[_i][_qp];
+    return operator*<Real>(inter, _grad_u[_qp]);
+  }
   else if (_prop_to_use == "RegReg")
-    return operator*<Real>(_regular_diff_from_regular_prop[_qp] * _grad_test[_i][_qp],
-                           _grad_u[_qp]);
+  {
+    auto inter = _regular_diff_from_regular_prop[_qp] * _grad_test[_i][_qp];
+    return operator*<Real>(inter, _grad_u[_qp]);
+  }
   else
     mooseError("Oops");
 }
