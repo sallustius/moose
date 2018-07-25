@@ -38,18 +38,18 @@ ADMatTypes::computeQpProperties()
   _scalar_ad_prop[_qp] = _scalar_ad_prop[_qp] * _scalar_ad_prop[_qp];
 
   _vector_ad_prop[_qp] = _scalar_ad_prop[_qp] * RealVectorValue(1., 1., 1.);
-  _scalar_ad_prop[_qp] = _vector_ad_prop[_qp] * _vector_ad_prop[_qp];
-  _vector_ad_prop[_qp] *= 2.;
-  _vector_ad_prop[_qp] = 2. * _vector_ad_prop[_qp] + _vector_ad_prop[_qp] * 2.;
+  _scalar_ad_prop[_qp] = operator*<Real>(_vector_ad_prop[_qp], _vector_ad_prop[_qp]);
+  // _vector_ad_prop[_qp] *= 2.;
+  // _vector_ad_prop[_qp] = 2. * _vector_ad_prop[_qp] + _vector_ad_prop[_qp] * 2.;
 
-  _tensor_ad_prop[_qp] = _scalar_ad_prop[_qp] * RealTensorValue(1., 1., 1., 1., 1., 1., 1., 1., 1.);
-  _vector_ad_prop[_qp] = _tensor_ad_prop[_qp] * _vector_ad_prop[_qp];
-  _tensor_ad_prop[_qp] *= 2.;
-  _tensor_ad_prop[_qp] *= _tensor_ad_prop[_qp];
-  _tensor_ad_prop[_qp] = _tensor_ad_prop[_qp] * _tensor_ad_prop[_qp];
-  _tensor_ad_prop[_qp] = 2. * _tensor_ad_prop[_qp] + _tensor_ad_prop[_qp] * 2.;
+  // _tensor_ad_prop[_qp] = _scalar_ad_prop[_qp] * RealTensorValue(1., 1., 1., 1., 1., 1., 1.,
+  // 1., 1.); _vector_ad_prop[_qp] = _tensor_ad_prop[_qp] * _vector_ad_prop[_qp];
+  // _tensor_ad_prop[_qp] *= 2.;
+  // _tensor_ad_prop[_qp] *= _tensor_ad_prop[_qp];
+  // _tensor_ad_prop[_qp] = _tensor_ad_prop[_qp] * _tensor_ad_prop[_qp];
+  // _tensor_ad_prop[_qp] = 2. * _tensor_ad_prop[_qp] + _tensor_ad_prop[_qp] * 2.;
 
-  _scalar_reg_prop[_qp] = _scalar_ad_prop[_qp];
-  _vector_reg_prop[_qp] = _vector_ad_prop[_qp];
-  _tensor_reg_prop[_qp] = _tensor_ad_prop[_qp];
+  // _scalar_reg_prop[_qp] = _scalar_ad_prop[_qp];
+  // _vector_reg_prop[_qp] = _vector_ad_prop[_qp];
+  // _tensor_reg_prop[_qp] = _tensor_ad_prop[_qp];
 }
