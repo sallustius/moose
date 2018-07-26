@@ -3,6 +3,7 @@
 
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
+#include "libmesh/compare_types.h"
 
 #include "metaphysicl/dualnumber.h"
 #include "metaphysicl/numberarray.h"
@@ -16,143 +17,206 @@ using MetaPhysicL::DualNumber;
 using MetaPhysicL::NumberArray;
 using libMesh::Real;
 using libMesh::TensorValue;
+using libMesh::TypeTensor;
 using libMesh::VectorValue;
+using libMesh::TypeVector;
+using libMesh::boostcopy::enable_if_c;
 
 template <typename T>
 using ScalarDN = DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>>;
+template <typename T, template <class> class W>
+using TemplateDN = DualNumber<W<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, W<T>>>;
 template <typename T>
-using VectorDN = DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>;
+using VectorDN = DualNumber<TypeVector<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>>>;
 template <typename T>
-using TensorDN = DualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
+using TensorDN = DualNumber<TypeTensor<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>>>;
+template <typename T>
+using VectorValueDN = DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>;
+template <typename T>
+using TensorValueDN = DualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
 
 typedef ScalarDN<Real> ADReal;
 
-template <typename T>
-VectorDN<T> operator*(const VectorDN<T> & vec, const T & scalar)
+template <template <typename> class W, typename T>
+struct VectorTraits
 {
-  VectorValue<T> value = vec.value() * scalar;
-  NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>> derivatives;
+  static const bool value = false;
+};
+
+template <typename T>
+struct VectorTraits<TypeVector, T>
+{
+  static const bool value = true;
+};
+
+template <typename T>
+struct VectorTraits<VectorValue, T>
+{
+  static const bool value = true;
+};
+
+template <template <typename> class W, typename T>
+struct TensorTraits
+{
+  static const bool value = false;
+};
+
+template <typename T>
+struct TensorTraits<TypeTensor, T>
+{
+  static const bool value = true;
+};
+
+template <typename T>
+struct TensorTraits<TensorValue, T>
+{
+  static const bool value = true;
+};
+
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type * = nullptr>
+VectorDN<T> operator*(const TemplateDN<T, W> & vec, const T & scalar)
+{
+  TypeVector<T> value = vec.value() * scalar;
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = vec.derivatives()[i] * scalar;
   return {value, derivatives};
 }
 
-template <typename T>
-VectorDN<T> operator*(const T & scalar, const VectorDN<T> & vec)
+template <template <typename> class W, typename T>
+VectorDN<T>
+operator*(const T & scalar,
+          const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & vec)
 {
-  VectorValue<T> value = vec.value() * scalar;
-  NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>> derivatives;
+  TypeVector<T> value = vec.value() * scalar;
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = vec.derivatives()[i] * scalar;
   return {value, derivatives};
 }
 
-template <typename T>
-VectorDN<T> operator*(const VectorValue<T> & vec, const ScalarDN<T> & scalar)
+template <template <typename> class W, typename T>
+VectorDN<T> operator*(const TypeVector<T> & vec, const ScalarDN<T> & scalar)
 {
-  VectorValue<T> value = vec * scalar.value();
-  NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>> derivatives;
+  TypeVector<T> value = vec * scalar.value();
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = vec * scalar.derivatives()[i];
   return {value, derivatives};
 }
 
-template <typename T>
-VectorDN<T> operator*(const ScalarDN<T> & scalar, const VectorValue<T> & vec)
+template <template <typename> class W, typename T>
+VectorDN<T> operator*(const ScalarDN<T> & scalar, const TypeVector<T> & vec)
 {
-  VectorValue<T> value = vec * scalar.value();
-  NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>> derivatives;
+  TypeVector<T> value = vec * scalar.value();
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = vec * scalar.derivatives()[i];
   return {value, derivatives};
 }
 
-template <typename T>
-VectorDN<T> operator*(const VectorDN<T> & vec, const ScalarDN<T> & scalar)
+template <template <typename> class W, typename T>
+VectorDN<T>
+operator*(const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & vec,
+          const ScalarDN<T> & scalar)
 {
-  VectorValue<T> value = vec.value() * scalar.value();
-  NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>> derivatives;
+  TypeVector<T> value = vec.value() * scalar.value();
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = vec.value() * scalar.derivatives()[i] + vec.derivatives()[i] * scalar.value();
   return {value, derivatives};
 }
 
-template <typename T>
-VectorDN<T> operator*(const ScalarDN<T> & scalar, const VectorDN<T> & vec)
+template <template <typename> class W, typename T>
+VectorDN<T>
+operator*(const ScalarDN<T> & scalar,
+          const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & vec)
 {
-  VectorValue<T> value = vec.value() * scalar.value();
-  NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>> derivatives;
+  TypeVector<T> value = vec.value() * scalar.value();
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = vec.value() * scalar.derivatives()[i] + vec.derivatives()[i] * scalar.value();
   return {value, derivatives};
 }
 
-template <typename T>
-TensorDN<T> operator*(const TensorDN<T> & tensor, const T & scalar)
+template <template <typename> class W, typename T>
+TensorDN<T>
+operator*(const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>>::type & tensor,
+          const T & scalar)
 {
-  TensorValue<T> value = tensor.value() * scalar;
-  NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>> derivatives;
+  TypeTensor<T> value = tensor.value() * scalar;
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = tensor.derivatives()[i] * scalar;
   return {value, derivatives};
 }
 
-template <typename T>
-TensorDN<T> operator*(const T & scalar, const TensorDN<T> & tensor)
+template <template <typename> class W, typename T>
+TensorDN<T>
+operator*(const T & scalar,
+          const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>>::type & tensor)
 {
-  TensorValue<T> value = tensor.value() * scalar;
-  NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>> derivatives;
+  TypeTensor<T> value = tensor.value() * scalar;
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = tensor.derivatives()[i] * scalar;
   return {value, derivatives};
 }
 
-template <typename T>
-TensorDN<T> operator*(const TensorValue<T> & tensor, const ScalarDN<T> & scalar)
+template <template <typename> class W, typename T>
+TensorDN<T> operator*(const TypeTensor<T> & tensor, const ScalarDN<T> & scalar)
 {
-  TensorValue<T> value = tensor * scalar.value();
-  NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>> derivatives;
+  TypeTensor<T> value = tensor * scalar.value();
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = tensor * scalar.derivatives()[i];
   return {value, derivatives};
 }
 
-template <typename T>
-TensorDN<T> operator*(const ScalarDN<T> & scalar, const TensorValue<T> & tensor)
+template <template <typename> class W, typename T>
+TensorDN<T> operator*(const ScalarDN<T> & scalar, const TypeTensor<T> & tensor)
 {
-  TensorValue<T> value = tensor * scalar.value();
-  NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>> derivatives;
+  TypeTensor<T> value = tensor * scalar.value();
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] = tensor * scalar.derivatives()[i];
   return {value, derivatives};
 }
 
-template <typename T>
-TensorDN<T> operator*(const TensorDN<T> & tensor, const ScalarDN<T> & scalar)
+template <template <typename> class W, typename T>
+TensorDN<T>
+operator*(const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>>::type & tensor,
+          const ScalarDN<T> & scalar)
 {
-  TensorValue<T> value = tensor.value() * scalar.value();
-  NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>> derivatives;
+  TypeTensor<T> value = tensor.value() * scalar.value();
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] =
         tensor.value() * scalar.derivatives()[i] + tensor.derivatives()[i] * scalar.value();
   return {value, derivatives};
 }
 
-template <typename T>
-TensorDN<T> operator*(const ScalarDN<T> & scalar, const TensorDN<T> & tensor)
+template <template <typename> class W, typename T>
+TensorDN<T>
+operator*(const ScalarDN<T> & scalar,
+          const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>>::type & tensor)
 {
-  TensorValue<T> value = tensor.value() * scalar.value();
-  NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>> derivatives;
+  TypeTensor<T> value = tensor.value() * scalar.value();
+  NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
     derivatives[i] =
         tensor.value() * scalar.derivatives()[i] + tensor.derivatives()[i] * scalar.value();
   return {value, derivatives};
 }
 
-template <typename T>
-ScalarDN<T> operator*(const VectorDN<T> & dn, const VectorValue<T> & vec2)
+template <template <typename> class W, typename T>
+ScalarDN<T>
+operator*(const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & dn,
+          const TypeVector<T> & vec2)
 {
-  const VectorValue<T> & vec1 = dn.value();
+  const TypeVector<T> & vec1 = dn.value();
   T value = vec1 * vec2;
   NumberArray<AD_MAX_DOFS_PER_ELEM, T> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
@@ -160,10 +224,12 @@ ScalarDN<T> operator*(const VectorDN<T> & dn, const VectorValue<T> & vec2)
   return {value, derivatives};
 }
 
-template <typename T>
-ScalarDN<T> operator*(const VectorValue<T> & vec2, const VectorDN<T> & dn)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type * = nullptr>
+ScalarDN<T> operator*(const TypeVector<T> & vec2, const TemplateDN<T, W> & dn)
 {
-  const VectorValue<T> & vec1 = dn.value();
+  const TypeVector<T> & vec1 = dn.value();
   T value = vec1 * vec2;
   NumberArray<AD_MAX_DOFS_PER_ELEM, T> derivatives;
   for (decltype(AD_MAX_DOFS_PER_ELEM) i = 0; i < AD_MAX_DOFS_PER_ELEM; ++i)
@@ -171,8 +237,10 @@ ScalarDN<T> operator*(const VectorValue<T> & vec2, const VectorDN<T> & dn)
   return {value, derivatives};
 }
 
-template <typename T>
-ScalarDN<T> operator*(const VectorDN<T> & dn1, const VectorDN<T> & dn2)
+template <template <typename> class W, typename T>
+ScalarDN<T>
+operator*(const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & dn1,
+          const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & dn2)
 {
   T value = dn1.value() * dn2.value();
   NumberArray<AD_MAX_DOFS_PER_ELEM, T> derivatives;
