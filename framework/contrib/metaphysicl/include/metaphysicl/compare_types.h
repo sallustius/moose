@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------bl-
 //--------------------------------------------------------------------------
-// 
+//
 // MetaPhysicL - A metaprogramming library for physics calculations
 //
 // Copyright (C) 2013 The PECOS Development Team
@@ -31,7 +31,8 @@
 // System includes
 #include <complex>
 
-namespace MetaPhysicL {
+namespace MetaPhysicL
+{
 
 // Compile-time assertions:
 // Use of ctassert<E>, where E is a constant expression,
@@ -39,23 +40,27 @@ namespace MetaPhysicL {
 // a nonzero integral value.
 
 template <bool t>
-struct ctassert {
-  enum { N = 1 - 2 * int(!t) };
-    // 1 if t is true, -1 if t is false.
+struct ctassert
+{
+  enum
+  {
+    N = 1 - 2 * int(!t)
+  };
+  // 1 if t is true, -1 if t is false.
   static char A[N];
 
   static void apply() {}
 };
 
-template <typename T1=void,
-          typename T2=void,
-          typename T3=void,
-          typename T4=void,
-          typename T5=void,
-          typename T6=void,
-          typename T7=void,
-          typename T8=void,
-          typename T9=void>
+template <typename T1 = void,
+          typename T2 = void,
+          typename T3 = void,
+          typename T4 = void,
+          typename T5 = void,
+          typename T6 = void,
+          typename T7 = void,
+          typename T8 = void,
+          typename T9 = void>
 struct ctprint
 {
   typedef typename T9::compiler_should_print_types force_an_error;
@@ -74,49 +79,75 @@ char ctassert<t>::A[N];
 
 // Copy of boost's enable_if_c
 
-namespace boostcopy {
-  template <bool B, class T = void>
-    struct enable_if_c {
-      typedef T type;
-    };
+namespace boostcopy
+{
+template <bool B, class T = void>
+struct enable_if_c
+{
+  typedef T type;
+};
 
-  template <class T>
-    struct enable_if_c<false, T> {};
+template <class T>
+struct enable_if_c<false, T>
+{
+};
 
-  template <class Cond, class T = void>
-    struct enable_if : public enable_if_c<Cond::value, T> {};
+template <class Cond, class T = void>
+struct enable_if : public enable_if_c<Cond::value, T>
+{
+};
 
-  template <class B, class T>
-    struct enable_if_class {
-      typedef T type;
-    };
+template <bool B, class T>
+struct lazy_enable_if_c
+{
+  typedef typename T::supertype type;
+};
 
-  template <class T>
-    struct remove_const {
-      typedef T type;
-    };
+template <class T>
+struct lazy_enable_if_c<false, T>
+{
+};
 
-  template <class T>
-    struct remove_const<const T> {
-      typedef T type;
-    };
+template <class Cond, class T>
+struct lazy_enable_if : public lazy_enable_if_c<Cond::value, T>
+{
+};
 
-  template <class T>
-    struct remove_reference {
-      typedef T type;
-    };
+template <class B, class T>
+struct enable_if_class
+{
+  typedef T type;
+};
 
-  template <class T>
-    struct remove_reference<T&> {
-      typedef T type;
-    };
+template <class T>
+struct remove_const
+{
+  typedef T type;
+};
+
+template <class T>
+struct remove_const<const T>
+{
+  typedef T type;
+};
+
+template <class T>
+struct remove_reference
+{
+  typedef T type;
+};
+
+template <class T>
+struct remove_reference<T &>
+{
+  typedef T type;
+};
 }
-
 
 //
 // Should we store a value or a reference, in ``pass-through''
 // expression cases where we have the option?
-// 
+//
 // Copying underlying storage unnecessarily is wasteful in the best
 // case, and leads to segfaults if we copy into a temporary that gets
 // just referenced in outer expressions.
@@ -129,36 +160,42 @@ namespace boostcopy {
 // to reference, and default everything else to copy
 //
 
-template <typename T, typename Enable=void>
-struct copy_or_reference {
+template <typename T, typename Enable = void>
+struct copy_or_reference
+{
   typedef typename boostcopy::remove_reference<T>::type type;
 
   static const bool copy = true;
 };
 
-
-
 // We can pass commas for template arguments through one level of
 // macro expansion by "escaping" them this way:
 #define MacroComma ,
 
-
 // List of scalar and builtin classes, useful for disambiguation
-template <typename T, typename Enable=void>
-struct ScalarTraits {
-      static const bool value = false;
+template <typename T, typename Enable = void>
+struct ScalarTraits
+{
+  static const bool value = false;
 };
 
-template <typename T, typename Enable=void>
-struct BuiltinTraits {
-      static const bool value = false;
+template <typename T, typename Enable = void>
+struct BuiltinTraits
+{
+  static const bool value = false;
 };
 
-#define ScalarBuiltin_true(type) \
-template<> \
-struct ScalarTraits<type> { static const bool value = true; }; \
-template<> \
-struct BuiltinTraits<type> { static const bool value = true; }
+#define ScalarBuiltin_true(type)                                                                   \
+  template <>                                                                                      \
+  struct ScalarTraits<type>                                                                        \
+  {                                                                                                \
+    static const bool value = true;                                                                \
+  };                                                                                               \
+  template <>                                                                                      \
+  struct BuiltinTraits<type>                                                                       \
+  {                                                                                                \
+    static const bool value = true;                                                                \
+  }
 
 ScalarBuiltin_true(bool);
 ScalarBuiltin_true(char);
@@ -173,13 +210,17 @@ ScalarBuiltin_true(float);
 ScalarBuiltin_true(double);
 ScalarBuiltin_true(long double);
 
-template<typename T>
-struct ScalarTraits<std::complex<T> > { static const bool value = ScalarTraits<T>::value; };
+template <typename T>
+struct ScalarTraits<std::complex<T>>
+{
+  static const bool value = ScalarTraits<T>::value;
+};
 
-template<typename T>
-struct BuiltinTraits<std::complex<T> > { static const bool value = BuiltinTraits<T>::value; };
-
-
+template <typename T>
+struct BuiltinTraits<std::complex<T>>
+{
+  static const bool value = BuiltinTraits<T>::value;
+};
 
 // Operators using different but compatible types need a return value
 // based on whichever type the other can be upconverted into.  For
@@ -188,119 +229,136 @@ struct BuiltinTraits<std::complex<T> > { static const bool value = BuiltinTraits
 // general, an operation using types S and T should return a value
 // based on CompareTypes<S,T>::supertype
 
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct CompareTypes {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct CompareTypes
+{
 
-// All specializations need to define supertype.  But compilers give
-// better error messages for forgot-to-specialize-CompareTypes bugs if
-// we leave supertype undefined in the unspecialized template
-// definition.
+  // All specializations need to define supertype.  But compilers give
+  // better error messages for forgot-to-specialize-CompareTypes bugs if
+  // we leave supertype undefined in the unspecialized template
+  // definition.
 
-// typedef void supertype;
+  // typedef void supertype;
 
-//   typedef S nosupertype;
+  //   typedef S nosupertype;
 };
-
 
 // A tricky SFINAE idiom for testing whether a particular CompareTypes
 // combination has been properly specialized:
 
-template<typename T>
+template <typename T>
 struct DefinesSupertype
 {
 private:
-    typedef char                      yes;
-    typedef struct { char array[2]; } no;
+  typedef char yes;
+  typedef struct
+  {
+    char array[2];
+  } no;
 
-    template<typename C> static yes test(typename C::supertype*);
-    template<typename C> static no  test(...);
+  template <typename C>
+  static yes test(typename C::supertype *);
+  template <typename C>
+  static no test(...);
+
 public:
-    static const bool value = (sizeof(test<T>(0)) == sizeof(yes));
+  static const bool value = (sizeof(test<T>(0)) == sizeof(yes));
 };
-
 
 // PlusType, MinusType, MultipliesType, and DividesType are usually just the
 // same as CompareTypes, but user types may want to specialize further for
 // efficiency.
 // FIXME: AndType and OrType should probably be boolean types where possible.
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct PlusType {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct PlusType
+{
 };
 
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct MinusType {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct MinusType
+{
 };
 
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct MultipliesType {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct MultipliesType
+{
 };
 
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct DividesType {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct DividesType
+{
 };
 
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct AndType {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct AndType
+{
 };
 
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct OrType {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct OrType
+{
 };
 
 // DotType, OuterProductType, and SumType are only defined for vector
 // and tensor objects.
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct DotType {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct DotType
+{
 };
 
-template<typename S, typename T, bool reverseorder=false, typename Enable=void>
-struct OuterProductType {
+template <typename S, typename T, bool reverseorder = false, typename Enable = void>
+struct OuterProductType
+{
 };
 
-template<typename S>
-struct SumType {
+template <typename S>
+struct SumType
+{
 };
-
 
 // typenames may need a MacroComma...
-#define CompareTypes_default_Type(functor, typenames, typename1, typename2, enabletype) \
-template<typenames bool reverseorder> \
-struct functor##Type<typename1, typename2, reverseorder, enabletype> \
-{ \
-   typedef typename CompareTypes<typename1,typename2,reverseorder>::supertype supertype; \
-}
+#define CompareTypes_default_Type(functor, typenames, typename1, typename2, enabletype)            \
+  template <typenames bool reverseorder>                                                           \
+  struct functor##Type<typename1, typename2, reverseorder, enabletype>                             \
+  {                                                                                                \
+    typedef typename CompareTypes<typename1, typename2, reverseorder>::supertype supertype;        \
+  }
 
-#define CompareTypes_default_Types(typenames,typename1,typename2, enabletype) \
-CompareTypes_default_Type(Plus,typenames,typename1,typename2, enabletype); \
-CompareTypes_default_Type(Minus,typenames,typename1,typename2, enabletype); \
-CompareTypes_default_Type(Multiplies,typenames,typename1,typename2, enabletype); \
-CompareTypes_default_Type(Divides,typenames,typename1,typename2, enabletype); \
-CompareTypes_default_Type(And,typenames,typename1,typename2, enabletype); \
-CompareTypes_default_Type(Or,typenames,typename1,typename2, enabletype) \
+#define CompareTypes_default_Types(typenames, typename1, typename2, enabletype)                    \
+  CompareTypes_default_Type(Plus, typenames, typename1, typename2, enabletype);                    \
+  CompareTypes_default_Type(Minus, typenames, typename1, typename2, enabletype);                   \
+  CompareTypes_default_Type(Multiplies, typenames, typename1, typename2, enabletype);              \
+  CompareTypes_default_Type(Divides, typenames, typename1, typename2, enabletype);                 \
+  CompareTypes_default_Type(And, typenames, typename1, typename2, enabletype);                     \
+  CompareTypes_default_Type(Or, typenames, typename1, typename2, enabletype)
 
-
-template<bool reverseorder, typename Enable>
-struct CompareTypes<void, void, reverseorder, Enable> {
+template <bool reverseorder, typename Enable>
+struct CompareTypes<void, void, reverseorder, Enable>
+{
   typedef void supertype;
 };
 
-template<typename T, bool reverseorder, typename Enable>
-struct CompareTypes<T, void, reverseorder, Enable> {
+template <typename T, bool reverseorder, typename Enable>
+struct CompareTypes<T, void, reverseorder, Enable>
+{
   typedef T supertype;
 };
 
-template<typename T, bool reverseorder, typename Enable>
-struct CompareTypes<T, T, reverseorder, Enable> {
+template <typename T, bool reverseorder, typename Enable>
+struct CompareTypes<T, T, reverseorder, Enable>
+{
   typedef T supertype;
 };
 
-template<typename T, bool reverseorder, typename Enable>
-struct CompareTypes<T, std::complex<T>, reverseorder, Enable> {
+template <typename T, bool reverseorder, typename Enable>
+struct CompareTypes<T, std::complex<T>, reverseorder, Enable>
+{
   typedef std::complex<T> supertype;
 };
 
-template<typename T, bool reverseorder, typename Enable>
-struct CompareTypes<std::complex<T>, T, reverseorder, Enable> {
+template <typename T, bool reverseorder, typename Enable>
+struct CompareTypes<std::complex<T>, T, reverseorder, Enable>
+{
   typedef std::complex<T> supertype;
 };
 
@@ -308,25 +366,25 @@ struct CompareTypes<std::complex<T>, T, reverseorder, Enable> {
 // thing on the net requires a bunch of Alexandrescu's code and doesn't work
 // with older compilers
 
-#define CompareTypes_super(a,b,super) \
-	template<bool reverseorder, typename Enable> \
-	struct CompareTypes<a, b, reverseorder, Enable> { \
-	  typedef super supertype; \
-	}; \
-        CompareTypes_default_Types(,a,b,void)
+#define CompareTypes_super(a, b, super)                                                            \
+  template <bool reverseorder, typename Enable>                                                    \
+  struct CompareTypes<a, b, reverseorder, Enable>                                                  \
+  {                                                                                                \
+    typedef super supertype;                                                                       \
+  };                                                                                               \
+  CompareTypes_default_Types(, a, b, void)
 
-#define CompareTypes_all(mysub,mysuper) \
-        CompareTypes_super(mysub, mysuper, mysuper); \
-        CompareTypes_super(mysuper, mysub, mysuper); \
-        CompareTypes_super(std::complex<mysub>, mysuper, std::complex<mysuper>); \
-        CompareTypes_super(mysuper, std::complex<mysub>, std::complex<mysuper>); \
-        CompareTypes_super(mysub, std::complex<mysuper>, std::complex<mysuper>); \
-        CompareTypes_super(std::complex<mysuper>, mysub, std::complex<mysuper>); \
-        CompareTypes_super(std::complex<mysub>, std::complex<mysuper>, std::complex<mysuper>); \
-        CompareTypes_super(std::complex<mysuper>, std::complex<mysub>, std::complex<mysuper>)
+#define CompareTypes_all(mysub, mysuper)                                                           \
+  CompareTypes_super(mysub, mysuper, mysuper);                                                     \
+  CompareTypes_super(mysuper, mysub, mysuper);                                                     \
+  CompareTypes_super(std::complex<mysub>, mysuper, std::complex<mysuper>);                         \
+  CompareTypes_super(mysuper, std::complex<mysub>, std::complex<mysuper>);                         \
+  CompareTypes_super(mysub, std::complex<mysuper>, std::complex<mysuper>);                         \
+  CompareTypes_super(std::complex<mysuper>, mysub, std::complex<mysuper>);                         \
+  CompareTypes_super(std::complex<mysub>, std::complex<mysuper>, std::complex<mysuper>);           \
+  CompareTypes_super(std::complex<mysuper>, std::complex<mysub>, std::complex<mysuper>)
 
-#define CompareTypes_single(mytype) \
-        CompareTypes_super(mytype, mytype, mytype)
+#define CompareTypes_single(mytype) CompareTypes_super(mytype, mytype, mytype)
 
 CompareTypes_single(unsigned char);
 CompareTypes_single(unsigned short);
@@ -398,58 +456,64 @@ struct CompareTypes<S, std::complex<T> > {
 #define CompareTypes_stripped(rawT1, rawT2) \
 template<typename T1, typename T2, bool reverseorder> \
 struct CompareTypes<rawT1, rawT2, reverseorder, \
-	            typename boostcopy::enable_if_c<DefinesSupertype<CompareTypes<T1,T2,reverseorder> >::value>::type> \
+              typename boostcopy::enable_if_c<DefinesSupertype<CompareTypes<T1,T2,reverseorder>
+>::value>::type> \
 { \
   typedef typename CompareTypes<T1,T2,reverseorder>::supertype supertype; \
 };
 */
 
-template <typename T1, typename T2, bool reverseorder, typename Enable=void>
-struct CompareTypesEnabler {};
+template <typename T1, typename T2, bool reverseorder, typename Enable = void>
+struct CompareTypesEnabler
+{
+};
 
 template <typename T1, typename T2, bool reverseorder>
-struct CompareTypesEnabler<T1,T2,reverseorder,
-  typename boostcopy::enable_if_c<
-    DefinesSupertype<CompareTypes<T1,T2,reverseorder> >::value
-  >::type>
+struct CompareTypesEnabler<T1,
+                           T2,
+                           reverseorder,
+                           typename boostcopy::enable_if_c<
+                               DefinesSupertype<CompareTypes<T1, T2, reverseorder>>::value>::type>
 {
   typedef void type;
 };
 
-#define CompareType_stripped(rawT1) \
-template<typename T1, bool reverseorder> \
-struct CompareTypes<rawT1, rawT1, reverseorder, \
-typename CompareTypesEnabler< \
-typename boostcopy::remove_const<typename boostcopy::remove_reference<rawT1>::type>::type, \
-typename boostcopy::remove_const<typename boostcopy::remove_reference<rawT1>::type>::type, \
-reverseorder>::type> \
-{ \
-  typedef typename CompareTypes<T1,T1,reverseorder>::supertype supertype; \
-};
+#define CompareType_stripped(rawT1)                                                                \
+  template <typename T1, bool reverseorder>                                                        \
+  struct CompareTypes<                                                                             \
+      rawT1,                                                                                       \
+      rawT1,                                                                                       \
+      reverseorder,                                                                                \
+      typename CompareTypesEnabler<typename boostcopy::remove_const<                               \
+                                       typename boostcopy::remove_reference<rawT1>::type>::type,   \
+                                   typename boostcopy::remove_const<                               \
+                                       typename boostcopy::remove_reference<rawT1>::type>::type,   \
+                                   reverseorder>::type>                                            \
+  {                                                                                                \
+    typedef typename CompareTypes<T1, T1, reverseorder>::supertype supertype;                      \
+  };
 
-#define CompareTypes_stripped(rawT1, rawT2) \
-template<typename T1, typename T2, bool reverseorder> \
-struct CompareTypes<rawT1, rawT2, reverseorder, \
-typename CompareTypesEnabler< \
-typename boostcopy::remove_const<typename boostcopy::remove_reference<rawT1>::type>::type, \
-typename boostcopy::remove_const<typename boostcopy::remove_reference<rawT2>::type>::type, \
-reverseorder>::type> \
-{ \
-  typedef typename CompareTypes<T1,T2,reverseorder>::supertype supertype; \
-};
+#define CompareTypes_stripped(rawT1, rawT2)                                                        \
+  template <typename T1, typename T2, bool reverseorder>                                           \
+  struct CompareTypes<                                                                             \
+      rawT1,                                                                                       \
+      rawT2,                                                                                       \
+      reverseorder,                                                                                \
+      typename CompareTypesEnabler<typename boostcopy::remove_const<                               \
+                                       typename boostcopy::remove_reference<rawT1>::type>::type,   \
+                                   typename boostcopy::remove_const<                               \
+                                       typename boostcopy::remove_reference<rawT2>::type>::type,   \
+                                   reverseorder>::type>                                            \
+  {                                                                                                \
+    typedef typename CompareTypes<T1, T2, reverseorder>::supertype supertype;                      \
+  };
 
-CompareTypes_stripped(const T1 ,       T2 )
-CompareTypes_stripped(      T1 , const T2 )
-CompareTypes_stripped(const T1 , const T2 )
-CompareTypes_stripped(const T1&,       T2 )
-CompareTypes_stripped(      T1 , const T2&)
-CompareTypes_stripped(const T1&, const T2&)
-CompareTypes_stripped(const T1 , const T2&)
-CompareTypes_stripped(const T1&, const T2 )
+CompareTypes_stripped(const T1, T2) CompareTypes_stripped(T1, const T2)
+    CompareTypes_stripped(const T1, const T2) CompareTypes_stripped(const T1 &, T2)
+        CompareTypes_stripped(T1, const T2 &) CompareTypes_stripped(const T1 &, const T2 &)
+            CompareTypes_stripped(const T1, const T2 &) CompareTypes_stripped(const T1 &, const T2)
 
-CompareType_stripped(const T1 )
-CompareType_stripped(const T1&)
-
+                CompareType_stripped(const T1) CompareType_stripped(const T1 &)
 
 // We can define CompareTypes template specializations with user types
 // asymmetrically, to assist in disambiguation of templated functions
@@ -458,22 +522,23 @@ CompareType_stripped(const T1&)
 // FIXME: this won't work yet for cases where CompareTypes depends on
 // reverseorder
 
-#define Symmetric_definition(templatename) \
-template<typename S, typename T, bool reverseorder=false, \
-	 bool Simple=DefinesSupertype<templatename<S,T> >::value> \
-struct Symmetric##templatename { \
-  typedef typename templatename<S,T,reverseorder>::supertype supertype; \
-}; \
- \
-template<typename S, typename T, bool reverseorder> \
-struct Symmetric##templatename<S, T, reverseorder, false> \
-{ \
-  typedef typename templatename<T,S,!reverseorder>::supertype supertype; \
-}
+#define Symmetric_definition(templatename)                                                         \
+  template <typename S,                                                                            \
+            typename T,                                                                            \
+            bool reverseorder = false,                                                             \
+            bool Simple = DefinesSupertype<templatename<S, T>>::value>                             \
+  struct Symmetric##templatename                                                                   \
+  {                                                                                                \
+    typedef typename templatename<S, T, reverseorder>::supertype supertype;                        \
+  };                                                                                               \
+                                                                                                   \
+  template <typename S, typename T, bool reverseorder>                                             \
+  struct Symmetric##templatename<S, T, reverseorder, false>                                        \
+  {                                                                                                \
+    typedef typename templatename<T, S, !reverseorder>::supertype supertype;                       \
+  }
 
-
-
-Symmetric_definition(CompareTypes);
+                    Symmetric_definition(CompareTypes);
 Symmetric_definition(PlusType);
 Symmetric_definition(MinusType);
 Symmetric_definition(MultipliesType);
@@ -500,18 +565,26 @@ Symmetric_definition(OrType);
 // here I'm afraid.
 
 template <typename B, typename T, typename T2>
-inline
-typename boostcopy::enable_if_c<
-  ScalarTraits<B>::value,
-  typename CompareTypes<T,T2>::supertype
->::type
-if_else (const B & condition, const T & if_true, const T2 & if_false)
+inline typename boostcopy::enable_if_c<ScalarTraits<B>::value,
+                                       typename CompareTypes<T, T2>::supertype>::type
+if_else(const B & condition, const T & if_true, const T2 & if_false)
 {
   if (condition)
     return if_true;
   return if_false;
 }
 
+template <typename T, typename U>
+struct IsOperable
+{
+  static const bool value = ScalarTraits<T>::value && ScalarTraits<U>::value;
+};
+
+template <template <typename> class W1, template <typename> class W2, typename T1, typename T2>
+struct IsOperable<W1<T1>, W2<T2>>
+{
+  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W1, T2>::value;
+};
 
 } // namespace MetaPhysicL
 

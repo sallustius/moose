@@ -215,16 +215,20 @@ struct DualNumberConstructor<DualNumber<T, D>, DD>
 
 #define DualNumber_decl_preop(opname, functorname)                                                 \
   template <typename T, typename D, typename T2, typename D2>                                      \
-  inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype               \
+  inline typename boostcopy::lazy_enable_if<                                                       \
+      IsOperable<T, T2>,                                                                           \
+      functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>>::type                               \
   operator opname(const DualNumber<T, D> & a, const DualNumber<T2, D2> & b);                       \
                                                                                                    \
   template <typename T, typename T2, typename D>                                                   \
-  inline typename functorname##Type<DualNumber<T2, D>, T, true>::supertype operator opname(        \
-      const T & a, const DualNumber<T2, D> & b);                                                   \
+  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
+                                            functorname##Type<DualNumber<T2, D>, T, true>>::type   \
+  operator opname(const T & a, const DualNumber<T2, D> & b);                                       \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
-  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
-      const DualNumber<T, D> & a, const T2 & b);
+  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
+                                            functorname##Type<DualNumber<T, D>, T2, false>>::type  \
+  operator opname(const DualNumber<T, D> & a, const T2 & b);
 
 // With C++11, define "move operations" where possible.  We should be
 // more complete and define the move-from-b alternatives as well, but
@@ -235,12 +239,15 @@ struct DualNumberConstructor<DualNumber<T, D>, DD>
   DualNumber_decl_preop(opname, functorname)                                                       \
                                                                                                    \
       template <typename T, typename D, typename T2, typename D2>                                  \
-      inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype           \
+      inline typename boostcopy::lazy_enable_if<                                                   \
+          IsOperable<T, T2>,                                                                       \
+          functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>>::type                           \
       operator opname(DualNumber<T, D> && a, const DualNumber<T2, D2> & b);                        \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
-  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
-      DualNumber<T, D> && a, const T2 & b);
+  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
+                                            functorname##Type<DualNumber<T, D>, T2, false>>::type  \
+  operator opname(DualNumber<T, D> && a, const T2 & b);
 
 #else
 #define DualNumber_decl_op(opname, functorname) DualNumber_decl_preop(opname, functorname)
@@ -591,7 +598,7 @@ DualNumber_decl_std_unary(sqrt) DualNumber_decl_std_unary(exp) DualNumber_decl_s
 
                 template <typename T, typename D>
                 class numeric_limits<DualNumber<T, D>>
-    : public MetaPhysicL::raw_numeric_limits<DualNumber<T, D>, T>
+  : public MetaPhysicL::raw_numeric_limits<DualNumber<T, D>, T>
 {
 };
 
