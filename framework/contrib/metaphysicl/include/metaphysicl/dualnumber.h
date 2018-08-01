@@ -139,7 +139,9 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D, typename T2, typename D2>                                      \
-  inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype               \
+  inline typename boostcopy::lazy_enable_if<                                                       \
+      IsOperable<T, T2>,                                                                           \
+      functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>>::type                               \
   operator opname(const DualNumber<T, D> & a, const DualNumber<T2, D2> & b)                        \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype DS;        \
@@ -149,8 +151,9 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
   }                                                                                                \
                                                                                                    \
   template <typename T, typename T2, typename D>                                                   \
-  inline typename functorname##Type<DualNumber<T2, D>, T, true>::supertype operator opname(        \
-      const T & a, const DualNumber<T2, D> & b)                                                    \
+  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
+                                            functorname##Type<DualNumber<T2, D>, T, true>>::type   \
+  operator opname(const T & a, const DualNumber<T2, D> & b)                                        \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T2, D>, T, true>::supertype DS;                  \
     DS returnval = a;                                                                              \
@@ -159,8 +162,9 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
-  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
-      const DualNumber<T, D> & a, const T2 & b)                                                    \
+  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
+                                            functorname##Type<DualNumber<T, D>, T2, false>>::type  \
+  operator opname(const DualNumber<T, D> & a, const T2 & b)                                        \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, T2, false>::supertype DS;                 \
     DS returnval = a;                                                                              \
@@ -177,7 +181,9 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
   DualNumber_preop(opname, functorname, simplecalc, dualcalc)                                      \
                                                                                                    \
       template <typename T, typename D, typename T2, typename D2>                                  \
-      inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype           \
+      inline typename boostcopy::lazy_enable_if<                                                   \
+          IsOperable<T, T2>,                                                                       \
+          functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>>::type                           \
       operator opname(DualNumber<T, D> && a, const DualNumber<T2, D2> & b)                         \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype DS;        \
@@ -187,8 +193,9 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
-  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
-      DualNumber<T, D> && a, const T2 & b)                                                         \
+  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
+                                            functorname##Type<DualNumber<T, D>, T2, false>>::type  \
+  operator opname(DualNumber<T, D> && a, const T2 & b)                                             \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, T2, false>::supertype DS;                 \
     DS returnval = std::move(a);                                                                   \
