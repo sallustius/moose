@@ -591,7 +591,7 @@ DualNumber_decl_std_unary(sqrt) DualNumber_decl_std_unary(exp) DualNumber_decl_s
 
                 template <typename T, typename D>
                 class numeric_limits<DualNumber<T, D>>
-  : public MetaPhysicL::raw_numeric_limits<DualNumber<T, D>, T>
+    : public MetaPhysicL::raw_numeric_limits<DualNumber<T, D>, T>
 {
 };
 

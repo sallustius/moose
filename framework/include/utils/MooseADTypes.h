@@ -21,6 +21,7 @@ using libMesh::TypeTensor;
 using libMesh::VectorValue;
 using libMesh::TypeVector;
 using libMesh::boostcopy::enable_if_c;
+using libMesh::ScalarTraits;
 
 template <typename T>
 using ScalarDN = DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>>;
@@ -75,7 +76,8 @@ struct TensorTraits<TensorValue, T>
 
 template <template <typename> class W,
           typename T,
-          typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type * = nullptr>
+          typename enable_if_c<VectorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
 VectorDN<T> operator*(const TemplateDN<T, W> & vec, const T & scalar)
 {
   TypeVector<T> value = vec.value() * scalar;
@@ -85,10 +87,11 @@ VectorDN<T> operator*(const TemplateDN<T, W> & vec, const T & scalar)
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-VectorDN<T>
-operator*(const T & scalar,
-          const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & vec)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<VectorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+VectorDN<T> operator*(const T & scalar, const TemplateDN<T, W> & vec)
 {
   TypeVector<T> value = vec.value() * scalar;
   NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
@@ -97,7 +100,7 @@ operator*(const T & scalar,
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
+template <typename T, typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
 VectorDN<T> operator*(const TypeVector<T> & vec, const ScalarDN<T> & scalar)
 {
   TypeVector<T> value = vec * scalar.value();
@@ -107,7 +110,7 @@ VectorDN<T> operator*(const TypeVector<T> & vec, const ScalarDN<T> & scalar)
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
+template <typename T, typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
 VectorDN<T> operator*(const ScalarDN<T> & scalar, const TypeVector<T> & vec)
 {
   TypeVector<T> value = vec * scalar.value();
@@ -117,10 +120,11 @@ VectorDN<T> operator*(const ScalarDN<T> & scalar, const TypeVector<T> & vec)
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-VectorDN<T>
-operator*(const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & vec,
-          const ScalarDN<T> & scalar)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<VectorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+VectorDN<T> operator*(const TemplateDN<T, W> & vec, const ScalarDN<T> & scalar)
 {
   TypeVector<T> value = vec.value() * scalar.value();
   NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
@@ -129,10 +133,11 @@ operator*(const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-VectorDN<T>
-operator*(const ScalarDN<T> & scalar,
-          const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & vec)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<VectorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+VectorDN<T> operator*(const ScalarDN<T> & scalar, const TemplateDN<T, W> & vec)
 {
   TypeVector<T> value = vec.value() * scalar.value();
   NumberArray<AD_MAX_DOFS_PER_ELEM, TypeVector<T>> derivatives;
@@ -141,10 +146,11 @@ operator*(const ScalarDN<T> & scalar,
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-TensorDN<T>
-operator*(const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>>::type & tensor,
-          const T & scalar)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<TensorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+TensorDN<T> operator*(const TemplateDN<T, W> & tensor, const T & scalar)
 {
   TypeTensor<T> value = tensor.value() * scalar;
   NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
@@ -153,10 +159,11 @@ operator*(const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-TensorDN<T>
-operator*(const T & scalar,
-          const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>>::type & tensor)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<TensorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+TensorDN<T> operator*(const T & scalar, const TemplateDN<T, W> & tensor)
 {
   TypeTensor<T> value = tensor.value() * scalar;
   NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
@@ -165,7 +172,7 @@ operator*(const T & scalar,
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
+template <typename T, typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
 TensorDN<T> operator*(const TypeTensor<T> & tensor, const ScalarDN<T> & scalar)
 {
   TypeTensor<T> value = tensor * scalar.value();
@@ -175,7 +182,7 @@ TensorDN<T> operator*(const TypeTensor<T> & tensor, const ScalarDN<T> & scalar)
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
+template <typename T, typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
 TensorDN<T> operator*(const ScalarDN<T> & scalar, const TypeTensor<T> & tensor)
 {
   TypeTensor<T> value = tensor * scalar.value();
@@ -185,10 +192,11 @@ TensorDN<T> operator*(const ScalarDN<T> & scalar, const TypeTensor<T> & tensor)
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-TensorDN<T>
-operator*(const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>>::type & tensor,
-          const ScalarDN<T> & scalar)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<TensorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+TensorDN<T> operator*(const TemplateDN<T, W> & tensor, const ScalarDN<T> & scalar)
 {
   TypeTensor<T> value = tensor.value() * scalar.value();
   NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
@@ -198,10 +206,11 @@ operator*(const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-TensorDN<T>
-operator*(const ScalarDN<T> & scalar,
-          const typename enable_if_c<TensorTraits<W, T>::value, TemplateDN<T, W>>::type & tensor)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<TensorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+TensorDN<T> operator*(const ScalarDN<T> & scalar, const TemplateDN<T, W> & tensor)
 {
   TypeTensor<T> value = tensor.value() * scalar.value();
   NumberArray<AD_MAX_DOFS_PER_ELEM, TypeTensor<T>> derivatives;
@@ -211,10 +220,11 @@ operator*(const ScalarDN<T> & scalar,
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-ScalarDN<T>
-operator*(const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & dn,
-          const TypeVector<T> & vec2)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<VectorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+ScalarDN<T> operator*(const TemplateDN<T, W> & dn, const TypeVector<T> & vec2)
 {
   const TypeVector<T> & vec1 = dn.value();
   T value = vec1 * vec2;
@@ -226,7 +236,8 @@ operator*(const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>
 
 template <template <typename> class W,
           typename T,
-          typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type * = nullptr>
+          typename enable_if_c<VectorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
 ScalarDN<T> operator*(const TypeVector<T> & vec2, const TemplateDN<T, W> & dn)
 {
   const TypeVector<T> & vec1 = dn.value();
@@ -237,10 +248,11 @@ ScalarDN<T> operator*(const TypeVector<T> & vec2, const TemplateDN<T, W> & dn)
   return {value, derivatives};
 }
 
-template <template <typename> class W, typename T>
-ScalarDN<T>
-operator*(const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & dn1,
-          const typename enable_if_c<VectorTraits<W, T>::value, TemplateDN<T, W>>::type & dn2)
+template <template <typename> class W,
+          typename T,
+          typename enable_if_c<VectorTraits<W, T>::value, int>::type = 0,
+          typename enable_if_c<ScalarTraits<T>::value, int>::type = 0>
+ScalarDN<T> operator*(const TemplateDN<T, W> & dn1, const TemplateDN<T, W> & dn2)
 {
   T value = dn1.value() * dn2.value();
   NumberArray<AD_MAX_DOFS_PER_ELEM, T> derivatives;
