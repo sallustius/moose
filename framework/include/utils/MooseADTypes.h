@@ -15,6 +15,8 @@ class MooseArray;
 #define AD_MAX_DOFS_PER_ELEM 100
 using MetaPhysicL::DualNumber;
 using MetaPhysicL::NumberArray;
+using MetaPhysicL::TensorTraits;
+using MetaPhysicL::VectorTraits;
 using libMesh::Real;
 using libMesh::ScalarTraits;
 using libMesh::TensorValue;
@@ -40,60 +42,6 @@ template <typename T>
 using TensorValueDN = DualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
 
 typedef ScalarDN<Real> ADReal;
-
-/*
- * Math construct traits
- */
-template <template <typename> class W, typename T>
-struct VectorTraits
-{
-  static const bool value = false;
-};
-
-template <typename T>
-struct VectorTraits<TypeVector, T>
-{
-  static const bool value = true;
-};
-
-template <typename T>
-struct VectorTraits<VectorValue, T>
-{
-  static const bool value = true;
-};
-
-template <template <typename> class W, typename T>
-struct TensorTraits
-{
-  static const bool value = false;
-};
-
-template <typename T>
-struct TensorTraits<TypeTensor, T>
-{
-  static const bool value = true;
-};
-
-template <typename T>
-struct TensorTraits<TensorValue, T>
-{
-  static const bool value = true;
-};
-
-/*
- * Type specializations to ensure proper return types from MetaPhysicL
- */
-template <std::size_t N, typename T, bool reverseorder>
-struct MetaPhysicL::MultipliesType<NumberArray<N, TypeTensor<T>>, TypeTensor<T>, reverseorder>
-{
-  typedef NumberArray<N, TensorValue<T>> supertype;
-};
-
-template <std::size_t N, typename T>
-struct MetaPhysicL::MultipliesType<NumberArray<N, TensorValue<T>>, TensorValue<T>, false>
-{
-  typedef NumberArray<N, TensorValue<T>> supertype;
-};
 
 /*
  * Vector-scalar multiplication

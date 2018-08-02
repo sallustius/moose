@@ -306,15 +306,22 @@ struct PlusType<DualNumber<T, D>,
 };
 
 template <typename T, typename D, typename T2, typename D2, bool reverseorder>
-struct PlusType<DualNumber<T, D>, DualNumber<T2, D2>, reverseorder>
+struct PlusType<
+    DualNumber<T, D>,
+    DualNumber<T2, D2>,
+    reverseorder,
+    typename boostcopy::enable_if_c<ScalarTraits<T>::value && ScalarTraits<T2>::value>::type>
 {
   typedef DualNumber<typename SymmetricPlusType<T, T2, reverseorder>::supertype,
                      typename SymmetricPlusType<D, D2, reverseorder>::supertype>
       supertype;
 };
 
-template <typename T, typename D>
-struct PlusType<DualNumber<T, D>, DualNumber<T, D>>
+template <typename T, typename D, bool reverseorder>
+struct PlusType<DualNumber<T, D>,
+                DualNumber<T, D>,
+                reverseorder,
+                typename boostcopy::enable_if_c<ScalarTraits<T>::value>::type>
 {
   typedef DualNumber<typename SymmetricPlusType<T, T>::supertype,
                      typename SymmetricPlusType<D, D>::supertype>

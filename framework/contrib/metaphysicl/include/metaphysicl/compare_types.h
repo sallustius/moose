@@ -30,6 +30,15 @@
 
 // System includes
 #include <complex>
+#include <iostream>
+
+#include "libmesh/vector_value.h"
+#include "libmesh/tensor_value.h"
+
+using libMesh::TensorValue;
+using libMesh::TypeTensor;
+using libMesh::TypeVector;
+using libMesh::VectorValue;
 
 namespace MetaPhysicL
 {
@@ -574,6 +583,48 @@ if_else(const B & condition, const T & if_true, const T2 & if_false)
   return if_false;
 }
 
+/*
+ * Math construct traits
+ */
+template <template <typename> class W, typename T>
+struct VectorTraits
+{
+  static const bool value = false;
+};
+
+template <typename T>
+struct VectorTraits<TypeVector, T>
+{
+  static const bool value = true;
+};
+
+template <typename T>
+struct VectorTraits<VectorValue, T>
+{
+  static const bool value = true;
+};
+
+template <template <typename> class W, typename T>
+struct TensorTraits
+{
+  static const bool value = false;
+};
+
+template <typename T>
+struct TensorTraits<TypeTensor, T>
+{
+  static const bool value = true;
+};
+
+template <typename T>
+struct TensorTraits<TensorValue, T>
+{
+  static const bool value = true;
+};
+
+/*
+ * Check whether the two operands work with the operator
+ */
 template <typename T, typename U>
 struct IsOperable
 {
@@ -583,7 +634,7 @@ struct IsOperable
 template <template <typename> class W1, template <typename> class W2, typename T1, typename T2>
 struct IsOperable<W1<T1>, W2<T2>>
 {
-  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W1, T2>::value;
+  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W2, T2>::value;
 };
 
 } // namespace MetaPhysicL
