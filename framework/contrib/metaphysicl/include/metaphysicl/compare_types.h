@@ -441,6 +441,89 @@ CompareTypes_all(float, double);
 CompareTypes_all(float, long double);
 CompareTypes_all(double, long double);
 
+// We did all the standard built-in types. Now lets do vectors and tensors
+
+/*
+ * Tensor-tensor and vector-vector
+ */
+#define MathConstruct_OpTypes(opname, math_construct)                                              \
+  template <typename T, bool reverseorder>                                                         \
+  struct opname##Type<math_construct##Value<T>, math_construct##Value<T>, reverseorder>            \
+  {                                                                                                \
+    typedef math_construct##Value<T> supertype;                                                    \
+  };                                                                                               \
+                                                                                                   \
+  template <typename T, bool reverseorder>                                                         \
+  struct opname##Type<math_construct##Value<T>, Type##math_construct<T>, reverseorder>             \
+  {                                                                                                \
+    typedef math_construct##Value<T> supertype;                                                    \
+  };                                                                                               \
+                                                                                                   \
+  template <typename T, bool reverseorder>                                                         \
+  struct opname##Type<Type##math_construct<T>, math_construct##Value<T>, reverseorder>             \
+  {                                                                                                \
+    typedef math_construct##Value<T> supertype;                                                    \
+  };                                                                                               \
+                                                                                                   \
+  template <typename T, bool reverseorder>                                                         \
+  struct opname##Type<Type##math_construct<T>, Type##math_construct<T>, reverseorder>              \
+  {                                                                                                \
+    typedef math_construct##Value<T> supertype;                                                    \
+  }
+
+MathConstruct_OpTypes(Multiplies, Tensor);
+MathConstruct_OpTypes(Plus, Tensor);
+MathConstruct_OpTypes(Minus, Tensor);
+MathConstruct_OpTypes(Multiplies, Vector);
+MathConstruct_OpTypes(Plus, Vector);
+MathConstruct_OpTypes(Minus, Vector);
+
+/*
+ * scalar-tensor and scalar-vector
+ */
+#define ScalarMultTypes(math_construct)                                                            \
+  template <typename T, bool reverseorder>                                                         \
+  struct MultipliesType<Type##math_construct<T>, T, reverseorder>                                  \
+  {                                                                                                \
+    typedef math_construct##Value<T> supertype;                                                    \
+  };                                                                                               \
+                                                                                                   \
+  template <typename T, bool reverseorder>                                                         \
+  struct MultipliesType<T, Type##math_construct<T>, reverseorder>                                  \
+  {                                                                                                \
+    typedef math_construct##Value<T> supertype;                                                    \
+  };                                                                                               \
+                                                                                                   \
+  template <typename T, bool reverseorder>                                                         \
+  struct MultipliesType<math_construct##Value<T>, T, reverseorder>                                 \
+  {                                                                                                \
+    typedef math_construct##Value<T> supertype;                                                    \
+  };                                                                                               \
+                                                                                                   \
+  template <typename T, bool reverseorder>                                                         \
+  struct MultipliesType<T, math_construct##Value<T>, reverseorder>                                 \
+  {                                                                                                \
+    typedef math_construct##Value<T> supertype;                                                    \
+  }
+
+ScalarMultTypes(Tensor);
+ScalarMultTypes(Vector);
+
+/*
+ * tensor-vector
+ */
+#define TensorVectorMultTypes(TensorClass, VectorClass)                                            \
+  template <typename T, bool reverseorder>                                                         \
+  struct MultipliesType<TensorClass<T>, VectorClass<T>, reverseorder>                              \
+  {                                                                                                \
+    typedef VectorValue<T> supertype;                                                              \
+  }
+
+TensorVectorMultTypes(TypeTensor, TypeVector);
+TensorVectorMultTypes(TypeTensor, VectorValue);
+TensorVectorMultTypes(TensorValue, TypeVector);
+TensorVectorMultTypes(TensorValue, VectorValue);
+
 // gcc can't tell which of the following is the most specialized?  Weak.
 /*
 template<typename S, typename T>

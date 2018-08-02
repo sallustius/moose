@@ -215,20 +215,16 @@ struct DualNumberConstructor<DualNumber<T, D>, DD>
 
 #define DualNumber_decl_preop(opname, functorname)                                                 \
   template <typename T, typename D, typename T2, typename D2>                                      \
-  inline typename boostcopy::lazy_enable_if<                                                       \
-      IsOperable<T, T2>,                                                                           \
-      functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>>::type                               \
+  inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype               \
   operator opname(const DualNumber<T, D> & a, const DualNumber<T2, D2> & b);                       \
                                                                                                    \
   template <typename T, typename T2, typename D>                                                   \
-  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
-                                            functorname##Type<DualNumber<T2, D>, T, true>>::type   \
-  operator opname(const T & a, const DualNumber<T2, D> & b);                                       \
+  inline typename functorname##Type<DualNumber<T2, D>, T, true>::supertype operator opname(        \
+      const T & a, const DualNumber<T2, D> & b);                                                   \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
-  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
-                                            functorname##Type<DualNumber<T, D>, T2, false>>::type  \
-  operator opname(const DualNumber<T, D> & a, const T2 & b);
+  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
+      const DualNumber<T, D> & a, const T2 & b);
 
 // With C++11, define "move operations" where possible.  We should be
 // more complete and define the move-from-b alternatives as well, but
@@ -239,22 +235,21 @@ struct DualNumberConstructor<DualNumber<T, D>, DD>
   DualNumber_decl_preop(opname, functorname)                                                       \
                                                                                                    \
       template <typename T, typename D, typename T2, typename D2>                                  \
-      inline typename boostcopy::lazy_enable_if<                                                   \
-          IsOperable<T, T2>,                                                                       \
-          functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>>::type                           \
+      inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype           \
       operator opname(DualNumber<T, D> && a, const DualNumber<T2, D2> & b);                        \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
-  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
-                                            functorname##Type<DualNumber<T, D>, T2, false>>::type  \
-  operator opname(DualNumber<T, D> && a, const T2 & b);
+  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
+      DualNumber<T, D> && a, const T2 & b)
 
 #else
 #define DualNumber_decl_op(opname, functorname) DualNumber_decl_preop(opname, functorname)
 #endif
 
-DualNumber_decl_op(+, Plus) DualNumber_decl_op(-, Minus) DualNumber_decl_op(*, Multiplies)
-    DualNumber_decl_op(/, Divides)
+DualNumber_decl_op(+, Plus);
+DualNumber_decl_op(-, Minus);
+DualNumber_decl_op(*, Multiplies);
+DualNumber_decl_op(/, Divides);
 
 #define DualNumber_decl_compare(opname)                                                            \
   template <typename T, typename D, typename T2, typename D2>                                      \
@@ -270,15 +265,19 @@ DualNumber_decl_op(+, Plus) DualNumber_decl_op(-, Minus) DualNumber_decl_op(*, M
   inline                                                                                           \
       typename boostcopy::enable_if_class<typename CompareTypes<DualNumber<T, D>, T2>::supertype,  \
                                           bool>::type                                              \
-      operator opname(const DualNumber<T, D> & a, const T2 & b);
+      operator opname(const DualNumber<T, D> & a, const T2 & b)
 
-        DualNumber_decl_compare(>) DualNumber_decl_compare(>=) DualNumber_decl_compare(<)
-            DualNumber_decl_compare(<=) DualNumber_decl_compare(==) DualNumber_decl_compare(!=)
-                DualNumber_decl_compare(&&) DualNumber_decl_compare(||)
+DualNumber_decl_compare(>);
+DualNumber_decl_compare(>=);
+DualNumber_decl_compare(<);
+DualNumber_decl_compare(<=);
+DualNumber_decl_compare(==);
+DualNumber_decl_compare(!=);
+DualNumber_decl_compare(&&);
+DualNumber_decl_compare(||);
 
-                    template <typename T, typename D>
-                    inline std::ostream & operator<<(std::ostream & output,
-                                                     const DualNumber<T, D> & a);
+template <typename T, typename D>
+inline std::ostream & operator<<(std::ostream & output, const DualNumber<T, D> & a);
 
 // ScalarTraits, RawType, CompareTypes specializations
 
@@ -306,11 +305,7 @@ struct PlusType<DualNumber<T, D>,
 };
 
 template <typename T, typename D, typename T2, typename D2, bool reverseorder>
-struct PlusType<
-    DualNumber<T, D>,
-    DualNumber<T2, D2>,
-    reverseorder,
-    typename boostcopy::enable_if_c<ScalarTraits<T>::value && ScalarTraits<T2>::value>::type>
+struct PlusType<DualNumber<T, D>, DualNumber<T2, D2>, reverseorder>
 {
   typedef DualNumber<typename SymmetricPlusType<T, T2, reverseorder>::supertype,
                      typename SymmetricPlusType<D, D2, reverseorder>::supertype>
@@ -318,10 +313,7 @@ struct PlusType<
 };
 
 template <typename T, typename D, bool reverseorder>
-struct PlusType<DualNumber<T, D>,
-                DualNumber<T, D>,
-                reverseorder,
-                typename boostcopy::enable_if_c<ScalarTraits<T>::value>::type>
+struct PlusType<DualNumber<T, D>, DualNumber<T, D>, reverseorder>
 {
   typedef DualNumber<typename SymmetricPlusType<T, T>::supertype,
                      typename SymmetricPlusType<D, D>::supertype>
@@ -354,10 +346,8 @@ struct MinusType<DualNumber<T, D>, DualNumber<T, D>, reverseorder>
 };
 
 template <typename T, typename T2, typename D, bool reverseorder>
-struct MultipliesType<DualNumber<T, D>,
-                      T2,
-                      reverseorder,
-                      typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
+struct MultipliesType<DualNumber<T, D>, T2, reverseorder>
+// typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
   typedef DualNumber<typename SymmetricMultipliesType<T, T2, reverseorder>::supertype,
                      typename SymmetricMultipliesType<D, T2, reverseorder>::supertype>

@@ -111,62 +111,13 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
 {
 }
 
-// clang-format off
-
-/*
- * OperatorType specializations for tensors
- */
-#define DualNumber_TypeTensor_OpTypes(opname)                                                     \
-  /* First arg */                                                                                 \
-  template <typename T, typename D, bool reverseorder>                                            \
-  struct opname##Type<DualNumber<TensorValue<T>, D>, TensorValue<T>, reverseorder>                \
-  {                                                                                               \
-    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
-  };                                                                                              \
-                                                                                                  \
-  template <typename T, typename D, bool reverseorder>                                            \
-  struct opname##Type<DualNumber<TypeTensor<T>, D>, TypeTensor<T>, reverseorder>                  \
-  {                                                                                               \
-    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
-  };                                                                                              \
-                                                                                                  \
-  /* Second arg */                                                                                \
-  template <typename T, typename D, bool reverseorder>                                            \
-  struct opname##Type<TensorValue<T>, DualNumber<TensorValue<T>, D>, reverseorder>                \
-  {                                                                                               \
-    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
-  };                                                                                              \
-                                                                                                  \
-  template <typename T, typename D, bool reverseorder>                                            \
-  struct opname##Type<TypeTensor<T>, DualNumber<TypeTensor<T>, D>, reverseorder>                  \
-  {                                                                                               \
-    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
-  };                                                                                              \
-                                                                                                  \
-  /* Both args */                                                                                 \
-  template <typename T, typename D, bool reverseorder>                                            \
-  struct opname##Type<DualNumber<TensorValue<T>, D>, DualNumber<TensorValue<T>, D>, reverseorder> \
-  {                                                                                               \
-    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
-  };                                                                                              \
-                                                                                                  \
-  template <typename T, typename D, bool reverseorder>                                            \
-  struct opname##Type<DualNumber<TypeTensor<T>, D>, DualNumber<TypeTensor<T>, D>, reverseorder>   \
-  {                                                                                               \
-    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
-  }
-
-DualNumber_TypeTensor_OpTypes(Multiplies);
-DualNumber_TypeTensor_OpTypes(Plus);
-DualNumber_TypeTensor_OpTypes(Minus);
-
-// FIXME: these operators currently do automatic type promotion when
-// encountering DualNumbers of differing levels of recursion and
-// differentiability.  But what we really want is automatic type
-// *demotion*, to avoid pretending we have accurate derivatives which
-// we don't have.  If we could do that right then some potential
-// subtle run-time user errors would turn into compile-time user
-// errors.
+  // FIXME: these operators currently do automatic type promotion when
+  // encountering DualNumbers of differing levels of recursion and
+  // differentiability.  But what we really want is automatic type
+  // *demotion*, to avoid pretending we have accurate derivatives which
+  // we don't have.  If we could do that right then some potential
+  // subtle run-time user errors would turn into compile-time user
+  // errors.
 
 #define DualNumber_preop(opname, functorname, simplecalc, dualcalc)                                \
   template <typename T, typename D>                                                                \
@@ -188,9 +139,7 @@ DualNumber_TypeTensor_OpTypes(Minus);
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D, typename T2, typename D2>                                      \
-  inline typename boostcopy::lazy_enable_if<                                                       \
-      IsOperable<T, T2>,                                                                           \
-      functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>>::type                               \
+  inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype               \
   operator opname(const DualNumber<T, D> & a, const DualNumber<T2, D2> & b)                        \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype DS;        \
@@ -200,26 +149,19 @@ DualNumber_TypeTensor_OpTypes(Minus);
   }                                                                                                \
                                                                                                    \
   template <typename T, typename T2, typename D>                                                   \
-  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
-                                            functorname##Type<DualNumber<T2, D>, T, true>>::type   \
-  operator opname(const T & a, const DualNumber<T2, D> & b)                                        \
+  inline typename functorname##Type<DualNumber<T2, D>, T, true>::supertype operator opname(        \
+      const T & a, const DualNumber<T2, D> & b)                                                    \
   {                                                                                                \
-    typedef typename functorname##Type<DualNumber<T2, D>, T, true>::supertype DS;                  \
-    DS returnval = a;                                                                              \
-    returnval opname## = b;                                                                        \
-    return returnval;                                                                              \
+    return {a opname b.value(), a opname b.derivatives()};                                         \
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
-  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
-                                            functorname##Type<DualNumber<T, D>, T2, false>>::type  \
-  operator opname(const DualNumber<T, D> & a, const T2 & b)                                        \
+  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
+      const DualNumber<T, D> & a, const T2 & b)                                                    \
   {                                                                                                \
-    typedef typename functorname##Type<DualNumber<T, D>, T2, false>::supertype DS;                 \
-    DS returnval = a;                                                                              \
-    returnval opname## = b;                                                                        \
-    return returnval;                                                                              \
-  }
+    return {a.value() opname b, a.derivatives() opname b};                                         \
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
 // With C++11, define "move operations" where possible.  We should be
 // more complete and define the move-from-b alternatives as well, but
@@ -227,13 +169,11 @@ DualNumber_TypeTensor_OpTypes(Minus);
 // division, subtraction, or non-commutative addition/multiplication
 #if __cplusplus >= 201103L
 #define DualNumber_op(opname, functorname, simplecalc, dualcalc)                                   \
-  DualNumber_preop(opname, functorname, simplecalc, dualcalc)                                      \
+  DualNumber_preop(opname, functorname, simplecalc, dualcalc);                                     \
                                                                                                    \
-      template <typename T, typename D, typename T2, typename D2>                                  \
-      inline typename boostcopy::lazy_enable_if<                                                   \
-          IsOperable<T, T2>,                                                                       \
-          functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>>::type                           \
-      operator opname(DualNumber<T, D> && a, const DualNumber<T2, D2> & b)                         \
+  template <typename T, typename D, typename T2, typename D2>                                      \
+  inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype               \
+  operator opname(DualNumber<T, D> && a, const DualNumber<T2, D2> & b)                             \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype DS;        \
     DS returnval = std::move(a);                                                                   \
@@ -242,31 +182,31 @@ DualNumber_TypeTensor_OpTypes(Minus);
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
-  inline typename boostcopy::lazy_enable_if<IsOperable<T, T2>,                                     \
-                                            functorname##Type<DualNumber<T, D>, T2, false>>::type  \
-  operator opname(DualNumber<T, D> && a, const T2 & b)                                             \
+  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
+      DualNumber<T, D> && a, const T2 & b)                                                         \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, T2, false>::supertype DS;                 \
     DS returnval = std::move(a);                                                                   \
     returnval opname## = b;                                                                        \
     return returnval;                                                                              \
-  }
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
 #else
 #define DualNumber_op(opname, functorname, simplecalc, dualcalc)                                   \
-  DualNumber_preop(opname, functorname, simplecalc, dualcalc)
+  DualNumber_preop(opname, functorname, simplecalc, dualcalc);                                     \
+  void ANONYMOUS_FUNCTION()
 #endif
 
-DualNumber_op(+, Plus, , this->derivatives() += in.derivatives())
+DualNumber_op(+, Plus, , this->derivatives() += in.derivatives());
 
-    DualNumber_op(-, Minus, , this->derivatives() -= in.derivatives())
+DualNumber_op(-, Minus, , this->derivatives() -= in.derivatives());
 
-        DualNumber_op(*, Multiplies, this->derivatives() *= in, this->derivatives() *= in.value();
-                      this->derivatives() += this->value() * in.derivatives();)
+DualNumber_op(*, Multiplies, this->derivatives() *= in, this->derivatives() *= in.value();
+              this->derivatives() += this->value() * in.derivatives(););
 
-            DualNumber_op(/, Divides, this->derivatives() /= in, this->derivatives() /= in.value();
-                          this->derivatives() -=
-                          this->value() / (in.value() * in.value()) * in.derivatives();)
+DualNumber_op(/, Divides, this->derivatives() /= in, this->derivatives() /= in.value();
+              this->derivatives() -= this->value() / (in.value() * in.value()) * in.derivatives(););
 
 #define DualNumber_compare(opname)                                                                 \
   template <typename T, typename D, typename T2, typename D2>                                      \
@@ -293,18 +233,12 @@ DualNumber_op(+, Plus, , this->derivatives() += in.derivatives())
     return (a.value() opname b);                                                                   \
   }
 
-DualNumber_compare(>)
-DualNumber_compare(>=)
-DualNumber_compare(<)
-DualNumber_compare(<=)
-DualNumber_compare(==)
-DualNumber_compare(!=)
-DualNumber_compare(&&)
-DualNumber_compare(||)
+DualNumber_compare(>) DualNumber_compare(>=) DualNumber_compare(<) DualNumber_compare(<=)
+    DualNumber_compare(==) DualNumber_compare(!=) DualNumber_compare(&&) DualNumber_compare(||)
 
-template <typename T, typename D>
-inline std::ostream &
-operator<<(std::ostream & output, const DualNumber<T, D> & a)
+        template <typename T, typename D>
+        inline std::ostream &
+        operator<<(std::ostream & output, const DualNumber<T, D> & a)
 {
   return output << '(' << a.value() << ',' << a.derivatives() << ')';
 }
