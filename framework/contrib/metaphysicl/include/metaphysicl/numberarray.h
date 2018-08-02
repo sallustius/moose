@@ -332,16 +332,142 @@ sum(const NumberArray<N, T> & a)
   return returnval;
 }
 
+/*
+ * IsOperable specializations for NumberArray with tensors
+ */
+template <std::size_t N,
+          template <typename> class W1,
+          template <typename> class W2,
+          typename T1,
+          typename T2>
+struct IsOperable<NumberArray<N, W1<T1>>, W2<T2>>
+{
+  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W2, T2>::value;
+};
+
+template <std::size_t N,
+          template <typename> class W1,
+          template <typename> class W2,
+          typename T1,
+          typename T2>
+struct IsOperable<W1<T1>, NumberArray<N, W2<T2>>>
+{
+  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W2, T2>::value;
+};
+
+template <std::size_t N,
+          template <typename> class W1,
+          template <typename> class W2,
+          typename T1,
+          typename T2>
+struct IsOperable<NumberArray<N, W1<T1>>, NumberArray<N, W2<T2>>>
+{
+  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W2, T2>::value;
+};
+
+template <std::size_t N, typename T, bool reverseorder>
+struct MultipliesType<NumberArray<N, TypeTensor<T>>, TypeTensor<T>, reverseorder>
+{
+  typedef NumberArray<N, TensorValue<T>> supertype;
+};
+
+template <std::size_t N, typename T, bool reverseorder>
+struct MultipliesType<NumberArray<N, TensorValue<T>>, TensorValue<T>, reverseorder>
+{
+  typedef NumberArray<N, TensorValue<T>> supertype;
+};
+
+template <std::size_t N, typename T, bool reverseorder>
+struct MultipliesType<TensorValue<T>, NumberArray<N, TensorValue<T>>, reverseorder>
+{
+  typedef NumberArray<N, TensorValue<T>> supertype;
+};
+
+template <std::size_t N, typename T, bool reverseorder>
+struct MultipliesType<TypeTensor<T>, NumberArray<N, TypeTensor<T>>, reverseorder>
+{
+  typedef NumberArray<N, TensorValue<T>> supertype;
+};
+
+template <std::size_t N, typename T, bool reverseorder>
+struct MultipliesType<NumberArray<N, TensorValue<T>>, NumberArray<N, TensorValue<T>>, reverseorder>
+{
+  typedef NumberArray<N, TensorValue<T>> supertype;
+};
+
+template <std::size_t N, typename T, bool reverseorder>
+struct MultipliesType<NumberArray<N, TypeTensor<T>>, NumberArray<N, TypeTensor<T>>, reverseorder>
+{
+  typedef NumberArray<N, TensorValue<T>> supertype;
+};
+
+/*
+ * IsOperable specializations for NumberArray with scalars
+ */
+template <std::size_t N, typename T1, typename T2>
+struct IsOperable<NumberArray<N, T1>, T2>
+{
+  static const bool value = ScalarTraits<T1>::value && ScalarTraits<T2>::value;
+};
+
+template <std::size_t N, typename T1, typename T2>
+struct IsOperable<T2, NumberArray<N, T1>>
+{
+  static const bool value = ScalarTraits<T1>::value && ScalarTraits<T2>::value;
+};
+
+template <std::size_t N, typename T1, typename T2>
+struct IsOperable<NumberArray<N, T1>, NumberArray<N, T2>>
+{
+  static const bool value = ScalarTraits<T1>::value && ScalarTraits<T2>::value;
+};
+
+// #define NumberArray_supported_scalar_operand_types(op)                                             \
+//   template <std::size_t N, typename T, bool reverseorder>                                          \
+//   struct op##Type<NumberArray<N, T>, T, reverseorder>                                              \
+//   {                                                                                                \
+//     typedef NumberArray<N, T> supertype;                                                           \
+//   };                                                                                               \
+//                                                                                                    \
+//   template <std::size_t N, typename T, bool reverseorder>                                          \
+//   struct op##Type<T, NumberArray<N, T>, reverseorder>                                              \
+//   {                                                                                                \
+//     typedef NumberArray<N, T> supertype;                                                           \
+//   };                                                                                               \
+//                                                                                                    \
+//   template <std::size_t N, typename T, bool reverseorder>                                          \
+//   struct op##Type<NumberArray<N, T>, NumberArray<N, T>, reverseorder>                              \
+//   {                                                                                                \
+//     typedef NumberArray<N, T> supertype;                                                           \
+//   }
+
+// NumberArray_supported_scalar_operand_types(Multiplies);
+// NumberArray_supported_scalar_operand_types(Divides);
+// NumberArray_supported_scalar_operand_types(Plus);
+// NumberArray_supported_scalar_operand_types(Minus);
+
 // clang-format off
 #define NumberArray_op_ab(opname, atype, btype, newtype)                                       \
-  template <std::size_t N, typename T, typename T2>                                            \
-  inline typename boostcopy::lazy_enable_if<IsOperablenewtype::supertype operator opname(const atype & a, const btype & b) \
-  {                                                                                            \
-    typedef typename newtype::supertype TS;                                                    \
-    TS returnval(a);                                                                           \
-    returnval opname## = b;                                                                    \
-    return returnval;                                                                          \
-  }
+   template <std::size_t N, typename T, typename T2>                                            \
+   inline typename boostcopy::lazy_enable_if<IsOperable<atype,btype>, newtype>::type                   \
+   operator opname(const atype & a, const btype & b)                                            \
+   {                                                                                            \
+     typedef typename newtype::supertype TS;                                                    \
+     TS returnval(a);                                                                           \
+     returnval opname## = b;                                                                    \
+     return returnval;                                                                          \
+   }
+
+// #define NumberArray_op_ab(opname, atype, btype, newtype)                                       \
+//   template <std::size_t N, typename T, typename T2>                                            \
+//   inline typename newtype::supertype                   \
+//   operator opname(const atype & a, const btype & b)                                            \
+//   {                                                                                            \
+//     typedef typename newtype::supertype TS;                                                    \
+//     TS returnval(a);                                                                           \
+//     returnval opname## = b;                                                                    \
+//     return returnval;                                                                          \
+//   }
 
 #define NumberArray_op(opname, typecomparison)                                                 \
   NumberArray_op_ab(                                                                           \

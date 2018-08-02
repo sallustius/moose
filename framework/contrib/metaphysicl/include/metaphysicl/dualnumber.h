@@ -111,13 +111,62 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
 {
 }
 
-  // FIXME: these operators currently do automatic type promotion when
-  // encountering DualNumbers of differing levels of recursion and
-  // differentiability.  But what we really want is automatic type
-  // *demotion*, to avoid pretending we have accurate derivatives which
-  // we don't have.  If we could do that right then some potential
-  // subtle run-time user errors would turn into compile-time user
-  // errors.
+// clang-format off
+
+/*
+ * OperatorType specializations for tensors
+ */
+#define DualNumber_TypeTensor_OpTypes(opname)                                                     \
+  /* First arg */                                                                                 \
+  template <typename T, typename D, bool reverseorder>                                            \
+  struct opname##Type<DualNumber<TensorValue<T>, D>, TensorValue<T>, reverseorder>                \
+  {                                                                                               \
+    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
+  };                                                                                              \
+                                                                                                  \
+  template <typename T, typename D, bool reverseorder>                                            \
+  struct opname##Type<DualNumber<TypeTensor<T>, D>, TypeTensor<T>, reverseorder>                  \
+  {                                                                                               \
+    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
+  };                                                                                              \
+                                                                                                  \
+  /* Second arg */                                                                                \
+  template <typename T, typename D, bool reverseorder>                                            \
+  struct opname##Type<TensorValue<T>, DualNumber<TensorValue<T>, D>, reverseorder>                \
+  {                                                                                               \
+    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
+  };                                                                                              \
+                                                                                                  \
+  template <typename T, typename D, bool reverseorder>                                            \
+  struct opname##Type<TypeTensor<T>, DualNumber<TypeTensor<T>, D>, reverseorder>                  \
+  {                                                                                               \
+    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
+  };                                                                                              \
+                                                                                                  \
+  /* Both args */                                                                                 \
+  template <typename T, typename D, bool reverseorder>                                            \
+  struct opname##Type<DualNumber<TensorValue<T>, D>, DualNumber<TensorValue<T>, D>, reverseorder> \
+  {                                                                                               \
+    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
+  };                                                                                              \
+                                                                                                  \
+  template <typename T, typename D, bool reverseorder>                                            \
+  struct opname##Type<DualNumber<TypeTensor<T>, D>, DualNumber<TypeTensor<T>, D>, reverseorder>   \
+  {                                                                                               \
+    typedef DualNumber<TensorValue<T>, D> supertype;                                              \
+  }
+
+DualNumber_TypeTensor_OpTypes(Multiplies);
+DualNumber_TypeTensor_OpTypes(Plus);
+DualNumber_TypeTensor_OpTypes(Minus);
+
+// FIXME: these operators currently do automatic type promotion when
+// encountering DualNumbers of differing levels of recursion and
+// differentiability.  But what we really want is automatic type
+// *demotion*, to avoid pretending we have accurate derivatives which
+// we don't have.  If we could do that right then some potential
+// subtle run-time user errors would turn into compile-time user
+// errors.
 
 #define DualNumber_preop(opname, functorname, simplecalc, dualcalc)                                \
   template <typename T, typename D>                                                                \
@@ -244,17 +293,23 @@ DualNumber_op(+, Plus, , this->derivatives() += in.derivatives())
     return (a.value() opname b);                                                                   \
   }
 
-                DualNumber_compare(>) DualNumber_compare(>=) DualNumber_compare(<)
-                    DualNumber_compare(<=) DualNumber_compare(==) DualNumber_compare(!=)
-                        DualNumber_compare(&&) DualNumber_compare(||)
+DualNumber_compare(>)
+DualNumber_compare(>=)
+DualNumber_compare(<)
+DualNumber_compare(<=)
+DualNumber_compare(==)
+DualNumber_compare(!=)
+DualNumber_compare(&&)
+DualNumber_compare(||)
 
-                            template <typename T, typename D>
-                            inline std::ostream &
-                            operator<<(std::ostream & output, const DualNumber<T, D> & a)
+template <typename T, typename D>
+inline std::ostream &
+operator<<(std::ostream & output, const DualNumber<T, D> & a)
 {
   return output << '(' << a.value() << ',' << a.derivatives() << ')';
 }
 
+// clang-format on
 template <typename T, typename D>
 inline D
 gradient(const DualNumber<T, D> & a)
@@ -278,6 +333,7 @@ isnan(const DualNumber<T, D> & a)
   return isnan(a.value());
 }
 
+// clang-format off
 #if __cplusplus >= 201103L
 #define DualNumber_std_unary(funcname, derivative, precalc)                                        \
   template <typename T, typename D>                                                                \
