@@ -119,23 +119,29 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
   // subtle run-time user errors would turn into compile-time user
   // errors.
 
-#define DualNumber_preop(opname, functorname, simplecalc, dualcalc)                                \
+#define DualNumber_op(opname, functorname, dn_first_calc, dn_second_calc, dualcalc)                \
   template <typename T, typename D>                                                                \
   template <typename T2>                                                                           \
   inline DualNumber<T, D> & DualNumber<T, D>::operator opname##=(const T2 & in)                    \
   {                                                                                                \
-    simplecalc;                                                                                    \
-    this->value() opname## = in;                                                                   \
-    return *this;                                                                                  \
+    auto & new_dn = *this;                                                                         \
+    const auto & a = *this;                                                                        \
+    const auto & b = in;                                                                           \
+    dn_first_calc;                                                                                 \
+    new_dn.value() opname## = in;                                                                  \
+    return new_dn;                                                                                 \
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D>                                                                \
   template <typename T2, typename D2>                                                              \
   inline DualNumber<T, D> & DualNumber<T, D>::operator opname##=(const DualNumber<T2, D2> & in)    \
   {                                                                                                \
+    auto & new_dn = *this;                                                                         \
+    const auto & a = *this;                                                                        \
+    const auto & b = in;                                                                           \
     dualcalc;                                                                                      \
-    this->value() opname## = in.value();                                                           \
-    return *this;                                                                                  \
+    new_dn.value() opname## = in.value();                                                          \
+    return new_dn;                                                                                 \
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D, typename T2, typename D2>                                      \
@@ -143,70 +149,56 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
   operator opname(const DualNumber<T, D> & a, const DualNumber<T2, D2> & b)                        \
   {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype DS;        \
-    DS returnval = a;                                                                              \
-    returnval opname## = b;                                                                        \
-    return returnval;                                                                              \
+    DS new_dn(a.value() opname b.value());                                                         \
+    dualcalc;                                                                                      \
+    return new_dn;                                                                                 \
   }                                                                                                \
                                                                                                    \
   template <typename T, typename T2, typename D>                                                   \
   inline typename functorname##Type<DualNumber<T2, D>, T, true>::supertype operator opname(        \
       const T & a, const DualNumber<T2, D> & b)                                                    \
   {                                                                                                \
-    return {a opname b.value(), a opname b.derivatives()};                                         \
+    typedef typename functorname##Type<DualNumber<T2, D>, T, true>::supertype DS;                  \
+    DS new_dn(a opname b.value());                                                                 \
+    dn_second_calc;                                                                                \
+    return new_dn;                                                                                 \
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D, typename T2>                                                   \
   inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
       const DualNumber<T, D> & a, const T2 & b)                                                    \
   {                                                                                                \
-    return {a.value() opname b, a.derivatives() opname b};                                         \
-  }                                                                                                \
-  void ANONYMOUS_FUNCTION()
-
-// With C++11, define "move operations" where possible.  We should be
-// more complete and define the move-from-b alternatives as well, but
-// those would require additional support to correctly handle
-// division, subtraction, or non-commutative addition/multiplication
-#if __cplusplus >= 201103L
-#define DualNumber_op(opname, functorname, simplecalc, dualcalc)                                   \
-  DualNumber_preop(opname, functorname, simplecalc, dualcalc);                                     \
-                                                                                                   \
-  template <typename T, typename D, typename T2, typename D2>                                      \
-  inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype               \
-  operator opname(DualNumber<T, D> && a, const DualNumber<T2, D2> & b)                             \
-  {                                                                                                \
-    typedef typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype DS;        \
-    DS returnval = std::move(a);                                                                   \
-    returnval opname## = b;                                                                        \
-    return returnval;                                                                              \
-  }                                                                                                \
-                                                                                                   \
-  template <typename T, typename D, typename T2>                                                   \
-  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
-      DualNumber<T, D> && a, const T2 & b)                                                         \
-  {                                                                                                \
     typedef typename functorname##Type<DualNumber<T, D>, T2, false>::supertype DS;                 \
-    DS returnval = std::move(a);                                                                   \
-    returnval opname## = b;                                                                        \
-    return returnval;                                                                              \
+    DS new_dn(a.value() opname b);                                                                 \
+    dn_first_calc;                                                                                 \
+    return new_dn;                                                                                 \
   }                                                                                                \
   void ANONYMOUS_FUNCTION()
 
-#else
-#define DualNumber_op(opname, functorname, simplecalc, dualcalc)                                   \
-  DualNumber_preop(opname, functorname, simplecalc, dualcalc);                                     \
-  void ANONYMOUS_FUNCTION()
-#endif
+DualNumber_op(+,
+              Plus,
+              new_dn.derivatives() = a.derivatives(),
+              new_dn.derivatives() = b.derivatives(),
+              new_dn.derivatives() = a.derivatives() + b.derivatives());
 
-DualNumber_op(+, Plus, , this->derivatives() += in.derivatives());
+DualNumber_op(-,
+              Minus,
+              new_dn.derivatives() = a.derivatives(),
+              new_dn.derivatives() = -b.derivatives,
+              new_dn.derivatives() = a.derivatives() - b.derivatives());
 
-DualNumber_op(-, Minus, , this->derivatives() -= in.derivatives());
+DualNumber_op(*,
+              Multiplies,
+              new_dn.derivatives() = a.derivatives() * b,
+              new_dn.derivatives() = a * b.derivatives(),
+              new_dn.derivatives() = a.value() * b.derivatives() + a.derivatives() * b.value());
 
-DualNumber_op(*, Multiplies, this->derivatives() *= in, this->derivatives() *= in.value();
-              this->derivatives() += this->value() * in.derivatives(););
-
-DualNumber_op(/, Divides, this->derivatives() /= in, this->derivatives() /= in.value();
-              this->derivatives() -= this->value() / (in.value() * in.value()) * in.derivatives(););
+DualNumber_op(/,
+              Divides,
+              new_dn.derivatives() = a.derivatives() / b,
+              new_dn.derivatives() = -a * b.derivatives() / (b.value() * b.value()),
+              new_dn.derivatives() = (b.value() * a.derivatives() - b.derivatives() * a.value()) /
+                                     (b.value() * b.value()));
 
 #define DualNumber_compare(opname)                                                                 \
   template <typename T, typename D, typename T2, typename D2>                                      \
@@ -231,19 +223,25 @@ DualNumber_op(/, Divides, this->derivatives() /= in, this->derivatives() /= in.v
       operator opname(const DualNumber<T, D> & a, const T2 & b)                                    \
   {                                                                                                \
     return (a.value() opname b);                                                                   \
-  }
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
-DualNumber_compare(>) DualNumber_compare(>=) DualNumber_compare(<) DualNumber_compare(<=)
-    DualNumber_compare(==) DualNumber_compare(!=) DualNumber_compare(&&) DualNumber_compare(||)
+DualNumber_compare(>);
+DualNumber_compare(>=);
+DualNumber_compare(<);
+DualNumber_compare(<=);
+DualNumber_compare(==);
+DualNumber_compare(!=);
+DualNumber_compare(&&);
+DualNumber_compare(||);
 
-        template <typename T, typename D>
-        inline std::ostream &
-        operator<<(std::ostream & output, const DualNumber<T, D> & a)
+template <typename T, typename D>
+inline std::ostream &
+operator<<(std::ostream & output, const DualNumber<T, D> & a)
 {
   return output << '(' << a.value() << ',' << a.derivatives() << ')';
 }
 
-// clang-format on
 template <typename T, typename D>
 inline D
 gradient(const DualNumber<T, D> & a)
@@ -267,7 +265,6 @@ isnan(const DualNumber<T, D> & a)
   return isnan(a.value());
 }
 
-// clang-format off
 #if __cplusplus >= 201103L
 #define DualNumber_std_unary(funcname, derivative, precalc)                                        \
   template <typename T, typename D>                                                                \
@@ -289,7 +286,8 @@ isnan(const DualNumber<T, D> & a)
     in.derivatives() *= derivative;                                                                \
     in.value() = funcval;                                                                          \
     return in;                                                                                     \
-  }
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
 #else
 
@@ -302,29 +300,28 @@ isnan(const DualNumber<T, D> & a)
     in.derivatives() *= derivative;                                                                \
     in.value() = funcval;                                                                          \
     return in;                                                                                     \
-  }
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
 #endif
 
-DualNumber_std_unary(sqrt, 1 / (2 * funcval), ) DualNumber_std_unary(exp, funcval, )
-    DualNumber_std_unary(log, 1 / in.value(), )
-        DualNumber_std_unary(log10, 1 / in.value() * (1 / std::log(T(10.))), ) DualNumber_std_unary(
-            sin, std::cos(in.value()), ) DualNumber_std_unary(cos, -std::sin(in.value()), )
-            DualNumber_std_unary(tan, sec_in * sec_in, T sec_in = 1 / std::cos(in.value()))
-                DualNumber_std_unary(asin, 1 / std::sqrt(1 - in.value() * in.value()), )
-                    DualNumber_std_unary(acos, -1 / std::sqrt(1 - in.value() * in.value()), )
-                        DualNumber_std_unary(atan, 1 / (1 + in.value() * in.value()), )
-                            DualNumber_std_unary(sinh, std::cosh(in.value()), )
-                                DualNumber_std_unary(cosh, std::sinh(in.value()), )
-                                    DualNumber_std_unary(tanh,
-                                                         sech_in * sech_in,
-                                                         T sech_in = 1 / std::cosh(in.value()))
-                                        DualNumber_std_unary(abs,
-                                                             (in.value() > 0) -
-                                                                 (in.value() <
-                                                                  0), ) // std < and > return 0 or 1
-    DualNumber_std_unary(fabs, (in.value() > 0) - (in.value() < 0), )   // std < and > return 0 or 1
-    DualNumber_std_unary(ceil, 0, ) DualNumber_std_unary(floor, 0, )
+DualNumber_std_unary(sqrt, 1 / (2 * funcval), );
+DualNumber_std_unary(exp, funcval, );
+DualNumber_std_unary(log, 1 / in.value(), );
+DualNumber_std_unary(log10, 1 / in.value() * (1 / std::log(T(10.))), );
+DualNumber_std_unary(sin, std::cos(in.value()), );
+DualNumber_std_unary(cos, -std::sin(in.value()), );
+DualNumber_std_unary(tan, sec_in * sec_in, T sec_in = 1 / std::cos(in.value()));
+DualNumber_std_unary(asin, 1 / std::sqrt(1 - in.value() * in.value()), );
+DualNumber_std_unary(acos, -1 / std::sqrt(1 - in.value() * in.value()), );
+DualNumber_std_unary(atan, 1 / (1 + in.value() * in.value()), );
+DualNumber_std_unary(sinh, std::cosh(in.value()), );
+DualNumber_std_unary(cosh, std::sinh(in.value()), );
+DualNumber_std_unary(tanh, sech_in * sech_in, T sech_in = 1 / std::cosh(in.value()));
+DualNumber_std_unary(abs, (in.value() > 0) - (in.value() < 0), );  // std < and > return 0 or 1
+DualNumber_std_unary(fabs, (in.value() > 0) - (in.value() < 0), ); // std < and > return 0 or 1
+DualNumber_std_unary(ceil, 0, );
+DualNumber_std_unary(floor, 0, );
 
 #define DualNumber_std_binary(funcname, derivative)                                                \
   template <typename T, typename D, typename T2, typename D2>                                      \
@@ -361,22 +358,22 @@ DualNumber_std_unary(sqrt, 1 / (2 * funcval), ) DualNumber_std_unary(exp, funcva
     typedef typename CompareTypes<DualNumber<T, D>, T2>::supertype type;                           \
     type newb(b);                                                                                  \
     return std::funcname(a, newb);                                                                 \
-  }
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
-    // if_else is necessary here to handle cases where a is negative but b
-    // is 0; we should have a contribution of 0 from those, not NaN.
-    DualNumber_std_binary(pow,
-                          funcval *(b.value() * a.derivatives() / a.value() +
-                                    MetaPhysicL::if_else(b.derivatives(),
-                                                         b.derivatives() * std::log(a.value()),
-                                                         b.derivatives())))
-        DualNumber_std_binary(atan2,
-                              (b.value() * a.derivatives() - a.value() * b.derivatives()) /
-                                  (b.value() * b.value() + a.value() * a.value()))
-            DualNumber_std_binary(max, (a.value() > b.value()) ? a.derivatives() : b.derivatives())
-                DualNumber_std_binary(min,
-                                      (a.value() > b.value()) ? b.derivatives() : a.derivatives())
-                    DualNumber_std_binary(fmod, a.derivatives())
+// if_else is necessary here to handle cases where a is negative but b
+// is 0; we should have a contribution of 0 from those, not NaN.
+DualNumber_std_binary(pow,
+                      funcval *(b.value() * a.derivatives() / a.value() +
+                                MetaPhysicL::if_else(b.derivatives(),
+                                                     b.derivatives() * std::log(a.value()),
+                                                     b.derivatives())));
+DualNumber_std_binary(atan2,
+                      (b.value() * a.derivatives() - a.value() * b.derivatives()) /
+                          (b.value() * b.value() + a.value() * a.value()));
+DualNumber_std_binary(max, (a.value() > b.value()) ? a.derivatives() : b.derivatives());
+DualNumber_std_binary(min, (a.value() > b.value()) ? b.derivatives() : a.derivatives());
+DualNumber_std_binary(fmod, a.derivatives());
 
 } // namespace std
 

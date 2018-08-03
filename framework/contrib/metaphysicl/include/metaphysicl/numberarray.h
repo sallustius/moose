@@ -332,206 +332,79 @@ sum(const NumberArray<N, T> & a)
   return returnval;
 }
 
-/*
- * IsOperable specializations for NumberArray with tensors
- */
-template <std::size_t N,
-          template <typename> class W1,
-          template <typename> class W2,
-          typename T1,
-          typename T2>
-struct IsOperable<NumberArray<N, W1<T1>>, W2<T2>>
-{
-  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W2, T2>::value;
-};
+#define NumberArray_op_ab(opname, functorname, atype, btype, aarg, barg)                           \
+  template <std::size_t N, typename T, typename T2>                                                \
+  inline NumberArray<N, typename functorname##Type<T, T2>::supertype> operator opname(             \
+      const atype & a, const btype & b)                                                            \
+  {                                                                                                \
+    typedef NumberArray<N, typename functorname##Type<T, T2>::supertype> NA;                       \
+    NA returnval;                                                                                  \
+    for (std::size_t i = 0; i != N; ++i)                                                           \
+      returnval[i] = aarg opname barg;                                                             \
+                                                                                                   \
+    return returnval;                                                                              \
+  }                                                                                                \
+  void ANYONYMOUS_FUNCTION()
 
-template <std::size_t N,
-          template <typename> class W1,
-          template <typename> class W2,
-          typename T1,
-          typename T2>
-struct IsOperable<W1<T1>, NumberArray<N, W2<T2>>>
-{
-  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W2, T2>::value;
-};
+#define NumberArray_op(opname, typecomparison)                                                     \
+  NumberArray_op_ab(opname,                                                                        \
+                    typecomparison,                                                                \
+                    NumberArray<N MacroComma T>,                                                   \
+                    NumberArray<N MacroComma T2>,                                                  \
+                    a[i],                                                                          \
+                    b[i]);                                                                         \
+  NumberArray_op_ab(opname, typecomparison, T, NumberArray<N MacroComma T2>, a, b[i]);             \
+  NumberArray_op_ab(opname, typecomparison, NumberArray<N MacroComma T>, T2, a[i], b);             \
+  void ANONYMOUS_FUNCTION()
 
-template <std::size_t N,
-          template <typename> class W1,
-          template <typename> class W2,
-          typename T1,
-          typename T2>
-struct IsOperable<NumberArray<N, W1<T1>>, NumberArray<N, W2<T2>>>
-{
-  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W2, T2>::value;
-};
+NumberArray_op(+, Plus);
+NumberArray_op(-, Minus);
+NumberArray_op(*, Multiplies);
+NumberArray_op(/, Divides);
 
-template <std::size_t N, typename T, bool reverseorder>
-struct MultipliesType<NumberArray<N, TypeTensor<T>>, TypeTensor<T>, reverseorder>
-{
-  typedef NumberArray<N, TensorValue<T>> supertype;
-};
+#define NumberArray_operator_binary_abab(opname, atype, btype, aarg, barg)                         \
+  template <std::size_t N, typename T, typename T2>                                                \
+  inline NumberArray<N, bool> operator opname(const atype & a, const btype & b)                    \
+  {                                                                                                \
+    NumberArray<N, bool> returnval;                                                                \
+                                                                                                   \
+    for (std::size_t i = 0; i != N; ++i)                                                           \
+      returnval[i] = (aarg opname barg);                                                           \
+                                                                                                   \
+    return returnval;                                                                              \
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
-template <std::size_t N, typename T, bool reverseorder>
-struct MultipliesType<NumberArray<N, TensorValue<T>>, TensorValue<T>, reverseorder>
-{
-  typedef NumberArray<N, TensorValue<T>> supertype;
-};
+#define NumberArray_operator_binary(opname)                                                        \
+  NumberArray_operator_binary_abab(                                                                \
+      opname, NumberArray<N MacroComma T>, NumberArray<N MacroComma T2>, a[i], b[i]);              \
+  NumberArray_operator_binary_abab(opname, T, NumberArray<N MacroComma T2>, a, b[i]);              \
+  NumberArray_operator_binary_abab(opname, NumberArray<N MacroComma T>, T2, a[i], b);              \
+  void ANONYMOUS_FUNCTION()
 
-template <std::size_t N, typename T, bool reverseorder>
-struct MultipliesType<TensorValue<T>, NumberArray<N, TensorValue<T>>, reverseorder>
-{
-  typedef NumberArray<N, TensorValue<T>> supertype;
-};
-
-template <std::size_t N, typename T, bool reverseorder>
-struct MultipliesType<TypeTensor<T>, NumberArray<N, TypeTensor<T>>, reverseorder>
-{
-  typedef NumberArray<N, TensorValue<T>> supertype;
-};
-
-template <std::size_t N, typename T, bool reverseorder>
-struct MultipliesType<NumberArray<N, TensorValue<T>>, NumberArray<N, TensorValue<T>>, reverseorder>
-{
-  typedef NumberArray<N, TensorValue<T>> supertype;
-};
-
-template <std::size_t N, typename T, bool reverseorder>
-struct MultipliesType<NumberArray<N, TypeTensor<T>>, NumberArray<N, TypeTensor<T>>, reverseorder>
-{
-  typedef NumberArray<N, TensorValue<T>> supertype;
-};
-
-/*
- * IsOperable specializations for NumberArray with scalars
- */
-template <std::size_t N, typename T1, typename T2>
-struct IsOperable<NumberArray<N, T1>, T2>
-{
-  static const bool value = ScalarTraits<T1>::value && ScalarTraits<T2>::value;
-};
-
-template <std::size_t N, typename T1, typename T2>
-struct IsOperable<T2, NumberArray<N, T1>>
-{
-  static const bool value = ScalarTraits<T1>::value && ScalarTraits<T2>::value;
-};
-
-template <std::size_t N, typename T1, typename T2>
-struct IsOperable<NumberArray<N, T1>, NumberArray<N, T2>>
-{
-  static const bool value = ScalarTraits<T1>::value && ScalarTraits<T2>::value;
-};
-
-// #define NumberArray_supported_scalar_operand_types(op)                                             \
-//   template <std::size_t N, typename T, bool reverseorder>                                          \
-//   struct op##Type<NumberArray<N, T>, T, reverseorder>                                              \
-//   {                                                                                                \
-//     typedef NumberArray<N, T> supertype;                                                           \
-//   };                                                                                               \
-//                                                                                                    \
-//   template <std::size_t N, typename T, bool reverseorder>                                          \
-//   struct op##Type<T, NumberArray<N, T>, reverseorder>                                              \
-//   {                                                                                                \
-//     typedef NumberArray<N, T> supertype;                                                           \
-//   };                                                                                               \
-//                                                                                                    \
-//   template <std::size_t N, typename T, bool reverseorder>                                          \
-//   struct op##Type<NumberArray<N, T>, NumberArray<N, T>, reverseorder>                              \
-//   {                                                                                                \
-//     typedef NumberArray<N, T> supertype;                                                           \
-//   }
-
-// NumberArray_supported_scalar_operand_types(Multiplies);
-// NumberArray_supported_scalar_operand_types(Divides);
-// NumberArray_supported_scalar_operand_types(Plus);
-// NumberArray_supported_scalar_operand_types(Minus);
-
-// clang-format off
-#define NumberArray_op_ab(opname, atype, btype, newtype)                                       \
-   template <std::size_t N, typename T, typename T2>                                            \
-   inline typename boostcopy::lazy_enable_if<IsOperable<atype,btype>, newtype>::type                   \
-   operator opname(const atype & a, const btype & b)                                            \
-   {                                                                                            \
-     typedef typename newtype::supertype TS;                                                    \
-     TS returnval(a);                                                                           \
-     returnval opname## = b;                                                                    \
-     return returnval;                                                                          \
-   }
-
-// #define NumberArray_op_ab(opname, atype, btype, newtype)                                       \
-//   template <std::size_t N, typename T, typename T2>                                            \
-//   inline typename newtype::supertype                   \
-//   operator opname(const atype & a, const btype & b)                                            \
-//   {                                                                                            \
-//     typedef typename newtype::supertype TS;                                                    \
-//     TS returnval(a);                                                                           \
-//     returnval opname## = b;                                                                    \
-//     return returnval;                                                                          \
-//   }
-
-#define NumberArray_op(opname, typecomparison)                                                 \
-  NumberArray_op_ab(                                                                           \
-    opname,                                                                                    \
-    NumberArray<N MacroComma T>,                                                               \
-    NumberArray<N MacroComma T2>,                                                              \
-    typecomparison##Type<NumberArray<N MacroComma T> MacroComma NumberArray<N MacroComma T2>>) \
-  NumberArray_op_ab(                                                                           \
-    opname,                                                                                    \
-    T,                                                                                         \
-    NumberArray<N MacroComma T2>,                                                              \
-    typecomparison##Type<NumberArray<N MacroComma T2> MacroComma T MacroComma true>)           \
-  NumberArray_op_ab(                                                                           \
-    opname,                                                                                    \
-    NumberArray<N MacroComma T>,                                                               \
-    T2,                                                                                        \
-    typecomparison##Type<NumberArray<N MacroComma T> MacroComma T2>)
-
-NumberArray_op(+, Plus)
-NumberArray_op(-, Minus)
-NumberArray_op(*, Multiplies)
-NumberArray_op(/, Divides)
-
-#define NumberArray_operator_binary_abab(opname, atype, btype, aarg, barg)           \
-  template <std::size_t N, typename T, typename T2>                                  \
-  inline NumberArray<N, bool> operator opname(const atype & a, const btype & b)      \
-  {                                                                                  \
-    NumberArray<N, bool> returnval;                                                  \
-                                                                                     \
-    for (std::size_t i = 0; i != N; ++i)                                             \
-      returnval[i] = (aarg opname barg);                                             \
-                                                                                     \
-    return returnval;                                                                \
-  }
-
-#define NumberArray_operator_binary(opname)                                          \
-  NumberArray_operator_binary_abab(                                                  \
-    opname, NumberArray<N MacroComma T>, NumberArray<N MacroComma T2>, a[i], b[i])   \
-  NumberArray_operator_binary_abab(opname, T, NumberArray<N MacroComma T2>, a, b[i]) \
-  NumberArray_operator_binary_abab(opname, NumberArray<N MacroComma T>, T2, a[i], b)
-
-NumberArray_operator_binary(<)
-NumberArray_operator_binary(<=)
-NumberArray_operator_binary(>)
-NumberArray_operator_binary(>=)
-NumberArray_operator_binary(==)
-NumberArray_operator_binary(!=)
-NumberArray_operator_binary(&&)
-NumberArray_operator_binary(||)
+NumberArray_operator_binary(<);
+NumberArray_operator_binary(<=);
+NumberArray_operator_binary(>);
+NumberArray_operator_binary(>=);
+NumberArray_operator_binary(==);
+NumberArray_operator_binary(!=);
+NumberArray_operator_binary(&&);
+NumberArray_operator_binary(||);
 
 template <std::size_t N, typename T>
 inline std::ostream &
 operator<<(std::ostream & output, const NumberArray<N, T> & a)
 {
-output << '{';
-if (N)
-  output << a[0];
-for (std::size_t i = 1; i < N; ++i)
-  output << ',' << a[i];
-output << '}';
-return output;
+  output << '{';
+  if (N)
+    output << a[0];
+  for (std::size_t i = 1; i < N; ++i)
+    output << ',' << a[i];
+  output << '}';
+  return output;
 }
 
-// CompareTypes, RawType, ValueType specializations
+  // CompareTypes, RawType, ValueType specializations
 
 #define NumberArray_comparisons(templatename)                                                      \
   template <std::size_t N, typename T, bool reverseorder>                                          \
@@ -571,8 +444,6 @@ return output;
     typedef NumberArray<N, typename Symmetric##templatename<T, T2, reverseorder>::supertype>       \
         supertype;                                                                                 \
   }
-
-// clang-format on
 
 NumberArray_comparisons(CompareTypes);
 NumberArray_comparisons(PlusType);
@@ -618,7 +489,8 @@ using MetaPhysicL::NumberArray;
       a[i] = std::funcname(a[i]);                                                                  \
                                                                                                    \
     return a;                                                                                      \
-  }
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
 #define NumberArray_std_binary_abab(funcname, atype, btype, abtypes, aarg, barg)                   \
   template <std::size_t N, typename T, typename T2>                                                \
@@ -631,7 +503,8 @@ using MetaPhysicL::NumberArray;
       returnval[i] = std::funcname(aarg, barg);                                                    \
                                                                                                    \
     return returnval;                                                                              \
-  }
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
 #define NumberArray_std_binary_aa(funcname, atype)                                                 \
   template <std::size_t N, typename T>                                                             \
@@ -643,52 +516,52 @@ using MetaPhysicL::NumberArray;
       returnval[i] = std::funcname(a[i], b[i]);                                                    \
                                                                                                    \
     return returnval;                                                                              \
-  }
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
 
-// clang-format off
 #define NumberArray_std_binary(funcname)                                                           \
   NumberArray_std_binary_abab(funcname,                                                            \
                               NumberArray<N MacroComma T>,                                         \
                               NumberArray<N MacroComma T2>,                                        \
                               NumberArray<N MacroComma T> MacroComma NumberArray<N MacroComma T2>, \
                               a[i],                                                                \
-                              b[i])                                                                \
+                              b[i]);                                                               \
   NumberArray_std_binary_abab(funcname,                                                            \
                               T,                                                                   \
                               NumberArray<N MacroComma T2>,                                        \
                               NumberArray<N MacroComma T2> MacroComma T,                           \
                               a,                                                                   \
-                              b[i])                                                                \
+                              b[i]);                                                               \
   NumberArray_std_binary_abab(funcname,                                                            \
                               NumberArray<N MacroComma T>,                                         \
                               T2,                                                                  \
                               NumberArray<N MacroComma T> MacroComma T2,                           \
                               a[i],                                                                \
-                              b)                                                                   \
+                              b);                                                                  \
   NumberArray_std_binary_aa(funcname, NumberArray<N MacroComma T>)
 
-NumberArray_std_binary(pow)
-NumberArray_std_unary(exp)
-NumberArray_std_unary(log)
-NumberArray_std_unary(log10)
-NumberArray_std_unary(sin)
-NumberArray_std_unary(cos)
-NumberArray_std_unary(tan)
-NumberArray_std_unary(asin)
-NumberArray_std_unary(acos)
-NumberArray_std_unary(atan)
-NumberArray_std_binary(atan2)
-NumberArray_std_unary(sinh)
-NumberArray_std_unary(cosh)
-NumberArray_std_unary(tanh)
-NumberArray_std_unary(sqrt)
-NumberArray_std_unary(abs)
-NumberArray_std_unary(fabs)
-NumberArray_std_binary(max)
-NumberArray_std_binary(min)
-NumberArray_std_unary(ceil)
-NumberArray_std_unary(floor)
-NumberArray_std_binary(fmod)
+NumberArray_std_binary(pow);
+NumberArray_std_unary(exp);
+NumberArray_std_unary(log);
+NumberArray_std_unary(log10);
+NumberArray_std_unary(sin);
+NumberArray_std_unary(cos);
+NumberArray_std_unary(tan);
+NumberArray_std_unary(asin);
+NumberArray_std_unary(acos);
+NumberArray_std_unary(atan);
+NumberArray_std_binary(atan2);
+NumberArray_std_unary(sinh);
+NumberArray_std_unary(cosh);
+NumberArray_std_unary(tanh);
+NumberArray_std_unary(sqrt);
+NumberArray_std_unary(abs);
+NumberArray_std_unary(fabs);
+NumberArray_std_binary(max);
+NumberArray_std_binary(min);
+NumberArray_std_unary(ceil);
+NumberArray_std_unary(floor);
+NumberArray_std_binary(fmod);
 
 template <std::size_t N, typename T>
 class numeric_limits<NumberArray<N, T>>

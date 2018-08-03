@@ -446,83 +446,77 @@ CompareTypes_all(double, long double);
 /*
  * Tensor-tensor and vector-vector
  */
-#define MathConstruct_OpTypes(opname, math_construct)                                              \
+#define DefineResult_OneTypeOneTemplate(opname, Operand, Result)                                   \
   template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<math_construct##Value<T>, math_construct##Value<T>, reverseorder>            \
+  struct opname##Type<Operand<T>, Operand<T>, reverseorder>                                        \
   {                                                                                                \
-    typedef math_construct##Value<T> supertype;                                                    \
-  };                                                                                               \
-                                                                                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<math_construct##Value<T>, Type##math_construct<T>, reverseorder>             \
-  {                                                                                                \
-    typedef math_construct##Value<T> supertype;                                                    \
-  };                                                                                               \
-                                                                                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<Type##math_construct<T>, math_construct##Value<T>, reverseorder>             \
-  {                                                                                                \
-    typedef math_construct##Value<T> supertype;                                                    \
-  };                                                                                               \
-                                                                                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<Type##math_construct<T>, Type##math_construct<T>, reverseorder>              \
-  {                                                                                                \
-    typedef math_construct##Value<T> supertype;                                                    \
+    typedef Result<T> supertype;                                                                   \
   }
 
-MathConstruct_OpTypes(Multiplies, Tensor);
-MathConstruct_OpTypes(Plus, Tensor);
-MathConstruct_OpTypes(Minus, Tensor);
-MathConstruct_OpTypes(Multiplies, Vector);
-MathConstruct_OpTypes(Plus, Vector);
-MathConstruct_OpTypes(Minus, Vector);
-
-/*
- * scalar-tensor and scalar-vector
- */
-#define ScalarMultTypes(math_construct)                                                            \
+#define DefineResult_TwoTypesTwoTemplates(opname, Operand1, Operand2, Result)                      \
   template <typename T, bool reverseorder>                                                         \
-  struct MultipliesType<Type##math_construct<T>, T, reverseorder>                                  \
+  struct opname##Type<Operand1<T>, Operand2<T>, reverseorder>                                      \
   {                                                                                                \
-    typedef math_construct##Value<T> supertype;                                                    \
-  };                                                                                               \
-                                                                                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct MultipliesType<T, Type##math_construct<T>, reverseorder>                                  \
-  {                                                                                                \
-    typedef math_construct##Value<T> supertype;                                                    \
-  };                                                                                               \
-                                                                                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct MultipliesType<math_construct##Value<T>, T, reverseorder>                                 \
-  {                                                                                                \
-    typedef math_construct##Value<T> supertype;                                                    \
-  };                                                                                               \
-                                                                                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct MultipliesType<T, math_construct##Value<T>, reverseorder>                                 \
-  {                                                                                                \
-    typedef math_construct##Value<T> supertype;                                                    \
+    typedef Result<T> supertype;                                                                   \
   }
 
-ScalarMultTypes(Tensor);
-ScalarMultTypes(Vector);
-
-/*
- * tensor-vector
- */
-#define TensorVectorMultTypes(TensorClass, VectorClass)                                            \
+#define DefineResult_TwoTypesTwoTemplatesReversable(opname, Operand1, Operand2, Result)            \
+  DefineResult_TwoTypesTwoTemplates(opname, Operand1, Operand2, Result);                           \
+                                                                                                   \
   template <typename T, bool reverseorder>                                                         \
-  struct MultipliesType<TensorClass<T>, VectorClass<T>, reverseorder>                              \
+  struct opname##Type<Operand2<T>, Operand1<T>, reverseorder>                                      \
   {                                                                                                \
-    typedef VectorValue<T> supertype;                                                              \
+    typedef Result<T> supertype;                                                                   \
   }
 
-TensorVectorMultTypes(TypeTensor, TypeVector);
-TensorVectorMultTypes(TypeTensor, VectorValue);
-TensorVectorMultTypes(TensorValue, TypeVector);
-TensorVectorMultTypes(TensorValue, VectorValue);
+#define DefineResult_TwoTypesOneTemplate(opname, NonScalarOperand, Result)                         \
+  template <typename T, bool reverseorder>                                                         \
+  struct opname##Type<NonScalarOperand<T>, T, reverseorder>                                        \
+  {                                                                                                \
+    typedef Result<T> supertype;                                                                   \
+  };                                                                                               \
+                                                                                                   \
+  template <typename T, bool reverseorder>                                                         \
+  struct opname##Type<T, NonScalarOperand<T>, reverseorder>                                        \
+  {                                                                                                \
+    typedef Result<T> supertype;                                                                   \
+  }
+
+// Tensor-tensor
+DefineResult_OneTypeOneTemplate(Multiplies, TensorValue, TensorValue);
+DefineResult_OneTypeOneTemplate(Multiplies, TypeTensor, TensorValue);
+DefineResult_TwoTypesTwoTemplatesReversable(Multiplies, TypeTensor, TensorValue, TensorValue);
+DefineResult_OneTypeOneTemplate(Plus, TensorValue, TensorValue);
+DefineResult_OneTypeOneTemplate(Plus, TypeTensor, TensorValue);
+DefineResult_TwoTypesTwoTemplatesReversable(Plus, TypeTensor, TensorValue, TensorValue);
+DefineResult_OneTypeOneTemplate(Minus, TensorValue, TensorValue);
+DefineResult_OneTypeOneTemplate(Minus, TypeTensor, TensorValue);
+DefineResult_TwoTypesTwoTemplatesReversable(Minus, TypeTensor, TensorValue, TensorValue);
+
+// Vector-vector
+DefineResult_OneTypeOneTemplate(Multiplies, VectorValue, VectorValue);
+DefineResult_OneTypeOneTemplate(Multiplies, TypeVector, VectorValue);
+DefineResult_TwoTypesTwoTemplatesReversable(Multiplies, TypeVector, VectorValue, VectorValue);
+DefineResult_OneTypeOneTemplate(Plus, VectorValue, VectorValue);
+DefineResult_OneTypeOneTemplate(Plus, TypeVector, VectorValue);
+DefineResult_TwoTypesTwoTemplatesReversable(Plus, TypeVector, VectorValue, VectorValue);
+DefineResult_OneTypeOneTemplate(Minus, VectorValue, VectorValue);
+DefineResult_OneTypeOneTemplate(Minus, TypeVector, VectorValue);
+DefineResult_TwoTypesTwoTemplatesReversable(Minus, TypeVector, VectorValue, VectorValue);
+
+// Scalar-vector
+DefineResult_TwoTypesOneTemplate(Multiplies, VectorValue, VectorValue);
+DefineResult_TwoTypesOneTemplate(Multiplies, TypeVector, VectorValue);
+
+// Scalar-tensor
+DefineResult_TwoTypesOneTemplate(Multiplies, TensorValue, TensorValue);
+DefineResult_TwoTypesOneTemplate(Multiplies, TypeTensor, TensorValue);
+
+// Tensor-vector
+DefineResult_TwoTypesTwoTemplates(Multiplies, TensorValue, VectorValue, VectorValue);
+DefineResult_TwoTypesTwoTemplates(Multiplies, TensorValue, TypeVector, VectorValue);
+DefineResult_TwoTypesTwoTemplates(Multiplies, TypeTensor, VectorValue, VectorValue);
+DefineResult_TwoTypesTwoTemplates(Multiplies, TypeTensor, TypeVector, VectorValue);
 
 // gcc can't tell which of the following is the most specialized?  Weak.
 /*
