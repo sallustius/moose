@@ -1,7 +1,32 @@
 [Tests]
-  [./test]
+  [./test_adad]
     type = 'Exodiff'
     input = 'ad_material.i'
     exodiff = 'ad_material_out.e'
+    absent_out = '7 Nonlinear'
+  [../]
+  [./test_adreg]
+    type = 'Exodiff'
+    input = 'ad_material.i'
+    exodiff = 'ad_material_out.e'
+    prereq = 'test_adad'
+    cli_args = "Kernels/diff/prop_to_use='adreg'"
+    expect_out = '14 Nonlinear'
+  [../]
+  [./test_regad]
+    type = 'Exodiff'
+    input = 'ad_material.i'
+    exodiff = 'ad_material_out.e'
+    prereq = 'test_adreg'
+    cli_args = "Kernels/diff/prop_to_use='regad'"
+    expect_out = '14 Nonlinear'
+  [../]
+  [./test_regreg]
+    type = 'Exodiff'
+    input = 'ad_material.i'
+    exodiff = 'ad_material_out.e'
+    prereq = 'test_regad'
+    cli_args = "Kernels/diff/prop_to_use='regreg'"
+    expect_out = '14 Nonlinear'
   [../]
 []

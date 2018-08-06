@@ -16,6 +16,8 @@
     type = ADMatDiffusion
     variable = u
     prop_to_use = 'AdAd'
+    ad_mat_prop = ad_diffusivity
+    regular_mat_prop = regular_diffusivity
   [../]
 []
 
@@ -38,9 +40,11 @@
   [./ad_coupled_mat]
     type = ADCoupledMaterial
     coupled_var = u
-    block = 0
     ad_mat_prop = ad_diffusivity
     regular_mat_prop = regular_diffusivity
+  [../]
+  [./ad_mat_types]
+    type = ADMatTypes
   [../]
 []
 
