@@ -31,25 +31,26 @@ ADMatTypes::ADMatTypes(const InputParameters & parameters)
 void
 ADMatTypes::computeQpProperties()
 {
-  // All binary and unary operators are implemented using the same macro, so we're just going to use
-  // multiply (*) as a surrogate to represent them all
   _scalar_ad_prop[_qp] = 1.;
   _scalar_ad_prop[_qp] *= _scalar_ad_prop[_qp];
   _scalar_ad_prop[_qp] = _scalar_ad_prop[_qp] * _scalar_ad_prop[_qp];
 
   _vector_ad_prop[_qp] = _scalar_ad_prop[_qp] * RealVectorValue(1., 1., 1.);
-  _scalar_ad_prop[_qp] = operator*<Real>(_vector_ad_prop[_qp], _vector_ad_prop[_qp]);
-  // _vector_ad_prop[_qp] *= 2.;
-  // _vector_ad_prop[_qp] = 2. * _vector_ad_prop[_qp] + _vector_ad_prop[_qp] * 2.;
+  _scalar_ad_prop[_qp] = _vector_ad_prop[_qp] * _vector_ad_prop[_qp];
+  _vector_ad_prop[_qp] *= 2.;
+  _vector_ad_prop[_qp] = 2. * _vector_ad_prop[_qp] + _vector_ad_prop[_qp] * 2.;
 
-  // _tensor_ad_prop[_qp] = _scalar_ad_prop[_qp] * RealTensorValue(1., 1., 1., 1., 1., 1., 1.,
-  // 1., 1.); _vector_ad_prop[_qp] = _tensor_ad_prop[_qp] * _vector_ad_prop[_qp];
-  // _tensor_ad_prop[_qp] *= 2.;
-  // _tensor_ad_prop[_qp] *= _tensor_ad_prop[_qp];
-  // _tensor_ad_prop[_qp] = _tensor_ad_prop[_qp] * _tensor_ad_prop[_qp];
-  // _tensor_ad_prop[_qp] = 2. * _tensor_ad_prop[_qp] + _tensor_ad_prop[_qp] * 2.;
+  _tensor_ad_prop[_qp] = _scalar_ad_prop[_qp] * RealTensorValue(1., 1., 1., 1., 1., 1., 1., 1., 1.);
 
-  // _scalar_reg_prop[_qp] = _scalar_ad_prop[_qp];
-  // _vector_reg_prop[_qp] = _vector_ad_prop[_qp];
-  // _tensor_reg_prop[_qp] = _tensor_ad_prop[_qp];
+  _vector_ad_prop[_qp] = _tensor_ad_prop[_qp] * _vector_ad_prop[_qp];
+
+  _tensor_ad_prop[_qp] *= 2.;
+  _tensor_ad_prop[_qp] *= _tensor_ad_prop[_qp];
+  _tensor_ad_prop[_qp] = _tensor_ad_prop[_qp] * _tensor_ad_prop[_qp];
+  _tensor_ad_prop[_qp] = 2. * _tensor_ad_prop[_qp] + _tensor_ad_prop[_qp] * 2.;
+  _tensor_ad_prop[_qp] = 2. * _tensor_ad_prop[_qp] - _tensor_ad_prop[_qp] * 2.;
+
+  _scalar_reg_prop[_qp] = _scalar_ad_prop[_qp];
+  _vector_reg_prop[_qp] = _vector_ad_prop[_qp];
+  _tensor_reg_prop[_qp] = _tensor_ad_prop[_qp];
 }
