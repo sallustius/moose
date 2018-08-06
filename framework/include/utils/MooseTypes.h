@@ -167,10 +167,6 @@ template <typename T>
 using VectorDN = DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>;
 template <typename T>
 using TensorDN = DualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
-template <typename T>
-using VectorValueDN = DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>;
-template <typename T>
-using TensorValueDN = DualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
 
 /*
  * Some helpful typedefs for AD

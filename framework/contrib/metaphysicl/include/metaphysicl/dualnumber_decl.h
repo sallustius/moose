@@ -35,6 +35,7 @@
 #include "metaphysicl/dualderivatives.h"
 #include "metaphysicl/raw_type.h"
 #include "metaphysicl/testable.h"
+#include "metaphysicl/numberarray.h"
 
 namespace MetaPhysicL
 {
@@ -214,17 +215,19 @@ struct DualNumberConstructor<DualNumber<T, D>, DD>
 // errors.
 
 #define DualNumber_decl_op(opname, functorname)                                                    \
-  template <typename T, typename D, typename T2, typename D2>                                      \
-  inline typename functorname##Type<DualNumber<T, D>, DualNumber<T2, D2>>::supertype               \
-  operator opname(const DualNumber<T, D> & a, const DualNumber<T2, D2> & b);                       \
+  template <typename T, size_t N, typename T2>                                                     \
+  inline auto operator opname(const DualNumber<T, NumberArray<N, T>> & a,                          \
+                              const DualNumber<T2, NumberArray<N, T2>> & b)                        \
+      ->DualNumber<decltype(a.value() opname b.value()),                                           \
+                   NumberArray<N, decltype(a.value() opname b.value())>>;                          \
                                                                                                    \
-  template <typename T, typename T2, typename D>                                                   \
-  inline typename functorname##Type<DualNumber<T2, D>, T, true>::supertype operator opname(        \
-      const T & a, const DualNumber<T2, D> & b);                                                   \
+  template <typename T, typename T2, size_t N>                                                     \
+  inline auto operator opname(const T & a, const DualNumber<T2, NumberArray<N, T2>> & b)           \
+      ->DualNumber<decltype(a opname b.value()), NumberArray<N, decltype(a opname b.value())>>;    \
                                                                                                    \
-  template <typename T, typename D, typename T2>                                                   \
-  inline typename functorname##Type<DualNumber<T, D>, T2, false>::supertype operator opname(       \
-      const DualNumber<T, D> & a, const T2 & b);
+  template <typename T, size_t N, typename T2>                                                     \
+  inline auto operator opname(const DualNumber<T, NumberArray<N, T>> & a, const T2 & b)            \
+      ->DualNumber<decltype(a.value() opname b), NumberArray<N, decltype(a.value() opname b)>>;
 
 DualNumber_decl_op(+, Plus);
 DualNumber_decl_op(-, Minus);
