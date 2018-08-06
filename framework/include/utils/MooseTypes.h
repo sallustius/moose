@@ -11,7 +11,6 @@
 #define MOOSETYPES_H
 
 #include "Moose.h"
-#include "MooseADTypes.h"
 
 #include "libmesh/libmesh.h"
 #include "libmesh/id_types.h"
@@ -23,6 +22,9 @@
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
 #include "libmesh/type_n_tensor.h"
+
+#include "metaphysicl/dualnumber.h"
+#include "metaphysicl/numberarray.h"
 
 // BOOST include
 #include "bitmask_operators.h"
@@ -149,6 +151,40 @@ typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariableTestValue;
 typedef MooseArray<std::vector<TensorValue<Real>>> VectorVariableTestGradient;
 typedef MooseArray<std::vector<TypeNTensor<3, Real>>> VectorVariableTestSecond;
 typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariableTestCurl;
+
+/*
+ * DualNumber naming
+ */
+#define AD_MAX_DOFS_PER_ELEM 100
+using MetaPhysicL::DualNumber;
+using MetaPhysicL::NumberArray;
+
+template <typename T>
+using ScalarDN = DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>>;
+template <typename T, template <class> class W>
+using TemplateDN = DualNumber<W<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, W<T>>>;
+template <typename T>
+using VectorDN = DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>;
+template <typename T>
+using TensorDN = DualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
+template <typename T>
+using VectorValueDN = DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>;
+template <typename T>
+using TensorValueDN = DualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
+
+/*
+ * Some helpful typedefs for AD
+ */
+typedef ScalarDN<Real> ADReal;
+typedef VectorDN<Real> ADRealVectorValue;
+typedef TensorDN<Real> ADRealTensorValue;
+
+typedef ADRealVectorValue ADRealGradient;
+typedef ADRealTensorValue ADRealTensor;
+
+typedef MooseArray<ADReal> ADVariableValue;
+typedef MooseArray<ADRealGradient> ADVariableGradient;
+typedef MooseArray<ADRealTensor> ADVariableSecond;
 
 namespace Moose
 {
