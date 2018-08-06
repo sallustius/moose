@@ -441,83 +441,6 @@ CompareTypes_all(float, double);
 CompareTypes_all(float, long double);
 CompareTypes_all(double, long double);
 
-// We did all the standard built-in types. Now lets do vectors and tensors
-
-/*
- * Tensor-tensor and vector-vector
- */
-#define DefineResult_OneTypeOneTemplate(opname, Operand, Result)                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<Operand<T>, Operand<T>, reverseorder>                                        \
-  {                                                                                                \
-    typedef Result supertype;                                                                      \
-  }
-
-#define DefineResult_TwoTypesTwoTemplates(opname, Operand1, Operand2, Result)                      \
-  template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<Operand1<T>, Operand2<T>, reverseorder>                                      \
-  {                                                                                                \
-    typedef Result supertype;                                                                      \
-  }
-
-#define DefineResult_TwoTypesTwoTemplatesReversable(opname, Operand1, Operand2, Result)            \
-  DefineResult_TwoTypesTwoTemplates(opname, Operand1, Operand2, Result);                           \
-                                                                                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<Operand2<T>, Operand1<T>, reverseorder>                                      \
-  {                                                                                                \
-    typedef Result supertype;                                                                      \
-  }
-
-#define DefineResult_TwoTypesOneTemplate(opname, NonScalarOperand, Result)                         \
-  template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<NonScalarOperand<T>, T, reverseorder>                                        \
-  {                                                                                                \
-    typedef Result supertype;                                                                      \
-  };                                                                                               \
-                                                                                                   \
-  template <typename T, bool reverseorder>                                                         \
-  struct opname##Type<T, NonScalarOperand<T>, reverseorder>                                        \
-  {                                                                                                \
-    typedef Result supertype;                                                                      \
-  }
-
-// Tensor-tensor
-DefineResult_OneTypeOneTemplate(Multiplies, TensorValue, TensorValue<T>);
-DefineResult_OneTypeOneTemplate(Multiplies, TypeTensor, TensorValue<T>);
-DefineResult_TwoTypesTwoTemplatesReversable(Multiplies, TypeTensor, TensorValue, TensorValue<T>);
-DefineResult_OneTypeOneTemplate(Plus, TensorValue, TensorValue<T>);
-DefineResult_OneTypeOneTemplate(Plus, TypeTensor, TensorValue<T>);
-DefineResult_TwoTypesTwoTemplatesReversable(Plus, TypeTensor, TensorValue, TensorValue<T>);
-DefineResult_OneTypeOneTemplate(Minus, TensorValue, TensorValue<T>);
-DefineResult_OneTypeOneTemplate(Minus, TypeTensor, TensorValue<T>);
-DefineResult_TwoTypesTwoTemplatesReversable(Minus, TypeTensor, TensorValue, TensorValue<T>);
-
-// Vector-vector
-DefineResult_OneTypeOneTemplate(Multiplies, VectorValue, T);
-DefineResult_OneTypeOneTemplate(Multiplies, TypeVector, T);
-DefineResult_TwoTypesTwoTemplatesReversable(Multiplies, TypeVector, VectorValue, T);
-DefineResult_OneTypeOneTemplate(Plus, VectorValue, VectorValue<T>);
-DefineResult_OneTypeOneTemplate(Plus, TypeVector, VectorValue<T>);
-DefineResult_TwoTypesTwoTemplatesReversable(Plus, TypeVector, VectorValue, VectorValue<T>);
-DefineResult_OneTypeOneTemplate(Minus, VectorValue, VectorValue<T>);
-DefineResult_OneTypeOneTemplate(Minus, TypeVector, VectorValue<T>);
-DefineResult_TwoTypesTwoTemplatesReversable(Minus, TypeVector, VectorValue, VectorValue<T>);
-
-// Scalar-vector
-DefineResult_TwoTypesOneTemplate(Multiplies, VectorValue, VectorValue<T>);
-DefineResult_TwoTypesOneTemplate(Multiplies, TypeVector, VectorValue<T>);
-
-// Scalar-tensor
-DefineResult_TwoTypesOneTemplate(Multiplies, TensorValue, TensorValue<T>);
-DefineResult_TwoTypesOneTemplate(Multiplies, TypeTensor, TensorValue<T>);
-
-// Tensor-vector
-DefineResult_TwoTypesTwoTemplates(Multiplies, TensorValue, VectorValue, VectorValue<T>);
-DefineResult_TwoTypesTwoTemplates(Multiplies, TensorValue, TypeVector, VectorValue<T>);
-DefineResult_TwoTypesTwoTemplates(Multiplies, TypeTensor, VectorValue, VectorValue<T>);
-DefineResult_TwoTypesTwoTemplates(Multiplies, TypeTensor, TypeVector, VectorValue<T>);
-
 // gcc can't tell which of the following is the most specialized?  Weak.
 /*
 template<typename S, typename T>
@@ -577,7 +500,7 @@ struct CompareTypesEnabler<T1,
                                    reverseorder>::type>                                            \
   {                                                                                                \
     typedef typename CompareTypes<T1, T1, reverseorder>::supertype supertype;                      \
-  };
+  }
 
 #define CompareTypes_stripped(rawT1, rawT2)                                                        \
   template <typename T1, typename T2, bool reverseorder>                                           \
@@ -592,14 +515,19 @@ struct CompareTypesEnabler<T1,
                                    reverseorder>::type>                                            \
   {                                                                                                \
     typedef typename CompareTypes<T1, T2, reverseorder>::supertype supertype;                      \
-  };
+  }
 
-CompareTypes_stripped(const T1, T2) CompareTypes_stripped(T1, const T2)
-    CompareTypes_stripped(const T1, const T2) CompareTypes_stripped(const T1 &, T2)
-        CompareTypes_stripped(T1, const T2 &) CompareTypes_stripped(const T1 &, const T2 &)
-            CompareTypes_stripped(const T1, const T2 &) CompareTypes_stripped(const T1 &, const T2)
+CompareTypes_stripped(const T1, T2);
+CompareTypes_stripped(T1, const T2);
+CompareTypes_stripped(const T1, const T2);
+CompareTypes_stripped(const T1 &, T2);
+CompareTypes_stripped(T1, const T2 &);
+CompareTypes_stripped(const T1 &, const T2 &);
+CompareTypes_stripped(const T1, const T2 &);
+CompareTypes_stripped(const T1 &, const T2);
 
-                CompareType_stripped(const T1) CompareType_stripped(const T1 &)
+CompareType_stripped(const T1);
+CompareType_stripped(const T1 &);
 
 // We can define CompareTypes template specializations with user types
 // asymmetrically, to assist in disambiguation of templated functions
@@ -624,7 +552,7 @@ CompareTypes_stripped(const T1, T2) CompareTypes_stripped(T1, const T2)
     typedef typename templatename<T, S, !reverseorder>::supertype supertype;                       \
   }
 
-                    Symmetric_definition(CompareTypes);
+Symmetric_definition(CompareTypes);
 Symmetric_definition(PlusType);
 Symmetric_definition(MinusType);
 Symmetric_definition(MultipliesType);
@@ -659,45 +587,6 @@ if_else(const B & condition, const T & if_true, const T2 & if_false)
     return if_true;
   return if_false;
 }
-
-/*
- * Math construct traits
- */
-template <template <typename> class W, typename T>
-struct VectorTraits
-{
-  static const bool value = false;
-};
-
-template <typename T>
-struct VectorTraits<TypeVector, T>
-{
-  static const bool value = true;
-};
-
-template <typename T>
-struct VectorTraits<VectorValue, T>
-{
-  static const bool value = true;
-};
-
-template <template <typename> class W, typename T>
-struct TensorTraits
-{
-  static const bool value = false;
-};
-
-template <typename T>
-struct TensorTraits<TypeTensor, T>
-{
-  static const bool value = true;
-};
-
-template <typename T>
-struct TensorTraits<TensorValue, T>
-{
-  static const bool value = true;
-};
 } // namespace MetaPhysicL
 
 #endif // METAPHYSICL_COMPARE_TYPES_H

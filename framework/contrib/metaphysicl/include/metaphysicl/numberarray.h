@@ -332,30 +332,38 @@ sum(const NumberArray<N, T> & a)
   return returnval;
 }
 
-#define NumberArray_op_ab(opname, functorname, atype, btype, aarg, barg)                           \
+#define NumberArray_op(opname, functorname)                                                        \
   template <std::size_t N, typename T, typename T2>                                                \
-  inline NumberArray<N, typename functorname##Type<T, T2>::supertype> operator opname(             \
-      const atype & a, const btype & b)                                                            \
+  inline auto operator opname(const NumberArray<N, T> & a, const NumberArray<N, T2> & b)           \
+      ->NumberArray<N, decltype(a[0] opname b[0])>                                                 \
   {                                                                                                \
-    typedef NumberArray<N, typename functorname##Type<T, T2>::supertype> NA;                       \
-    NA returnval;                                                                                  \
+    NumberArray<N, decltype(a[0] opname b[0])> returnval;                                          \
     for (std::size_t i = 0; i != N; ++i)                                                           \
-      returnval[i] = aarg opname barg;                                                             \
+      returnval[i] = a[i] opname b[i];                                                             \
+                                                                                                   \
+    return returnval;                                                                              \
+  }                                                                                                \
+  template <std::size_t N, typename T, typename T2>                                                \
+  inline auto operator opname(const T & a, const NumberArray<N, T2> & b)                           \
+      ->NumberArray<N, decltype(a opname b[0])>                                                    \
+  {                                                                                                \
+    NumberArray<N, decltype(a opname b[0])> returnval;                                             \
+    for (std::size_t i = 0; i != N; ++i)                                                           \
+      returnval[i] = a opname b[i];                                                                \
+                                                                                                   \
+    return returnval;                                                                              \
+  }                                                                                                \
+  template <std::size_t N, typename T, typename T2>                                                \
+  inline auto operator opname(const NumberArray<N, T> & a, const T2 & b)                           \
+      ->NumberArray<N, decltype(a[0] opname b)>                                                    \
+  {                                                                                                \
+    NumberArray<N, decltype(a[0] * b)> returnval;                                                  \
+    for (std::size_t i = 0; i != N; ++i)                                                           \
+      returnval[i] = a[i] opname b;                                                                \
                                                                                                    \
     return returnval;                                                                              \
   }                                                                                                \
   void ANYONYMOUS_FUNCTION()
-
-#define NumberArray_op(opname, typecomparison)                                                     \
-  NumberArray_op_ab(opname,                                                                        \
-                    typecomparison,                                                                \
-                    NumberArray<N MacroComma T>,                                                   \
-                    NumberArray<N MacroComma T2>,                                                  \
-                    a[i],                                                                          \
-                    b[i]);                                                                         \
-  NumberArray_op_ab(opname, typecomparison, T, NumberArray<N MacroComma T2>, a, b[i]);             \
-  NumberArray_op_ab(opname, typecomparison, NumberArray<N MacroComma T>, T2, a[i], b);             \
-  void ANONYMOUS_FUNCTION()
 
 NumberArray_op(+, Plus);
 NumberArray_op(-, Minus);
