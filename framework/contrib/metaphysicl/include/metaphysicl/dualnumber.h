@@ -124,24 +124,22 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
   template <typename T2>                                                                           \
   inline DualNumber<T, D> & DualNumber<T, D>::operator opname##=(const T2 & in)                    \
   {                                                                                                \
-    auto & new_dn = *this;                                                                         \
     const auto & a = *this;                                                                        \
     const auto & b = in;                                                                           \
-    dn_first_calc;                                                                                 \
-    new_dn.value() opname## = in;                                                                  \
-    return new_dn;                                                                                 \
+    this->derivatives() = dn_first_calc;                                                           \
+    this->value() opname## = in;                                                                   \
+    return *this;                                                                                  \
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D>                                                                \
   template <typename T2, typename D2>                                                              \
   inline DualNumber<T, D> & DualNumber<T, D>::operator opname##=(const DualNumber<T2, D2> & in)    \
   {                                                                                                \
-    auto & new_dn = *this;                                                                         \
     const auto & a = *this;                                                                        \
     const auto & b = in;                                                                           \
-    dualcalc;                                                                                      \
-    new_dn.value() opname## = in.value();                                                          \
-    return new_dn;                                                                                 \
+    this->derivatives() = dualcalc;                                                                \
+    this->value() opname## = in.value();                                                           \
+    return *this;                                                                                  \
   }                                                                                                \
                                                                                                    \
   template <typename T, size_t N, typename T2>                                                     \
@@ -151,7 +149,7 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
                    NumberArray<N, decltype(a.value() opname b.value())>>                           \
   {                                                                                                \
     auto value = a.value() opname b.value();                                                       \
-    dualcalc;                                                                                      \
+    auto derivatives = dualcalc;                                                                   \
     return {value, derivatives};                                                                   \
   }                                                                                                \
                                                                                                    \
@@ -160,7 +158,7 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
       ->DualNumber<decltype(a opname b.value()), NumberArray<N, decltype(a opname b.value())>>     \
   {                                                                                                \
     auto value = a opname b.value();                                                               \
-    dn_second_calc;                                                                                \
+    auto derivatives = dn_second_calc;                                                             \
     return {value, derivatives};                                                                   \
   }                                                                                                \
                                                                                                    \
@@ -169,35 +167,27 @@ inline DualNumber<T, D>::DualNumber(const T2 & val, const D2 & deriv)
       ->DualNumber<decltype(a.value() opname b), NumberArray<N, decltype(a.value() opname b)>>     \
   {                                                                                                \
     auto value = a.value() opname b;                                                               \
-    dn_first_calc;                                                                                 \
+    auto derivatives = dn_first_calc;                                                              \
     return {value, derivatives};                                                                   \
   }                                                                                                \
   void ANONYMOUS_FUNCTION()
 
-DualNumber_op(+,
-              Plus,
-              auto derivatives = a.derivatives(),
-              auto derivatives = b.derivatives(),
-              auto derivatives = a.derivatives() + b.derivatives());
+DualNumber_op(+, Plus, a.derivatives(), b.derivatives(), a.derivatives() + b.derivatives());
 
-DualNumber_op(-,
-              Minus,
-              auto derivatives = a.derivatives(),
-              auto derivatives = -b.derivatives,
-              auto derivatives = a.derivatives() - b.derivatives());
+DualNumber_op(-, Minus, a.derivatives(), -b.derivatives, a.derivatives() - b.derivatives());
 
 DualNumber_op(*,
               Multiplies,
-              auto derivatives = a.derivatives() * b,
-              auto derivatives = a * b.derivatives(),
-              auto derivatives = a.value() * b.derivatives() + a.derivatives() * b.value());
+              a.derivatives() * b,
+              a * b.derivatives(),
+              a.value() * b.derivatives() + a.derivatives() * b.value());
 
 DualNumber_op(/,
               Divides,
-              auto derivatives = a.derivatives() / b,
-              auto derivatives = -a * b.derivatives() / (b.value() * b.value()),
-              auto derivatives = (b.value() * a.derivatives() - b.derivatives() * a.value()) /
-                                 (b.value() * b.value()));
+              a.derivatives() / b,
+              -a * b.derivatives() / (b.value() * b.value()),
+              (b.value() * a.derivatives() - b.derivatives() * a.value()) /
+                  (b.value() * b.value()));
 
 #define DualNumber_compare(opname)                                                                 \
   template <typename T, typename D, typename T2, typename D2>                                      \
