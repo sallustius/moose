@@ -698,22 +698,6 @@ struct TensorTraits<TensorValue, T>
 {
   static const bool value = true;
 };
-
-/*
- * Check whether the two operands work with the operator
- */
-template <typename T, typename U>
-struct IsOperable
-{
-  static const bool value = ScalarTraits<T>::value && ScalarTraits<U>::value;
-};
-
-template <template <typename> class W1, template <typename> class W2, typename T1, typename T2>
-struct IsOperable<W1<T1>, W2<T2>>
-{
-  static const bool value = TensorTraits<W1, T1>::value && TensorTraits<W2, T2>::value;
-};
-
 } // namespace MetaPhysicL
 
 #endif // METAPHYSICL_COMPARE_TYPES_H
