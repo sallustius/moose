@@ -450,14 +450,14 @@ CompareTypes_all(double, long double);
   template <typename T, bool reverseorder>                                                         \
   struct opname##Type<Operand<T>, Operand<T>, reverseorder>                                        \
   {                                                                                                \
-    typedef Result<T> supertype;                                                                   \
+    typedef Result supertype;                                                                      \
   }
 
 #define DefineResult_TwoTypesTwoTemplates(opname, Operand1, Operand2, Result)                      \
   template <typename T, bool reverseorder>                                                         \
   struct opname##Type<Operand1<T>, Operand2<T>, reverseorder>                                      \
   {                                                                                                \
-    typedef Result<T> supertype;                                                                   \
+    typedef Result supertype;                                                                      \
   }
 
 #define DefineResult_TwoTypesTwoTemplatesReversable(opname, Operand1, Operand2, Result)            \
@@ -466,57 +466,57 @@ CompareTypes_all(double, long double);
   template <typename T, bool reverseorder>                                                         \
   struct opname##Type<Operand2<T>, Operand1<T>, reverseorder>                                      \
   {                                                                                                \
-    typedef Result<T> supertype;                                                                   \
+    typedef Result supertype;                                                                      \
   }
 
 #define DefineResult_TwoTypesOneTemplate(opname, NonScalarOperand, Result)                         \
   template <typename T, bool reverseorder>                                                         \
   struct opname##Type<NonScalarOperand<T>, T, reverseorder>                                        \
   {                                                                                                \
-    typedef Result<T> supertype;                                                                   \
+    typedef Result supertype;                                                                      \
   };                                                                                               \
                                                                                                    \
   template <typename T, bool reverseorder>                                                         \
   struct opname##Type<T, NonScalarOperand<T>, reverseorder>                                        \
   {                                                                                                \
-    typedef Result<T> supertype;                                                                   \
+    typedef Result supertype;                                                                      \
   }
 
 // Tensor-tensor
-DefineResult_OneTypeOneTemplate(Multiplies, TensorValue, TensorValue);
-DefineResult_OneTypeOneTemplate(Multiplies, TypeTensor, TensorValue);
-DefineResult_TwoTypesTwoTemplatesReversable(Multiplies, TypeTensor, TensorValue, TensorValue);
-DefineResult_OneTypeOneTemplate(Plus, TensorValue, TensorValue);
-DefineResult_OneTypeOneTemplate(Plus, TypeTensor, TensorValue);
-DefineResult_TwoTypesTwoTemplatesReversable(Plus, TypeTensor, TensorValue, TensorValue);
-DefineResult_OneTypeOneTemplate(Minus, TensorValue, TensorValue);
-DefineResult_OneTypeOneTemplate(Minus, TypeTensor, TensorValue);
-DefineResult_TwoTypesTwoTemplatesReversable(Minus, TypeTensor, TensorValue, TensorValue);
+DefineResult_OneTypeOneTemplate(Multiplies, TensorValue, TensorValue<T>);
+DefineResult_OneTypeOneTemplate(Multiplies, TypeTensor, TensorValue<T>);
+DefineResult_TwoTypesTwoTemplatesReversable(Multiplies, TypeTensor, TensorValue, TensorValue<T>);
+DefineResult_OneTypeOneTemplate(Plus, TensorValue, TensorValue<T>);
+DefineResult_OneTypeOneTemplate(Plus, TypeTensor, TensorValue<T>);
+DefineResult_TwoTypesTwoTemplatesReversable(Plus, TypeTensor, TensorValue, TensorValue<T>);
+DefineResult_OneTypeOneTemplate(Minus, TensorValue, TensorValue<T>);
+DefineResult_OneTypeOneTemplate(Minus, TypeTensor, TensorValue<T>);
+DefineResult_TwoTypesTwoTemplatesReversable(Minus, TypeTensor, TensorValue, TensorValue<T>);
 
 // Vector-vector
-DefineResult_OneTypeOneTemplate(Multiplies, VectorValue, VectorValue);
-DefineResult_OneTypeOneTemplate(Multiplies, TypeVector, VectorValue);
-DefineResult_TwoTypesTwoTemplatesReversable(Multiplies, TypeVector, VectorValue, VectorValue);
-DefineResult_OneTypeOneTemplate(Plus, VectorValue, VectorValue);
-DefineResult_OneTypeOneTemplate(Plus, TypeVector, VectorValue);
-DefineResult_TwoTypesTwoTemplatesReversable(Plus, TypeVector, VectorValue, VectorValue);
-DefineResult_OneTypeOneTemplate(Minus, VectorValue, VectorValue);
-DefineResult_OneTypeOneTemplate(Minus, TypeVector, VectorValue);
-DefineResult_TwoTypesTwoTemplatesReversable(Minus, TypeVector, VectorValue, VectorValue);
+DefineResult_OneTypeOneTemplate(Multiplies, VectorValue, T);
+DefineResult_OneTypeOneTemplate(Multiplies, TypeVector, T);
+DefineResult_TwoTypesTwoTemplatesReversable(Multiplies, TypeVector, VectorValue, T);
+DefineResult_OneTypeOneTemplate(Plus, VectorValue, VectorValue<T>);
+DefineResult_OneTypeOneTemplate(Plus, TypeVector, VectorValue<T>);
+DefineResult_TwoTypesTwoTemplatesReversable(Plus, TypeVector, VectorValue, VectorValue<T>);
+DefineResult_OneTypeOneTemplate(Minus, VectorValue, VectorValue<T>);
+DefineResult_OneTypeOneTemplate(Minus, TypeVector, VectorValue<T>);
+DefineResult_TwoTypesTwoTemplatesReversable(Minus, TypeVector, VectorValue, VectorValue<T>);
 
 // Scalar-vector
-DefineResult_TwoTypesOneTemplate(Multiplies, VectorValue, VectorValue);
-DefineResult_TwoTypesOneTemplate(Multiplies, TypeVector, VectorValue);
+DefineResult_TwoTypesOneTemplate(Multiplies, VectorValue, VectorValue<T>);
+DefineResult_TwoTypesOneTemplate(Multiplies, TypeVector, VectorValue<T>);
 
 // Scalar-tensor
-DefineResult_TwoTypesOneTemplate(Multiplies, TensorValue, TensorValue);
-DefineResult_TwoTypesOneTemplate(Multiplies, TypeTensor, TensorValue);
+DefineResult_TwoTypesOneTemplate(Multiplies, TensorValue, TensorValue<T>);
+DefineResult_TwoTypesOneTemplate(Multiplies, TypeTensor, TensorValue<T>);
 
 // Tensor-vector
-DefineResult_TwoTypesTwoTemplates(Multiplies, TensorValue, VectorValue, VectorValue);
-DefineResult_TwoTypesTwoTemplates(Multiplies, TensorValue, TypeVector, VectorValue);
-DefineResult_TwoTypesTwoTemplates(Multiplies, TypeTensor, VectorValue, VectorValue);
-DefineResult_TwoTypesTwoTemplates(Multiplies, TypeTensor, TypeVector, VectorValue);
+DefineResult_TwoTypesTwoTemplates(Multiplies, TensorValue, VectorValue, VectorValue<T>);
+DefineResult_TwoTypesTwoTemplates(Multiplies, TensorValue, TypeVector, VectorValue<T>);
+DefineResult_TwoTypesTwoTemplates(Multiplies, TypeTensor, VectorValue, VectorValue<T>);
+DefineResult_TwoTypesTwoTemplates(Multiplies, TypeTensor, TypeVector, VectorValue<T>);
 
 // gcc can't tell which of the following is the most specialized?  Weak.
 /*
