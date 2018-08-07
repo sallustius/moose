@@ -14,7 +14,7 @@
 
 const double tol = 1e-8;
 
-TEST(DualNumberTypesTest, sample)
+TEST(DualNumberTypesTest, Test)
 {
   DualNumber<Real, NumberArray<2, Real>> scalar_ad_prop;
   DualNumber<VectorValue<Real>, NumberArray<2, VectorValue<Real>>> vector_ad_prop;
