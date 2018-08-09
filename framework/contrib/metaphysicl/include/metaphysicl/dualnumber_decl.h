@@ -41,33 +41,33 @@ namespace MetaPhysicL
 {
 
 template <typename T, typename D = T>
-class DualNumber : public safe_bool<DualNumber<T, D>>
+class DualNumberBase : public safe_bool<DualNumberBase<T, D>>
 {
 public:
   typedef T value_type;
 
   typedef D derivatives_type;
 
-  DualNumber();
+  DualNumberBase();
 
   template <typename T2>
-  DualNumber(const T2 & val);
+  DualNumberBase(const T2 & val);
 
   template <typename T2, typename D2>
-  DualNumber(const T2 & val, const D2 & deriv);
+  DualNumberBase(const T2 & val, const D2 & deriv);
 
 #if __cplusplus >= 201103L
   // Move constructors are useful when all your data is on the heap
-  DualNumber(DualNumber<T, D> && src) = default;
+  DualNumberBase(DualNumberBase<T, D> && src) = default;
 
   // Move assignment avoids heap operations too
-  DualNumber & operator=(DualNumber<T, D> && src) = default;
+  DualNumberBase & operator=(DualNumberBase<T, D> && src) = default;
 
   // Standard copy operations get implicitly deleted upon move
   // constructor definition, so we redefine them.
-  DualNumber(const DualNumber<T, D> & src) = default;
+  DualNumberBase(const DualNumberBase<T, D> & src) = default;
 
-  DualNumber & operator=(const DualNumber<T, D> & src) = default;
+  DualNumberBase & operator=(const DualNumberBase<T, D> & src) = default;
 #endif
 
   T & value();
@@ -80,33 +80,33 @@ public:
 
   bool boolean_test() const;
 
-  DualNumber<T, D> operator-() const;
+  DualNumberBase<T, D> operator-() const;
 
-  DualNumber<T, D> operator!() const;
-
-  template <typename T2, typename D2>
-  DualNumber<T, D> & operator+=(const DualNumber<T2, D2> & a);
-
-  template <typename T2>
-  DualNumber<T, D> & operator+=(const T2 & a);
+  DualNumberBase<T, D> operator!() const;
 
   template <typename T2, typename D2>
-  DualNumber<T, D> & operator-=(const DualNumber<T2, D2> & a);
+  DualNumberBase<T, D> & operator+=(const DualNumberBase<T2, D2> & a);
 
   template <typename T2>
-  DualNumber<T, D> & operator-=(const T2 & a);
+  DualNumberBase<T, D> & operator+=(const T2 & a);
 
   template <typename T2, typename D2>
-  DualNumber<T, D> & operator*=(const DualNumber<T2, D2> & a);
+  DualNumberBase<T, D> & operator-=(const DualNumberBase<T2, D2> & a);
 
   template <typename T2>
-  DualNumber<T, D> & operator*=(const T2 & a);
+  DualNumberBase<T, D> & operator-=(const T2 & a);
 
   template <typename T2, typename D2>
-  DualNumber<T, D> & operator/=(const DualNumber<T2, D2> & a);
+  DualNumberBase<T, D> & operator*=(const DualNumberBase<T2, D2> & a);
 
   template <typename T2>
-  DualNumber<T, D> & operator/=(const T2 & a);
+  DualNumberBase<T, D> & operator*=(const T2 & a);
+
+  template <typename T2, typename D2>
+  DualNumberBase<T, D> & operator/=(const DualNumberBase<T2, D2> & a);
+
+  template <typename T2>
+  DualNumberBase<T, D> & operator/=(const T2 & a);
 
   operator T();
 
@@ -115,13 +115,46 @@ private:
   D _deriv;
 };
 
-// Helper class to handle partial specialization for DualNumber
+template <typename T, std::size_t N>
+class DualNumber : public DualNumberBase<T, NumberArray<N, T>>
+{
+public:
+  using DualNumberBase::DualNumberBase;
+
+  ~DualNumber();
+
+  DualNumber<TypeVector<T>, NumberArray<N, TypeVector<T>>> row(const unsigned int r) const;
+
+  DualNumber<T, NumberArray<N, T>> tr() const;
+
+  void zero();
+
+  DualNumber<T, NumberArray<N, T>> operator()(const unsigned int i, const unsigned int j) const;
+
+  DualNumberSurrogate<T, N> & operator()(const unsigned int i, const unsigned int j);
+
+  template <typename T, std::size_t N>
+  struct DualNumberSurrogate
+  {
+    DualNumberSurrogate(T & v_in, NumberArray<N, T> & d_in) : value(v_in), derivatives(d_in) {}
+
+    T & value;
+    NumberArray<N, T> & derivatives;
+  };
+
+protected:
+  std::map<std::pair<unsigned int, unsigned int>, DualNumberSurrogate>
+      _tensor_dual_number_surrogates;
+  std::map<unsigned int, DualNumberSurrogate> _vector_dual_number_surrogates;
+};
+
+// Helper class to handle partial specialization for DualNumberBase
 // constructors
 
 template <typename T, typename D>
-struct DualNumberConstructor
+struct DualNumberConstructorr
 {
-  static T value(const DualNumber<T, D> & v) { return v.value(); }
+  static T value(const DualNumberBase<T, D> & v) { return v.value(); }
 
   template <typename T2>
   static T value(const T2 & v)
@@ -136,9 +169,9 @@ struct DualNumberConstructor
   }
 
   template <typename T2, typename D2>
-  static T value(const DualNumber<T2, D2> & v)
+  static T value(const DualNumberBase<T2, D2> & v)
   {
-    return DualNumberConstructor<T, D>::value(v.value());
+    return DualNumberConstructorr<T, D>::value(v.value());
   }
 
   template <typename T2>
@@ -148,7 +181,7 @@ struct DualNumberConstructor
   }
 
   template <typename T2, typename D2>
-  static D deriv(const DualNumber<T2, D2> & v)
+  static D deriv(const DualNumberBase<T2, D2> & v)
   {
     return v.derivatives();
   }
@@ -161,28 +194,28 @@ struct DualNumberConstructor
 };
 
 template <typename T, typename D, typename DD>
-struct DualNumberConstructor<DualNumber<T, D>, DD>
+struct DualNumberConstructor<DualNumberBase<T, D>, DD>
 {
   template <typename T2, typename D2, typename D3>
-  static DualNumber<T, D> value(const DualNumber<DualNumber<T2, D2>, D3> & v)
+  static DualNumberBase<T, D> value(const DualNumberBase<DualNumberBase<T2, D2>, D3> & v)
   {
     return v.value();
   }
 
   template <typename T2>
-  static DualNumber<T, D> value(const T2 & v)
+  static DualNumberBase<T, D> value(const T2 & v)
   {
     return v;
   }
 
   template <typename T2, typename D2>
-  static DualNumber<T, D> value(const T2 & v, const D2 & d)
+  static DualNumberBase<T, D> value(const T2 & v, const D2 & d)
   {
-    return DualNumber<T, D>(v, d);
+    return DualNumberBase<T, D>(v, d);
   }
 
   template <typename D2>
-  static DualNumber<T, D> value(const DualNumber<T, D> & v, const D2 &)
+  static DualNumberBase<T, D> value(const DualNumberBase<T, D> & v, const D2 &)
   {
     return v;
   }
@@ -194,7 +227,7 @@ struct DualNumberConstructor<DualNumber<T, D>, DD>
   }
 
   template <typename T2, typename D2>
-  static DD deriv(const DualNumber<T2, D2> & v)
+  static DD deriv(const DualNumberBase<T2, D2> & v)
   {
     return v.derivatives();
   }
@@ -236,19 +269,17 @@ DualNumber_decl_op(/, Divides);
 
 #define DualNumber_decl_compare(opname)                                                            \
   template <typename T, typename D, typename T2, typename D2>                                      \
-  inline bool operator opname(const DualNumber<T, D> & a, const DualNumber<T2, D2> & b);           \
+  inline bool operator opname(const DualNumberBase<T, D> & a, const DualNumberBase<T2, D2> & b);   \
                                                                                                    \
   template <typename T, typename T2, typename D2>                                                  \
-  inline                                                                                           \
-      typename boostcopy::enable_if_class<typename CompareTypes<DualNumber<T2, D2>, T>::supertype, \
-                                          bool>::type                                              \
-      operator opname(const T & a, const DualNumber<T2, D2> & b);                                  \
+  inline typename boostcopy::                                                                      \
+      enable_if_class<typename CompareTypes<DualNumberBase<T2, D2>, T>::supertype, bool>::type     \
+      operator opname(const T & a, const DualNumberBase<T2, D2> & b);                              \
                                                                                                    \
   template <typename T, typename T2, typename D>                                                   \
-  inline                                                                                           \
-      typename boostcopy::enable_if_class<typename CompareTypes<DualNumber<T, D>, T2>::supertype,  \
-                                          bool>::type                                              \
-      operator opname(const DualNumber<T, D> & a, const T2 & b)
+  inline typename boostcopy::                                                                      \
+      enable_if_class<typename CompareTypes<DualNumberBase<T, D>, T2>::supertype, bool>::type      \
+      operator opname(const DualNumberBase<T, D> & a, const T2 & b)
 
 DualNumber_decl_compare(>);
 DualNumber_decl_compare(>=);
@@ -260,87 +291,87 @@ DualNumber_decl_compare(&&);
 DualNumber_decl_compare(||);
 
 template <typename T, typename D>
-inline std::ostream & operator<<(std::ostream & output, const DualNumber<T, D> & a);
+inline std::ostream & operator<<(std::ostream & output, const DualNumberBase<T, D> & a);
 
 // ScalarTraits, RawType, CompareTypes specializations
 
 template <typename T, typename D>
-struct ScalarTraits<DualNumber<T, D>>
+struct ScalarTraits<DualNumberBase<T, D>>
 {
   static const bool value = ScalarTraits<T>::value;
 };
 
 template <typename T, typename D>
-struct RawType<DualNumber<T, D>>
+struct RawType<DualNumberBase<T, D>>
 {
   typedef typename RawType<T>::value_type value_type;
 
-  static value_type value(const DualNumber<T, D> & a) { return raw_value(a.value()); }
+  static value_type value(const DualNumberBase<T, D> & a) { return raw_value(a.value()); }
 };
 
 template <typename T, typename T2, typename D, bool reverseorder>
-struct PlusType<DualNumber<T, D>,
+struct PlusType<DualNumberBase<T, D>,
                 T2,
                 reverseorder,
                 typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
-  typedef DualNumber<typename SymmetricPlusType<T, T2, reverseorder>::supertype, D> supertype;
+  typedef DualNumberBase<typename SymmetricPlusType<T, T2, reverseorder>::supertype, D> supertype;
 };
 
 template <typename T, typename D, typename T2, typename D2, bool reverseorder>
-struct PlusType<DualNumber<T, D>, DualNumber<T2, D2>, reverseorder>
+struct PlusType<DualNumberBase<T, D>, DualNumberBase<T2, D2>, reverseorder>
 {
-  typedef DualNumber<typename SymmetricPlusType<T, T2, reverseorder>::supertype,
-                     typename SymmetricPlusType<D, D2, reverseorder>::supertype>
+  typedef DualNumberBase<typename SymmetricPlusType<T, T2, reverseorder>::supertype,
+                         typename SymmetricPlusType<D, D2, reverseorder>::supertype>
       supertype;
 };
 
 template <typename T, typename D, bool reverseorder>
-struct PlusType<DualNumber<T, D>, DualNumber<T, D>, reverseorder>
+struct PlusType<DualNumberBase<T, D>, DualNumberBase<T, D>, reverseorder>
 {
-  typedef DualNumber<typename SymmetricPlusType<T, T>::supertype,
-                     typename SymmetricPlusType<D, D>::supertype>
+  typedef DualNumberBase<typename SymmetricPlusType<T, T>::supertype,
+                         typename SymmetricPlusType<D, D>::supertype>
       supertype;
 };
 
 template <typename T, typename T2, typename D, bool reverseorder>
-struct MinusType<DualNumber<T, D>,
+struct MinusType<DualNumberBase<T, D>,
                  T2,
                  reverseorder,
                  typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
-  typedef DualNumber<typename SymmetricMinusType<T, T2, reverseorder>::supertype, D> supertype;
+  typedef DualNumberBase<typename SymmetricMinusType<T, T2, reverseorder>::supertype, D> supertype;
 };
 
 template <typename T, typename D, typename T2, typename D2, bool reverseorder>
-struct MinusType<DualNumber<T, D>, DualNumber<T2, D2>, reverseorder>
+struct MinusType<DualNumberBase<T, D>, DualNumberBase<T2, D2>, reverseorder>
 {
-  typedef DualNumber<typename SymmetricMinusType<T, T2, reverseorder>::supertype,
-                     typename SymmetricMinusType<D, D2, reverseorder>::supertype>
+  typedef DualNumberBase<typename SymmetricMinusType<T, T2, reverseorder>::supertype,
+                         typename SymmetricMinusType<D, D2, reverseorder>::supertype>
       supertype;
 };
 
 template <typename T, typename D, bool reverseorder>
-struct MinusType<DualNumber<T, D>, DualNumber<T, D>, reverseorder>
+struct MinusType<DualNumberBase<T, D>, DualNumberBase<T, D>, reverseorder>
 {
-  typedef DualNumber<typename SymmetricMinusType<T, T>::supertype,
-                     typename SymmetricMinusType<D, D>::supertype>
+  typedef DualNumberBase<typename SymmetricMinusType<T, T>::supertype,
+                         typename SymmetricMinusType<D, D>::supertype>
       supertype;
 };
 
 template <typename T, typename T2, typename D, bool reverseorder>
-struct MultipliesType<DualNumber<T, D>, T2, reverseorder>
+struct MultipliesType<DualNumberBase<T, D>, T2, reverseorder>
 // typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
-  typedef DualNumber<typename SymmetricMultipliesType<T, T2, reverseorder>::supertype,
-                     typename SymmetricMultipliesType<D, T2, reverseorder>::supertype>
+  typedef DualNumberBase<typename SymmetricMultipliesType<T, T2, reverseorder>::supertype,
+                         typename SymmetricMultipliesType<D, T2, reverseorder>::supertype>
       supertype;
 };
 
 template <typename T, typename D, typename T2, typename D2, bool reverseorder>
-struct MultipliesType<DualNumber<T, D>, DualNumber<T2, D2>, reverseorder>
+struct MultipliesType<DualNumberBase<T, D>, DualNumberBase<T2, D2>, reverseorder>
 {
-  typedef DualNumber<
+  typedef DualNumberBase<
       typename SymmetricMultipliesType<T, T2, reverseorder>::supertype,
       typename SymmetricPlusType<
           typename SymmetricMultipliesType<T, D2, reverseorder>::supertype,
@@ -349,31 +380,31 @@ struct MultipliesType<DualNumber<T, D>, DualNumber<T2, D2>, reverseorder>
 };
 
 template <typename T, typename D, bool reverseorder>
-struct MultipliesType<DualNumber<T, D>, DualNumber<T, D>, reverseorder>
+struct MultipliesType<DualNumberBase<T, D>, DualNumberBase<T, D>, reverseorder>
 {
-  typedef DualNumber<typename SymmetricMultipliesType<T, T, reverseorder>::supertype,
-                     typename SymmetricMultipliesType<T, D, reverseorder>::supertype>
+  typedef DualNumberBase<typename SymmetricMultipliesType<T, T, reverseorder>::supertype,
+                         typename SymmetricMultipliesType<T, D, reverseorder>::supertype>
       supertype;
 };
 
 template <typename T, typename T2, typename D>
-struct DividesType<DualNumber<T, D>,
+struct DividesType<DualNumberBase<T, D>,
                    T2,
                    false,
                    typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
-  typedef DualNumber<typename SymmetricDividesType<T, T2>::supertype,
-                     typename SymmetricDividesType<D, T2>::supertype>
+  typedef DualNumberBase<typename SymmetricDividesType<T, T2>::supertype,
+                         typename SymmetricDividesType<D, T2>::supertype>
       supertype;
 };
 
 template <typename T, typename D, typename T2>
-struct DividesType<DualNumber<T, D>,
+struct DividesType<DualNumberBase<T, D>,
                    T2,
                    true,
                    typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
-  typedef DualNumber<
+  typedef DualNumberBase<
       typename SymmetricDividesType<T2, T>::supertype,
       typename SymmetricDividesType<typename SymmetricMultipliesType<T2, D>::supertype,
                                     T>::supertype>
@@ -381,9 +412,9 @@ struct DividesType<DualNumber<T, D>,
 };
 
 template <typename T, typename D, typename T2, typename D2>
-struct DividesType<DualNumber<T, D>, DualNumber<T2, D2>, false>
+struct DividesType<DualNumberBase<T, D>, DualNumberBase<T2, D2>, false>
 {
-  typedef DualNumber<
+  typedef DualNumberBase<
       typename SymmetricDividesType<T, T2>::supertype,
       typename SymmetricMinusType<
           typename SymmetricDividesType<T2, D>::supertype,
@@ -393,15 +424,16 @@ struct DividesType<DualNumber<T, D>, DualNumber<T2, D2>, false>
 };
 
 template <typename T, typename D, typename T2, typename D2>
-struct DividesType<DualNumber<T, D>, DualNumber<T2, D2>, true>
+struct DividesType<DualNumberBase<T, D>, DualNumberBase<T2, D2>, true>
 {
-  typedef typename DividesType<DualNumber<T2, D2>, DualNumber<T, D>, false>::supertype supertype;
+  typedef typename DividesType<DualNumberBase<T2, D2>, DualNumberBase<T, D>, false>::supertype
+      supertype;
 };
 
 template <typename T, typename D>
-struct DividesType<DualNumber<T, D>, DualNumber<T, D>, false>
+struct DividesType<DualNumberBase<T, D>, DualNumberBase<T, D>, false>
 {
-  typedef DualNumber<
+  typedef DualNumberBase<
       T,
       typename SymmetricMinusType<
           typename SymmetricDividesType<T, D>::supertype,
@@ -411,60 +443,61 @@ struct DividesType<DualNumber<T, D>, DualNumber<T, D>, false>
 };
 
 template <typename T, typename D>
-struct DividesType<DualNumber<T, D>, DualNumber<T, D>, true>
+struct DividesType<DualNumberBase<T, D>, DualNumberBase<T, D>, true>
 {
-  typedef typename DividesType<DualNumber<T, D>, DualNumber<T, D>, false>::supertype supertype;
+  typedef
+      typename DividesType<DualNumberBase<T, D>, DualNumberBase<T, D>, false>::supertype supertype;
 };
 
 template <typename T, typename T2, typename D, bool reverseorder>
-struct AndType<DualNumber<T, D>,
+struct AndType<DualNumberBase<T, D>,
                T2,
                reverseorder,
                typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
-  typedef DualNumber<typename SymmetricAndType<T, T2, reverseorder>::supertype, bool> supertype;
+  typedef DualNumberBase<typename SymmetricAndType<T, T2, reverseorder>::supertype, bool> supertype;
 };
 
 template <typename T, typename D, typename T2, typename D2, bool reverseorder>
-struct AndType<DualNumber<T, D>, DualNumber<T2, D2>, reverseorder>
+struct AndType<DualNumberBase<T, D>, DualNumberBase<T2, D2>, reverseorder>
 {
-  typedef DualNumber<typename SymmetricAndType<T, T2, reverseorder>::supertype, bool> supertype;
+  typedef DualNumberBase<typename SymmetricAndType<T, T2, reverseorder>::supertype, bool> supertype;
 };
 
 template <typename T, typename D>
-struct AndType<DualNumber<T, D>, DualNumber<T, D>>
+struct AndType<DualNumberBase<T, D>, DualNumberBase<T, D>>
 {
-  typedef DualNumber<typename SymmetricAndType<T, T>::supertype, bool> supertype;
+  typedef DualNumberBase<typename SymmetricAndType<T, T>::supertype, bool> supertype;
 };
 
 template <typename T, typename T2, typename D, bool reverseorder>
-struct OrType<DualNumber<T, D>,
+struct OrType<DualNumberBase<T, D>,
               T2,
               reverseorder,
               typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
-  typedef DualNumber<typename SymmetricOrType<T, T2, reverseorder>::supertype, bool> supertype;
+  typedef DualNumberBase<typename SymmetricOrType<T, T2, reverseorder>::supertype, bool> supertype;
 };
 
 template <typename T, typename D, typename T2, typename D2, bool reverseorder>
-struct OrType<DualNumber<T, D>, DualNumber<T2, D2>, reverseorder>
+struct OrType<DualNumberBase<T, D>, DualNumberBase<T2, D2>, reverseorder>
 {
-  typedef DualNumber<typename SymmetricOrType<T, T2, reverseorder>::supertype, bool> supertype;
+  typedef DualNumberBase<typename SymmetricOrType<T, T2, reverseorder>::supertype, bool> supertype;
 };
 
 template <typename T, typename D>
-struct OrType<DualNumber<T, D>, DualNumber<T, D>>
+struct OrType<DualNumberBase<T, D>, DualNumberBase<T, D>>
 {
-  typedef DualNumber<typename SymmetricOrType<T, T>::supertype, bool> supertype;
+  typedef DualNumberBase<typename SymmetricOrType<T, T>::supertype, bool> supertype;
 };
 
 template <typename T, typename T2, typename D, bool reverseorder>
-struct CompareTypes<DualNumber<T, D>,
+struct CompareTypes<DualNumberBase<T, D>,
                     T2,
                     reverseorder,
                     typename boostcopy::enable_if<BuiltinTraits<T2>>::type>
 {
-  typedef DualNumber<
+  typedef DualNumberBase<
       typename SymmetricCompareTypes<T, T2>::supertype,
       typename SymmetricCompareTypes<typename SymmetricCompareTypes<D, T2>::supertype,
                                      T>::supertype>
@@ -472,9 +505,9 @@ struct CompareTypes<DualNumber<T, D>,
 };
 
 template <typename T, typename D, typename T2, typename D2>
-struct CompareTypes<DualNumber<T, D>, DualNumber<T2, D2>>
+struct CompareTypes<DualNumberBase<T, D>, DualNumberBase<T2, D2>>
 {
-  typedef DualNumber<
+  typedef DualNumberBase<
       typename SymmetricCompareTypes<T, T2>::supertype,
       typename SymmetricCompareTypes<typename SymmetricCompareTypes<T, T2>::supertype,
                                      typename SymmetricCompareTypes<D, D2>::supertype>::supertype>
@@ -482,13 +515,13 @@ struct CompareTypes<DualNumber<T, D>, DualNumber<T2, D2>>
 };
 
 template <typename T, typename D>
-struct CompareTypes<DualNumber<T, D>, DualNumber<T, D>>
+struct CompareTypes<DualNumberBase<T, D>, DualNumberBase<T, D>>
 {
-  typedef DualNumber<T, typename SymmetricCompareTypes<T, D>::supertype> supertype;
+  typedef DualNumberBase<T, typename SymmetricCompareTypes<T, D>::supertype> supertype;
 };
 
 template <typename T, typename D>
-inline D gradient(const DualNumber<T, D> & a);
+inline D gradient(const DualNumberBase<T, D> & a);
 
 } // namespace MetaPhysicL
 
@@ -496,34 +529,34 @@ namespace std
 {
 
 using MetaPhysicL::CompareTypes;
-using MetaPhysicL::DualNumber;
+using MetaPhysicL::DualNumberBase;
 
 template <typename T, typename D>
-inline bool isnan(const DualNumber<T, D> & a);
+inline bool isnan(const DualNumberBase<T, D> & a);
 
-// Some forward declarations necessary for recursive DualNumbers
+// Some forward declarations necessary for recursive DualNumberBases
 
 #if __cplusplus >= 201103L
 
 template <typename T, typename D>
-inline DualNumber<T, D> cos(const DualNumber<T, D> & a);
+inline DualNumberBase<T, D> cos(const DualNumberBase<T, D> & a);
 
 template <typename T, typename D>
-inline DualNumber<T, D> cos(DualNumber<T, D> && a);
+inline DualNumberBase<T, D> cos(DualNumberBase<T, D> && a);
 
 template <typename T, typename D>
-inline DualNumber<T, D> cosh(const DualNumber<T, D> & a);
+inline DualNumberBase<T, D> cosh(const DualNumberBase<T, D> & a);
 
 template <typename T, typename D>
-inline DualNumber<T, D> cosh(DualNumber<T, D> && a);
+inline DualNumberBase<T, D> cosh(DualNumberBase<T, D> && a);
 
 #else
 
 template <typename T, typename D>
-inline DualNumber<T, D> cos(DualNumber<T, D> a);
+inline DualNumberBase<T, D> cos(DualNumberBase<T, D> a);
 
 template <typename T, typename D>
-inline DualNumber<T, D> cosh(DualNumber<T, D> a);
+inline DualNumberBase<T, D> cosh(DualNumberBase<T, D> a);
 
 #endif
 
@@ -532,53 +565,65 @@ inline DualNumber<T, D> cosh(DualNumber<T, D> a);
 #if __cplusplus >= 201103L
 #define DualNumber_decl_std_unary(funcname)                                                        \
   template <typename T, typename D>                                                                \
-  inline DualNumber<T, D> funcname(const DualNumber<T, D> & in);                                   \
+  inline DualNumberBase<T, D> funcname(const DualNumberBase<T, D> & in);                           \
                                                                                                    \
   template <typename T, typename D>                                                                \
-  inline DualNumber<T, D> funcname(DualNumber<T, D> && in);
+  inline DualNumberBase<T, D> funcname(DualNumberBase<T, D> && in)
 
 #else
 
 #define DualNumber_decl_std_unary(funcname)                                                        \
   template <typename T, typename D>                                                                \
-  inline DualNumber<T, D> funcname(DualNumber<T, D> in);
+  inline DualNumberBase<T, D> funcname(DualNumberBase<T, D> in)
 
 #endif
 
-DualNumber_decl_std_unary(sqrt) DualNumber_decl_std_unary(exp) DualNumber_decl_std_unary(log)
-    DualNumber_decl_std_unary(log10) DualNumber_decl_std_unary(sin) DualNumber_decl_std_unary(cos)
-        DualNumber_decl_std_unary(tan) DualNumber_decl_std_unary(asin)
-            DualNumber_decl_std_unary(acos) DualNumber_decl_std_unary(atan)
-                DualNumber_decl_std_unary(sinh) DualNumber_decl_std_unary(cosh)
-                    DualNumber_decl_std_unary(tanh) DualNumber_decl_std_unary(abs)
-                        DualNumber_decl_std_unary(fabs) DualNumber_decl_std_unary(ceil)
-                            DualNumber_decl_std_unary(floor)
+DualNumber_decl_std_unary(sqrt);
+DualNumber_decl_std_unary(exp);
+DualNumber_decl_std_unary(log);
+DualNumber_decl_std_unary(log10);
+DualNumber_decl_std_unary(sin);
+DualNumber_decl_std_unary(cos);
+DualNumber_decl_std_unary(tan);
+DualNumber_decl_std_unary(asin);
+DualNumber_decl_std_unary(acos);
+DualNumber_decl_std_unary(atan);
+DualNumber_decl_std_unary(sinh);
+DualNumber_decl_std_unary(cosh);
+DualNumber_decl_std_unary(tanh);
+DualNumber_decl_std_unary(abs);
+DualNumber_decl_std_unary(fabs);
+DualNumber_decl_std_unary(ceil);
+DualNumber_decl_std_unary(floor);
 
 #define DualNumber_decl_std_binary(funcname)                                                       \
   template <typename T, typename D, typename T2, typename D2>                                      \
-  inline typename CompareTypes<DualNumber<T, D>, DualNumber<T2, D2>>::supertype funcname(          \
-      const DualNumber<T, D> & a, const DualNumber<T2, D2> & b);                                   \
+  inline typename CompareTypes<DualNumberBase<T, D>, DualNumberBase<T2, D2>>::supertype funcname(  \
+      const DualNumberBase<T, D> & a, const DualNumberBase<T2, D2> & b);                           \
                                                                                                    \
   template <typename T, typename D>                                                                \
-  inline DualNumber<T, D> funcname(const DualNumber<T, D> & a, const DualNumber<T, D> & b);        \
+  inline DualNumberBase<T, D> funcname(const DualNumberBase<T, D> & a,                             \
+                                       const DualNumberBase<T, D> & b);                            \
                                                                                                    \
   template <typename T, typename T2, typename D>                                                   \
-  inline typename CompareTypes<DualNumber<T2, D>, T, true>::supertype funcname(                    \
-      const T & a, const DualNumber<T2, D> & b);                                                   \
+  inline typename CompareTypes<DualNumberBase<T2, D>, T, true>::supertype funcname(                \
+      const T & a, const DualNumberBase<T2, D> & b);                                               \
                                                                                                    \
   template <typename T, typename T2, typename D>                                                   \
-  inline typename CompareTypes<DualNumber<T, D>, T2>::supertype funcname(                          \
-      const DualNumber<T, D> & a, const T2 & b);
+  inline typename CompareTypes<DualNumberBase<T, D>, T2>::supertype funcname(                      \
+      const DualNumberBase<T, D> & a, const T2 & b)
 
-    // if_else is necessary here to handle cases where a is negative but b
-    // is 0; we should have a contribution of 0 from those, not NaN.
-    DualNumber_decl_std_binary(pow) DualNumber_decl_std_binary(atan2)
-        DualNumber_decl_std_binary(max) DualNumber_decl_std_binary(min)
-            DualNumber_decl_std_binary(fmod)
+// if_else is necessary here to handle cases where a is negative but b
+// is 0; we should have a contribution of 0 from those, not NaN.
+DualNumber_decl_std_binary(pow);
+DualNumber_decl_std_binary(atan2);
+DualNumber_decl_std_binary(max);
+DualNumber_decl_std_binary(min);
+DualNumber_decl_std_binary(fmod);
 
-                template <typename T, typename D>
-                class numeric_limits<DualNumber<T, D>>
-  : public MetaPhysicL::raw_numeric_limits<DualNumber<T, D>, T>
+template <typename T, typename D>
+class numeric_limits<DualNumber<T, D>>
+  : public MetaPhysicL::raw_numeric_limits<DualNumberBase<T, D>, T>
 {
 };
 

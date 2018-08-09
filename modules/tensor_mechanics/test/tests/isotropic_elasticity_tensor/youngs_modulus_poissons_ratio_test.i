@@ -1,6 +1,9 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
+  nx = 5
+  ny = 5
+  nz = 5
 []
 
 [GlobalParams]

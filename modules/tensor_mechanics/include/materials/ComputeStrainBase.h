@@ -42,14 +42,14 @@ protected:
 
   std::string _base_name;
 
-  MaterialProperty<RankTwoTensor> & _mechanical_strain;
+  ADMaterialProperty<RankTwoTensor> & _mechanical_strain;
 
-  MaterialProperty<RankTwoTensor> & _total_strain;
+  ADMaterialProperty<RankTwoTensor> & _total_strain;
 
   std::vector<MaterialPropertyName> _eigenstrain_names;
-  std::vector<const MaterialProperty<RankTwoTensor> *> _eigenstrains;
+  std::vector<const ADMaterialProperty<RankTwoTensor> *> _eigenstrains;
 
-  const MaterialProperty<RankTwoTensor> * _global_strain;
+  const ADMaterialProperty<RankTwoTensor> * _global_strain;
 
   bool _volumetric_locking_correction;
   const Real & _current_elem_volume;
