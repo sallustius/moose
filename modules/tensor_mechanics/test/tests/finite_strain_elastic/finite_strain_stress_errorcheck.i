@@ -1,6 +1,9 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
+  nx = 5
+  ny = 5
+  nz = 5
 []
 
 [GlobalParams]
@@ -9,7 +12,7 @@
 
 [Modules/TensorMechanics/Master]
   [./all]
-    strain = FINITE
+    strain = SMALL
     add_variables = true
   [../]
 []
@@ -44,7 +47,7 @@
 [Materials]
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1.0e10
+    youngs_modulus = 1.0e6
     poissons_ratio = 0.3
   [../]
   [./stress]
@@ -52,15 +55,18 @@
   [../]
 []
 
+[Preconditioning]
+  [./smp]
+    type = SMP
+    # full = true
+  [../]
+[]
+
 [Executioner]
   type = Transient
   dt = 0.05
 
-  #Preconditioned JFNK (default)
-  solve_type = 'PJFNK'
-
-  petsc_options_iname = -pc_hypre_type
-  petsc_options_value = boomeramg
+  solve_type = 'NEWTON'
 
   dtmin = 0.05
   num_steps = 1

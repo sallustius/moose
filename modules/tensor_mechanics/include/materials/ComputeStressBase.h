@@ -37,11 +37,11 @@ protected:
   const std::string _base_name;
   const std::string _elasticity_tensor_name;
 
-  const MaterialProperty<RankTwoTensor> & _mechanical_strain;
-  MaterialProperty<RankTwoTensor> & _stress;
-  MaterialProperty<RankTwoTensor> & _elastic_strain;
+  const ADMaterialProperty<RankTwoTensor> & _mechanical_strain;
+  ADMaterialProperty<RankTwoTensor> & _stress;
+  ADMaterialProperty<RankTwoTensor> & _elastic_strain;
 
-  const MaterialProperty<RankFourTensor> & _elasticity_tensor;
+  const ADMaterialProperty<RankFourTensor> & _elasticity_tensor;
 
   /// Extra stress tensor
   const MaterialProperty<RankTwoTensor> & _extra_stress;
@@ -50,7 +50,7 @@ protected:
   std::vector<Function *> _initial_stress_fcn;
 
   /// derivative of stress w.r.t. strain (_dstress_dstrain)
-  MaterialProperty<RankFourTensor> & _Jacobian_mult;
+  ADMaterialProperty<RankFourTensor> & _Jacobian_mult;
 
   /// Parameter which decides whether to store old stress. This is required for HHT time integration and Rayleigh damping
   const bool _store_stress_old;

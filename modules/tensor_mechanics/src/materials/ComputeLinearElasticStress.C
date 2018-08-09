@@ -22,7 +22,7 @@ validParams<ComputeLinearElasticStress>()
 
 ComputeLinearElasticStress::ComputeLinearElasticStress(const InputParameters & parameters)
   : ComputeStressBase(parameters),
-    _mechanical_strain(getMaterialPropertyByName<RankTwoTensor>(_base_name + "mechanical_strain"))
+    _mechanical_strain(getADMaterialPropertyByName<RankTwoTensor>(_base_name + "mechanical_strain"))
 {
 }
 
