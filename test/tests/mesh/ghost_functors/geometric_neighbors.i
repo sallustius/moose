@@ -1,8 +1,8 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 8
-  ny = 8
+  nx = 4
+  ny = 4
 
   # We are testing geometric ghosted functors
   # so we have to use distributed mesh
@@ -12,7 +12,51 @@
 [Variables]
   [./u]
   [../]
+
+  [./v]
+  [../]
 []
+
+[Kernels]
+  [./diff]
+    type = Diffusion
+    variable = u
+  [../]
+
+  [./diff_v]
+    type = Diffusion
+    variable = v
+  [../]
+
+[]
+
+[BCs]
+  [./left]
+    type = DirichletBC
+    variable = u
+    boundary = left
+    value = 0
+  [../]
+  [./right]
+    type = DirichletBC
+    variable = u
+    boundary = right
+    value = 1
+  [../]
+  [./left_v]
+    type = DirichletBC
+    variable = v
+    boundary = left
+    value = 0
+  [../]
+  [./right_v]
+    type = DirichletBC
+    variable = v
+    boundary = right
+    value = 10
+  [../]
+[]
+
 
 [AuxVariables]
   [./ghosted_elements]
@@ -30,10 +74,9 @@
     type = GhostAux
     variable = ghosted_elements
     ghost_user_object = ghost_uo
-    execute_on = initial
-
+    execute_on = timestep_end
   [../]
-  [./proc ]
+  [./proc]
     type = ProcessorIDAux
     variable = proc
     execute_on = initial
@@ -43,8 +86,9 @@
 [UserObjects]
   [./ghost_uo]
     type = GhostUserObject
-    execute_on = initial
-    element_side_neighbor_layers = 1
+    element_side_neighbor_layers = 2
+    some_variable = v
+    execute_on = timestep_end
   [../]
 []
 
@@ -54,9 +98,4 @@
 
 [Outputs]
   exodus = true
-[]
-
-[Problem]
-  solve = false
-  kernel_coverage_check = false
 []

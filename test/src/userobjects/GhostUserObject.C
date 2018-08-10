@@ -19,13 +19,13 @@ template <>
 InputParameters
 validParams<GhostUserObject>()
 {
-  InputParameters params = validParams<GeneralUserObject>();
+  InputParameters params = validParams<ElementUserObject>();
   params.addParam<unsigned int>(
       "rank",
       DofObject::invalid_processor_id,
       "The rank for which the ghosted elements are recorded (Default: ALL)");
 
-  params.set<ExecFlagEnum>("execute_on") = EXEC_TIMESTEP_BEGIN;
+  //  params.set<ExecFlagEnum>("execute_on") = EXEC_TIMESTEP_BEGIN;
 
   params.registerRelationshipManagers("ElementSideNeighborLayers");
   params.addRequiredParam<unsigned short>("element_side_neighbor_layers",
@@ -33,11 +33,17 @@ validParams<GhostUserObject>()
 
   params.addClassDescription("User object to calculate ghosted elements on a single processor or "
                              "the union across all processors.");
+
+  params.addRequiredCoupledVar(
+      "some_variable", "The gradient of this variable will be used as the velocity vector.");
+
   return params;
 }
 
 GhostUserObject::GhostUserObject(const InputParameters & parameters)
-  : GeneralUserObject(parameters), _rank(getParam<unsigned int>("rank"))
+  : ElementUserObject(parameters),
+    _rank(getParam<unsigned int>("rank")),
+    _some_variable(coupledValue("some_variable"))
 {
 }
 
@@ -50,16 +56,39 @@ GhostUserObject::initialize()
 void
 GhostUserObject::execute()
 {
+  const auto & mesh = _subproblem.mesh().getMesh();
+
   auto my_processor_id = processor_id();
 
-  if (_rank == DofObject::invalid_processor_id || my_processor_id == _rank)
+  for (const auto & elem : mesh.active_element_ptr_range())
   {
-    const auto & mesh = _subproblem.mesh().getMesh();
+    _console << "Elem ID: " << elem->id() << std::flush;
 
-    for (const auto & elem : mesh.active_element_ptr_range())
-      if (elem->processor_id() != my_processor_id)
-        _ghost_data.emplace(elem->id());
+    _fe_problem.prepare(elem, _tid);
+    _fe_problem.reinitElem(elem, _tid);
+
+    if (my_processor_id == 0 && elem->processor_id() != my_processor_id)
+    {
+      _console << ": " << _some_variable[0] << std::endl;
+      _ghost_data[elem->id()] = _some_variable[0];
+    }
+
+    //
+    //
+    //  if (_rank == DofObject::invalid_processor_id || my_processor_id == _rank)
+    //  {
+    //    const auto & mesh = _subproblem.mesh().getMesh();
+    //
+    //    for (const auto & elem : mesh.active_element_ptr_range())
+    //      if (elem->processor_id() != my_processor_id)
+    //        _ghost_data.emplace(elem->id());
+    //  }
   }
+}
+
+void
+GhostUserObject::threadJoin(const UserObject &)
+{
 }
 
 void
@@ -68,8 +97,13 @@ GhostUserObject::finalize()
   _communicator.set_union(_ghost_data);
 }
 
-unsigned long
+Real
 GhostUserObject::getElementalValue(dof_id_type element_id) const
 {
-  return _ghost_data.find(element_id) != _ghost_data.end();
+  auto pos = _ghost_data.find(element_id);
+
+  if (pos != _ghost_data.end())
+    return pos->second;
+  else
+    return 0;
 }
