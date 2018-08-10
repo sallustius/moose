@@ -111,59 +111,163 @@ inline DualNumberBase<T, D>::DualNumberBase(const T2 & val, const D2 & deriv)
 {
 }
 
+/*
+ * vector specialization definitions
+ */
 template <typename T, std::size_t N>
-inline DualNumber<TypeVector<T>, NumberArray<N, TypeVector<T>>>
-DualNumber<T, N>::row(const unsigned int r) const
+inline DualNumber<typename T::value_type, N>
+DualNumber<T, N, typename std::enable_if<VectorTraits<T>::value>::type>::
+operator()(const unsigned int i) const
 {
-  NumberArray<N, TypeVector<T>> deriv;
+  NumberArray<N, typename T::value_type> deriv;
+  for (decltype(N) di = 0; i < N; ++di)
+    deriv[di] = this->derivatives()[di](i);
+  return {this->value()(i), deriv};
+}
+
+template <typename T, std::size_t N>
+inline DualNumberSurrogate<typename T::value_type, N> &
+DualNumber<T, N, typename std::enable_if<VectorTraits<T>::value>::type>::
+operator()(const unsigned int i)
+{
+  typename std::map<std::pair<unsigned int, unsigned int>,
+                    DualNumberSurrogate<typename T::value_type, N>>::iterator it =
+      _vector_dual_number_surrogates.find(i);
+  if (it == _vector_dual_number_surrogates.end())
+    _vector_dual_number_surrogates.emplace(i, {*this, i});
+  return _vector_dual_number_surrogates[i];
+}
+
+template <typename T, std::size_t N>
+inline void
+DualNumber<T, N, typename std::enable_if<VectorTraits<T>::value>::type>::zero()
+{
+  zero_helper(*this);
+}
+
+/*
+ * tensor specialization definitions
+ */
+template <typename T, std::size_t N>
+inline auto
+DualNumber<T, N, typename std::enable_if<TensorTraits<T>::value>::type>::row(
+    const unsigned int r) const -> DualNumber<decltype(this->value().row(r)), N>
+{
+  NumberArray<N, decltype(this->value().row(r))> deriv;
   for (decltype(N) i = 0; i < N; ++i)
     deriv[i] = this->derivatives()[i].row(r);
   return {this->value().row(r), deriv};
 }
 
 template <typename T, std::size_t N>
-inline DualNumber<T, NumberArray<N, T>>
-DualNumber<T, N>::tr() const
+inline DualNumber<typename T::value_type, N>
+DualNumber<T, N, typename std::enable_if<TensorTraits<T>::value>::type>::tr() const
 {
-  NumberArray<N, TypeVector<T>> deriv;
+  NumberArray<N, typename T::value_type> deriv;
   for (decltype(N) i = 0; i < N; ++i)
     deriv[i] = this->derivatives()[i].tr();
   return {this->value().tr(), deriv};
 }
 
 template <typename T, std::size_t N>
-inline void
-DualNumber<T, N>::zero()
+inline DualNumber<typename T::value_type, N>
+DualNumber<T, N, typename std::enable_if<TensorTraits<T>::value>::type>::
+operator()(const unsigned int i, const unsigned int j) const
 {
-  this->value().zero();
-  for (decltype(N) i = 0; i < N; ++i)
-    this->derivatives()[i].zero();
-}
-
-template <typename T, std::size_t N>
-inline DualNumber<T, NumberArray<N, T>>
-DualNumber<T, N>::operator()(const unsigned int i, const unsigned int j) const
-{
-  NumberArray<N, TypeVector<T>> deriv;
-  for (decltype(N) i = 0; i < N; ++i)
-    deriv[i] = this->derivatives()[i](i, j);
+  NumberArray<N, typename T::value_type> deriv;
+  for (decltype(N) di = 0; di < N; ++di)
+    deriv[di] = this->derivatives()[di](i, j);
   return {this->value()(i, j), deriv};
 }
 
 template <typename T, std::size_t N>
-inline DualNumber<T, N>::DualNumberNumberSurrogate<T, N> &
-DualNumber<T, N>::operator()(const unsigned int i, const unsigned int j)
+inline DualNumberSurrogate<typename T::value_type, N> &
+DualNumber<T, N, typename std::enable_if<TensorTraits<T>::value>::type>::
+operator()(const unsigned int i, const unsigned int j)
 {
   std::pair<unsigned, unsigned> indices(i, j);
-  std::map<std::pair<unsigned int, unsigned int>, DualNumberSurrogate<T, N> *>::iterator it =
+  typename std::map<std::pair<unsigned int, unsigned int>,
+                    DualNumberSurrogate<typename T::value_type, N>>::iterator it =
       _tensor_dual_number_surrogates.find(indices);
   if (it == _tensor_dual_number_surrogates.end())
-  {
-    DualNumberSurrogate<T, N> dns(this->value()(i, j));
-    for (decltype(N) di = 0; di < N; ++di)
-      dns.derivatives[i] = &this->derivatives()[i](i, j);
-  }
-  return _tensor_dual_number_surrogates[indices]
+    _tensor_dual_number_surrogates.emplace(indices, {*this, i, j});
+  return _tensor_dual_number_surrogates[indices];
+}
+
+template <typename T, std::size_t N>
+inline void
+DualNumber<T, N, typename std::enable_if<TensorTraits<T>::value>::type>::zero()
+{
+  zero_helper(*this);
+}
+
+/*
+ * RankFourTensor specialization definitions
+ */
+template <typename T, std::size_t N>
+inline DualNumber<Real, N>
+DualNumber<T, N, typename std::enable_if<RankFourTraits<T>::value>::type>::operator()(
+    const unsigned int i, const unsigned int j, const unsigned int k, const unsigned int l) const
+{
+  NumberArray<N, Real> deriv;
+  for (decltype(N) di = 0; di < N; ++di)
+    deriv[di] = this->derivatives()[di](i, j, k, l);
+  return {this->value()(i, j, k, l), deriv};
+}
+
+template <typename T, std::size_t N>
+inline DualNumberSurrogate<Real, N> &
+DualNumber<T, N, typename std::enable_if<RankFourTraits<T>::value>::type>::
+operator()(const unsigned int i, const unsigned int j, const unsigned int k, const unsigned int l)
+{
+  std::tuple<unsigned, unsigned, unsigned, unsigned> indices(i, j, k, l);
+  typename std::map<std::tuple<unsigned, unsigned, unsigned, unsigned>,
+                    DualNumberSurrogate<Real, N>>::iterator it =
+      _rank4_dual_number_surrogates.find(indices);
+  if (it == _rank4_dual_number_surrogates.end())
+    _rank4_dual_number_surrogates.emplace(indices, {*this, i, j, k, l});
+  return _rank4_dual_number_surrogates[indices];
+}
+
+// helper function
+template <typename T>
+void
+zero_helper(T & dn)
+{
+  dn.value().zero();
+  auto size = dn.derivatives().size();
+  for (decltype(size) i = 0; i < size; ++i)
+    dn.derivatives()[i].zero();
+}
+
+template <typename T, std::size_t N>
+inline DualNumberSurrogate<T, N>::DualNumberSurrogate(DualNumber<T, N> & dn) : value(dn.value())
+{
+  for (decltype(N) i = 0; i < N; ++i)
+    derivatives[i] = &dn.derivatives()[i];
+}
+
+template <typename T, std::size_t N>
+inline DualNumberSurrogate<T, N>::DualNumberSurrogate(DualNumber<T, N> && dn) : value(dn.value())
+{
+  for (decltype(N) i = 0; i < N; ++i)
+    derivatives[i] = &dn.derivatives()[i];
+}
+
+template <typename T, std::size_t N>
+inline DualNumberSurrogate<T, N>::DualNumberSurrogate(const DualNumberSurrogate<T, N> & dns)
+  : value(dns.value), derivatives(dns.derivatives)
+{
+}
+
+template <typename T, std::size_t N>
+inline DualNumberSurrogate<T, N> &
+DualNumberSurrogate<T, N>::operator=(const DualNumberSurrogate<T, N> & dns)
+{
+  value = dns.value;
+  for (decltype(N) i = 0; i < N; ++i)
+    *derivatives[i] = *dns.derivatives[i];
+  return *this;
 }
 
   // FIXME: these operators currently do automatic type promotion when
@@ -199,10 +303,8 @@ DualNumber<T, N>::operator()(const unsigned int i, const unsigned int j)
   }                                                                                                \
                                                                                                    \
   template <typename T, size_t N, typename T2>                                                     \
-  inline auto operator opname(const DualNumber<T, NumberArray<N, T>> & a,                          \
-                              const DualNumber<T2, NumberArray<N, T2>> & b)                        \
-      ->DualNumber<decltype(a.value() opname b.value()),                                           \
-                   NumberArray<N, decltype(a.value() opname b.value())>>                           \
+  inline auto operator opname(const DualNumber<T, N> & a, const DualNumber<T2, N> & b)             \
+      ->DualNumber<decltype(a.value() opname b.value()), N>                                        \
   {                                                                                                \
     auto value = a.value() opname b.value();                                                       \
     auto derivatives = dualcalc;                                                                   \
@@ -210,8 +312,8 @@ DualNumber<T, N>::operator()(const unsigned int i, const unsigned int j)
   }                                                                                                \
                                                                                                    \
   template <typename T, typename T2, size_t N>                                                     \
-  inline auto operator opname(const T & a, const DualNumber<T2, NumberArray<N, T2>> & b)           \
-      ->DualNumber<decltype(a opname b.value()), NumberArray<N, decltype(a opname b.value())>>     \
+  inline auto operator opname(const T & a, const DualNumber<T2, N> & b)                            \
+      ->DualNumber<decltype(a opname b.value()), N>                                                \
   {                                                                                                \
     auto value = a opname b.value();                                                               \
     auto derivatives = dn_second_calc;                                                             \
@@ -219,8 +321,8 @@ DualNumber<T, N>::operator()(const unsigned int i, const unsigned int j)
   }                                                                                                \
                                                                                                    \
   template <typename T, size_t N, typename T2>                                                     \
-  inline auto operator opname(const DualNumber<T, NumberArray<N, T>> & a, const T2 & b)            \
-      ->DualNumber<decltype(a.value() opname b), NumberArray<N, decltype(a.value() opname b)>>     \
+  inline auto operator opname(const DualNumber<T, N> & a, const T2 & b)                            \
+      ->DualNumber<decltype(a.value() opname b), N>                                                \
   {                                                                                                \
     auto value = a.value() opname b;                                                               \
     auto derivatives = dn_first_calc;                                                              \

@@ -30,6 +30,7 @@
 
 #include <ostream>
 #include <limits>
+#include <utility>
 
 #include "metaphysicl/compare_types.h"
 #include "metaphysicl/dualderivatives.h"
@@ -116,43 +117,141 @@ private:
 };
 
 template <typename T, std::size_t N>
-class DualNumber : public DualNumberBase<T, NumberArray<N, T>>
+struct DualNumberSurrogate;
+
+template <typename T, std::size_t N, typename Enable = void>
+class DualNumber;
+
+template <typename T, std::size_t N>
+class DualNumber<T, N, typename std::enable_if<ScalarTraits<T>::value>::type>
+  : public DualNumberBase<T, NumberArray<N, T>>
 {
 public:
-  using DualNumberBase::DualNumberBase;
+  using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
+};
 
-  ~DualNumber();
+template <typename T, std::size_t N>
+class DualNumber<T, N, typename std::enable_if<VectorTraits<T>::value>::type>
+  : public DualNumberBase<T, NumberArray<N, T>>
+{
+public:
+  using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
 
-  DualNumber<TypeVector<T>, NumberArray<N, TypeVector<T>>> row(const unsigned int r) const;
+  DualNumber<typename T::value_type, N> operator()(const unsigned int i) const;
 
-  DualNumber<T, NumberArray<N, T>> tr() const;
+  DualNumberSurrogate<typename T::value_type, N> & operator()(const unsigned int i);
 
   void zero();
 
-  DualNumber<T, NumberArray<N, T>> operator()(const unsigned int i, const unsigned int j) const;
+protected:
+  std::map<std::pair<unsigned int, unsigned int>, DualNumberSurrogate<typename T::value_type, N>>
+      _tensor_dual_number_surrogates;
+  std::map<unsigned int, DualNumberSurrogate<typename T::value_type, N>>
+      _vector_dual_number_surrogates;
+};
 
-  DualNumberSurrogate<T, N> & operator()(const unsigned int i, const unsigned int j);
+template <typename T, std::size_t N>
+class DualNumber<T, N, typename std::enable_if<TensorTraits<T>::value>::type>
+  : public DualNumberBase<T, NumberArray<N, T>>
+{
+public:
+  using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
 
-  template <typename T, std::size_t N>
-  struct DualNumberSurrogate
-  {
-    DualNumberSurrogate(T & v_in, NumberArray<N, T> & d_in) : value(v_in), derivatives(d_in) {}
+  auto row(const unsigned int r) const -> DualNumber<decltype(this->value().row(r)), N>;
 
-    T & value;
-    NumberArray<N, T> & derivatives;
-  };
+  DualNumber<typename T::value_type, N> tr() const;
+
+  DualNumber<typename T::value_type, N> operator()(const unsigned int i,
+                                                   const unsigned int j) const;
+
+  DualNumberSurrogate<typename T::value_type, N> & operator()(const unsigned int i,
+                                                              const unsigned int j);
+
+  void zero();
 
 protected:
-  std::map<std::pair<unsigned int, unsigned int>, DualNumberSurrogate>
+  std::map<std::pair<unsigned int, unsigned int>, DualNumberSurrogate<typename T::value_type, N>>
       _tensor_dual_number_surrogates;
-  std::map<unsigned int, DualNumberSurrogate> _vector_dual_number_surrogates;
+};
+
+template <typename T, std::size_t N>
+class DualNumber<T, N, typename std::enable_if<RankFourTraits<T>::value>::type>
+  : public DualNumberBase<T, NumberArray<N, T>>
+{
+public:
+  using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
+
+  DualNumber<Real, N> operator()(const unsigned int i,
+                                 const unsigned int j,
+                                 const unsigned int k,
+                                 const unsigned int l) const;
+
+  DualNumberSurrogate<Real, N> & operator()(const unsigned int i,
+                                            const unsigned int j,
+                                            const unsigned int k,
+                                            const unsigned int l);
+
+  void zero();
+
+protected:
+  std::map<std::tuple<unsigned int, unsigned int, unsigned int, unsigned int>,
+           DualNumberSurrogate<Real, N>>
+      _rank4_dual_number_surrogates;
+};
+
+template <typename T>
+void zero_helper(T & dn);
+
+template <typename T, std::size_t N>
+struct DualNumberSurrogate
+{
+  DualNumberSurrogate(DualNumber<T, N> & dn);
+  DualNumberSurrogate(DualNumber<T, N> && dn);
+
+  template <typename T2,
+            typename MetaPhysicL::boostcopy::enable_if_c<VectorTraits<T2>::value, int> = 0>
+  DualNumberSurrogate(const DualNumber<T2, N> & vector_dn, unsigned int i)
+    : value(vector_dn.value())
+  {
+    for (decltype(N) di = 0; di < N; ++di)
+      derivatives[di] = &vector_dn.derivatives()[di](i);
+  }
+
+  template <typename T2,
+            typename MetaPhysicL::boostcopy::enable_if_c<TensorTraits<T2>::value, int> = 0>
+  DualNumberSurrogate(const DualNumber<T2, N> & tensor_dn, unsigned int i, unsigned int j)
+    : value(tensor_dn.value())
+  {
+    for (decltype(N) di = 0; di < N; ++di)
+      derivatives[di] = &tensor_dn.derivatives()[di](i, j);
+  }
+
+  template <typename T2,
+            typename MetaPhysicL::boostcopy::enable_if_c<RankFourTraits<T2>::value, int> = 0>
+  DualNumberSurrogate(const DualNumber<T2, N> & rank4_dn,
+                      unsigned int i,
+                      unsigned int j,
+                      unsigned int k,
+                      unsigned int l)
+    : value(rank4_dn.value())
+  {
+    for (decltype(N) di = 0; di < N; ++di)
+      derivatives[di] = &rank4_dn.derivatives()[di](i, j, k, l);
+  }
+
+  DualNumberSurrogate(const DualNumberSurrogate<T, N> & dns);
+
+  DualNumberSurrogate<T, N> & operator=(const DualNumberSurrogate<T, N> & dns);
+
+  T & value;
+  NumberArray<N, T *> derivatives;
 };
 
 // Helper class to handle partial specialization for DualNumberBase
 // constructors
 
 template <typename T, typename D>
-struct DualNumberConstructorr
+struct DualNumberConstructor
 {
   static T value(const DualNumberBase<T, D> & v) { return v.value(); }
 
@@ -171,7 +270,7 @@ struct DualNumberConstructorr
   template <typename T2, typename D2>
   static T value(const DualNumberBase<T2, D2> & v)
   {
-    return DualNumberConstructorr<T, D>::value(v.value());
+    return DualNumberConstructor<T, D>::value(v.value());
   }
 
   template <typename T2>
@@ -249,18 +348,16 @@ struct DualNumberConstructor<DualNumberBase<T, D>, DD>
 
 #define DualNumber_decl_op(opname, functorname)                                                    \
   template <typename T, size_t N, typename T2>                                                     \
-  inline auto operator opname(const DualNumber<T, NumberArray<N, T>> & a,                          \
-                              const DualNumber<T2, NumberArray<N, T2>> & b)                        \
-      ->DualNumber<decltype(a.value() opname b.value()),                                           \
-                   NumberArray<N, decltype(a.value() opname b.value())>>;                          \
+  inline auto operator opname(const DualNumber<T, N> & a, const DualNumber<T2, N> & b)             \
+      ->DualNumber<decltype(a.value() opname b.value()), N>;                                       \
                                                                                                    \
   template <typename T, typename T2, size_t N>                                                     \
-  inline auto operator opname(const T & a, const DualNumber<T2, NumberArray<N, T2>> & b)           \
-      ->DualNumber<decltype(a opname b.value()), NumberArray<N, decltype(a opname b.value())>>;    \
+  inline auto operator opname(const T & a, const DualNumber<T2, N> & b)                            \
+      ->DualNumber<decltype(a opname b.value()), N>;                                               \
                                                                                                    \
   template <typename T, size_t N, typename T2>                                                     \
-  inline auto operator opname(const DualNumber<T, NumberArray<N, T>> & a, const T2 & b)            \
-      ->DualNumber<decltype(a.value() opname b), NumberArray<N, decltype(a.value() opname b)>>;
+  inline auto operator opname(const DualNumber<T, N> & a, const T2 & b)                            \
+      ->DualNumber<decltype(a.value() opname b), N>
 
 DualNumber_decl_op(+, Plus);
 DualNumber_decl_op(-, Minus);
@@ -622,7 +719,7 @@ DualNumber_decl_std_binary(min);
 DualNumber_decl_std_binary(fmod);
 
 template <typename T, typename D>
-class numeric_limits<DualNumber<T, D>>
+class numeric_limits<DualNumberBase<T, D>>
   : public MetaPhysicL::raw_numeric_limits<DualNumberBase<T, D>, T>
 {
 };

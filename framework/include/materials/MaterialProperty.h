@@ -107,8 +107,7 @@ public:
   /**
    * @returns a read-only reference to the parameter value.
    */
-  const MooseArray<MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
-  get() const
+  const MooseArray<MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM>> & get() const
   {
     return _value;
   }
@@ -116,10 +115,7 @@ public:
   /**
    * @returns a writable reference to the parameter value.
    */
-  MooseArray<MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> & set()
-  {
-    return _value;
-  }
+  MooseArray<MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM>> & set() { return _value; }
 
   /**
    * String identifying the type of parameter stored.
@@ -205,7 +201,7 @@ private:
 
 protected:
   /// Stored parameter value.
-  MooseArray<MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> _value;
+  MooseArray<MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM>> _value;
 };
 
 // ------------------------------------------------------------
@@ -274,15 +270,14 @@ public:
   /**
    * Get element i out of the array as a writeable reference.
    */
-  typename MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
-  operator[](const unsigned int i)
+  typename MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM> & operator[](const unsigned int i)
   {
     return this->_value[i];
   }
   /**
    * Get element i out of the array as a read-only reference.
    */
-  const typename MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
+  const typename MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM> &
   operator[](const unsigned int i) const
   {
     return this->_value[i];
@@ -357,8 +352,7 @@ PropertyValue *
 _init_helper(int size, PropertyValue * /*prop*/, const P *)
 {
   MaterialProperty<P> * copy = new MaterialProperty<P>;
-  copy->_value.resize(
-      size, MetaPhysicL::DualNumber<P, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, P>>{});
+  copy->_value.resize(size, MetaPhysicL::DualNumber<P, AD_MAX_DOFS_PER_ELEM>{});
   return copy;
 }
 

@@ -32,13 +32,20 @@
 #include <complex>
 #include <iostream>
 
-#include "libmesh/vector_value.h"
-#include "libmesh/tensor_value.h"
-
-using libMesh::TensorValue;
-using libMesh::TypeTensor;
-using libMesh::TypeVector;
-using libMesh::VectorValue;
+namespace libMesh
+{
+class Real;
+template <typename T>
+class TensorValue;
+template <typename T>
+class TypeTensor;
+template <typename T>
+class VectorValue;
+template <typename T>
+class TypeVector;
+}
+class RankTwoTensor;
+class RankFourTensor;
 
 namespace MetaPhysicL
 {
@@ -587,6 +594,54 @@ if_else(const B & condition, const T & if_true, const T2 & if_false)
     return if_true;
   return if_false;
 }
+
+template <typename T>
+struct VectorTraits
+{
+  static const bool value = false;
+};
+template <typename T>
+struct VectorTraits<TypeVector<T>>
+{
+  static const bool value = true;
+};
+template <typename T>
+struct VectorTraits<VectorValue<T>>
+{
+  static const bool value = true;
+};
+
+template <typename T>
+struct TensorTraits
+{
+  static const bool value = false;
+};
+template <typename T>
+struct TensorTraits<TypeTensor<T>>
+{
+  static const bool value = true;
+};
+template <typename T>
+struct TensorTraits<TensorValue<T>>
+{
+  static const bool value = true;
+};
+template <>
+struct TensorTraits<RankTwoTensor>
+{
+  static const bool value = true;
+};
+
+template <typename>
+struct RankFourTraits
+{
+  static const bool value = false;
+};
+template <>
+struct RankFourTraits<RankFourTensor>
+{
+  static const bool value = true;
+};
 } // namespace MetaPhysicL
 
 #endif // METAPHYSICL_COMPARE_TYPES_H

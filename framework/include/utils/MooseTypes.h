@@ -160,13 +160,13 @@ using MetaPhysicL::DualNumber;
 using MetaPhysicL::NumberArray;
 
 template <typename T>
-using ScalarDN = DualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>>;
+using ScalarDN = DualNumber<T, AD_MAX_DOFS_PER_ELEM>;
 template <typename T, template <class> class W>
-using TemplateDN = DualNumber<W<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, W<T>>>;
+using TemplateDN = DualNumber<W<T>, AD_MAX_DOFS_PER_ELEM>;
 template <typename T>
-using VectorDN = DualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>;
+using VectorDN = DualNumber<VectorValue<T>, AD_MAX_DOFS_PER_ELEM>;
 template <typename T>
-using TensorDN = DualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
+using TensorDN = DualNumber<TensorValue<T>, AD_MAX_DOFS_PER_ELEM>;
 
 /*
  * Some helpful typedefs for AD
