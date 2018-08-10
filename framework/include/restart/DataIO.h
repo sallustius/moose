@@ -315,7 +315,7 @@ dataStore(std::ostream & stream, HashMap<T, U> & m, void * context)
 template <typename T>
 inline void
 dataStore(std::ostream & stream,
-          MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
+          MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM> & dn,
           void * context)
 {
   dataStore(stream, dn.value(), context);
@@ -505,7 +505,7 @@ dataLoad(std::istream & stream, HashMap<T, U> & m, void * context)
 template <typename T>
 inline void
 dataLoad(std::ostream & stream,
-         MetaPhysicL::DualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
+         MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM> & dn,
          void * context)
 {
   dataLoad(stream, dn.value(), context);
