@@ -255,6 +255,11 @@ inline DualNumberSurrogate<T, N>::DualNumberSurrogate(DualNumber<T, N> && dn) : 
 }
 
 template <typename T, std::size_t N>
+inline DualNumberSurrogate<T, N>::DualNumberSurrogate(const T & n) : value(n)
+{
+}
+
+template <typename T, std::size_t N>
 inline DualNumberSurrogate<T, N>::DualNumberSurrogate(const DualNumberSurrogate<T, N> & dns)
   : value(dns.value), derivatives(dns.derivatives)
 {
@@ -266,7 +271,12 @@ DualNumberSurrogate<T, N>::operator=(const DualNumberSurrogate<T, N> & dns)
 {
   value = dns.value;
   for (decltype(N) i = 0; i < N; ++i)
-    *derivatives[i] = *dns.derivatives[i];
+  {
+    if (dns.derivatives[i])
+      *derivatives[i] = *dns.derivatives[i];
+    else
+      *derivatives[i] = 0;
+  }
   return *this;
 }
 
