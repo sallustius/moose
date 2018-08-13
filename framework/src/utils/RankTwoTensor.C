@@ -585,13 +585,6 @@ RankTwoTensor::d2secondInvariant() const
   return result;
 }
 
-Real
-RankTwoTensor::trace() const
-{
-  // deprecate this!
-  return tr();
-}
-
 RankTwoTensor
 RankTwoTensor::inverse() const
 {

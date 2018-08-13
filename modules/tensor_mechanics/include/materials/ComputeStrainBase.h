@@ -37,8 +37,8 @@ protected:
 
   /// Coupled displacement variables
   unsigned int _ndisp;
-  std::vector<const VariableValue *> _disp;
-  std::vector<const VariableGradient *> _grad_disp;
+  std::vector<const ADVariableValue *> _disp;
+  std::vector<const ADVariableGradient *> _grad_disp;
 
   std::string _base_name;
 
