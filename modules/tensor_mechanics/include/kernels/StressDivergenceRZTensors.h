@@ -37,14 +37,10 @@ public:
 protected:
   virtual void initialSetup() override;
 
-  virtual Real computeQpResidual() override;
-  virtual Real computeQpJacobian() override;
-  virtual Real computeQpOffDiagJacobian(unsigned int jvar) override;
+  virtual ADReal computeQpResidual() override;
 
   virtual void computeAverageGradientTest() override;
   virtual void computeAverageGradientPhi() override;
-
-  Real calculateJacobian(unsigned int ivar, unsigned int jvar);
 };
 
 #endif // STRESSDIVERGENCERZTENSORS_H
