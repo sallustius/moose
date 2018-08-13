@@ -41,6 +41,9 @@
 namespace MetaPhysicL
 {
 
+template <typename T, size_t N, typename Enable = void>
+class DualNumber;
+
 template <typename T, typename D = T>
 class DualNumberBase : public safe_bool<DualNumberBase<T, D>>
 {
@@ -86,28 +89,40 @@ public:
   DualNumberBase<T, D> operator!() const;
 
   template <typename T2, typename D2>
-  DualNumberBase<T, D> & operator+=(const DualNumberBase<T2, D2> & a);
+  auto operator+=(const DualNumberBase<T2, D2> & a) -> decltype(*this) &;
+
+  template <typename T2, size_t N>
+  auto operator+=(const DualNumber<T2, N> & a) -> decltype(*this) &;
 
   template <typename T2>
-  DualNumberBase<T, D> & operator+=(const T2 & a);
+  auto operator+=(const T2 & a) -> decltype(*this) &;
 
   template <typename T2, typename D2>
-  DualNumberBase<T, D> & operator-=(const DualNumberBase<T2, D2> & a);
+  auto operator-=(const DualNumberBase<T2, D2> & a) -> decltype(*this) &;
+
+  template <typename T2, size_t N>
+  auto operator-=(const DualNumber<T2, N> & a) -> decltype(*this) &;
 
   template <typename T2>
-  DualNumberBase<T, D> & operator-=(const T2 & a);
+  auto operator-=(const T2 & a) -> decltype(*this) &;
 
   template <typename T2, typename D2>
-  DualNumberBase<T, D> & operator*=(const DualNumberBase<T2, D2> & a);
+  auto operator*=(const DualNumberBase<T2, D2> & a) -> decltype(*this) &;
+
+  template <typename T2, size_t N>
+  auto operator*=(const DualNumber<T2, N> & a) -> decltype(*this) &;
 
   template <typename T2>
-  DualNumberBase<T, D> & operator*=(const T2 & a);
+  auto operator*=(const T2 & a) -> decltype(*this) &;
 
   template <typename T2, typename D2>
-  DualNumberBase<T, D> & operator/=(const DualNumberBase<T2, D2> & a);
+  auto operator/=(const DualNumberBase<T2, D2> & a) -> decltype(*this) &;
+
+  template <typename T2, size_t N>
+  auto operator/=(const DualNumber<T2, N> & a) -> decltype(*this) &;
 
   template <typename T2>
-  DualNumberBase<T, D> & operator/=(const T2 & a);
+  auto operator/=(const T2 & a) -> decltype(*this) &;
 
   operator T();
 
@@ -119,12 +134,8 @@ private:
 template <typename T, std::size_t N>
 struct DualNumberSurrogate;
 
-template <typename T, std::size_t N, typename Enable = void>
-class DualNumber;
-
-template <typename T, std::size_t N>
-class DualNumber<T, N, typename std::enable_if<ScalarTraits<T>::value>::type>
-  : public DualNumberBase<T, NumberArray<N, T>>
+template <typename T, std::size_t N, typename Enable>
+class DualNumber : public DualNumberBase<T, NumberArray<N, T>>
 {
 public:
   using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
@@ -144,8 +155,6 @@ public:
   void zero();
 
 protected:
-  std::map<std::pair<unsigned int, unsigned int>, DualNumberSurrogate<typename T::value_type, N>>
-      _tensor_dual_number_surrogates;
   std::map<unsigned int, DualNumberSurrogate<typename T::value_type, N>>
       _vector_dual_number_surrogates;
 };
@@ -273,6 +282,12 @@ struct DualNumberConstructor
     return DualNumberConstructor<T, D>::value(v.value());
   }
 
+  template <typename T2, size_t N>
+  static T value(const DualNumber<T2, N> & v)
+  {
+    return DualNumberConstructor<T, NumberArray<N, T>>::value(v.value());
+  }
+
   template <typename T2>
   static D deriv(const T2 &)
   {
@@ -281,6 +296,12 @@ struct DualNumberConstructor
 
   template <typename T2, typename D2>
   static D deriv(const DualNumberBase<T2, D2> & v)
+  {
+    return v.derivatives();
+  }
+
+  template <typename T2, size_t N>
+  static D deriv(const DualNumber<T2, N> & v)
   {
     return v.derivatives();
   }

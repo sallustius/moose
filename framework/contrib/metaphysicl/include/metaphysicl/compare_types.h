@@ -32,9 +32,10 @@
 #include <complex>
 #include <iostream>
 
+#include "libmesh/libmesh_common.h"
+
 namespace libMesh
 {
-class Real;
 template <typename T>
 class TensorValue;
 template <typename T>
