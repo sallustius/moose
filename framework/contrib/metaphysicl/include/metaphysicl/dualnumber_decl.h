@@ -216,6 +216,7 @@ struct DualNumberSurrogate
 {
   DualNumberSurrogate(DualNumber<T, N> & dn);
   DualNumberSurrogate(DualNumber<T, N> && dn);
+  DualNumberSurrogate(const T & n);
 
   template <typename T2,
             typename MetaPhysicL::boostcopy::enable_if_c<VectorTraits<T2>::value, int> = 0>
@@ -291,7 +292,7 @@ struct DualNumberConstructor
   template <typename T2>
   static D deriv(const T2 &)
   {
-    return 0.;
+    return {};
   }
 
   template <typename T2, typename D2>
