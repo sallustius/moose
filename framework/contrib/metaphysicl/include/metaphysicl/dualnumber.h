@@ -281,24 +281,36 @@ DualNumberSurrogate<T, N>::operator=(const DualNumberSurrogate<T, N> & dns)
 #define DualNumber_op(opname, functorname, dn_first_calc, dn_second_calc, dualcalc)                \
   template <typename T, typename D>                                                                \
   template <typename T2>                                                                           \
-  inline DualNumberBase<T, D> & DualNumberBase<T, D>::operator opname##=(const T2 & in)            \
+  inline auto DualNumberBase<T, D>::operator opname##=(const T2 & in)->decltype(*this) &           \
   {                                                                                                \
     const auto & a = *this;                                                                        \
     const auto & b = in;                                                                           \
     this->derivatives() = dn_first_calc;                                                           \
-    this->value() opname## = in;                                                                   \
+    this->value() opname## = b;                                                                    \
     return *this;                                                                                  \
   }                                                                                                \
                                                                                                    \
   template <typename T, typename D>                                                                \
   template <typename T2, typename D2>                                                              \
-  inline DualNumberBase<T, D> & DualNumberBase<T, D>::operator opname##=(                          \
-      const DualNumberBase<T2, D2> & in)                                                           \
+  inline auto DualNumberBase<T, D>::operator opname##=(const DualNumberBase<T2, D2> & in)          \
+      ->decltype(*this) &                                                                          \
   {                                                                                                \
     const auto & a = *this;                                                                        \
     const auto & b = in;                                                                           \
     this->derivatives() = dualcalc;                                                                \
-    this->value() opname## = in.value();                                                           \
+    this->value() opname## = b.value();                                                            \
+    return *this;                                                                                  \
+  }                                                                                                \
+                                                                                                   \
+  template <typename T, typename D>                                                                \
+  template <typename T2, size_t N>                                                                 \
+  inline auto DualNumberBase<T, D>::operator opname##=(const DualNumber<T2, N> & in)               \
+      ->decltype(*this) &                                                                          \
+  {                                                                                                \
+    const auto & a = *this;                                                                        \
+    const auto & b = in;                                                                           \
+    this->derivatives() = dualcalc;                                                                \
+    this->value() opname## = b.value();                                                            \
     return *this;                                                                                  \
   }                                                                                                \
                                                                                                    \
