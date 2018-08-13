@@ -46,55 +46,10 @@ StressDivergenceRSphericalTensors::initialSetup()
                "spherically symmetric geometries.");
 }
 
-Real
+ADReal
 StressDivergenceRSphericalTensors::computeQpResidual()
 {
   return _grad_test[_i][_qp](0) * _stress[_qp](0, 0) +               // stress_{rr} part 1
          +(_test[_i][_qp] / _q_point[_qp](0)) * _stress[_qp](1, 1) + // stress_{\theta \theta}
          +(_test[_i][_qp] / _q_point[_qp](0)) * _stress[_qp](2, 2);  // stress_{\phi \phi}
-}
-
-Real
-StressDivergenceRSphericalTensors::computeQpJacobian()
-{
-  return calculateJacobian(_component, _component);
-}
-
-Real
-StressDivergenceRSphericalTensors::computeQpOffDiagJacobian(unsigned int jvar)
-{
-  for (unsigned int i = 0; i < _ndisp; ++i)
-    if (jvar == _disp_var[i])
-      return calculateJacobian(_component, i);
-
-  if (_temp_coupled && jvar == _temp_var)
-    return 0.0;
-
-  return 0.0;
-}
-
-Real
-StressDivergenceRSphericalTensors::calculateJacobian(unsigned int ivar, unsigned int jvar)
-{
-  RealGradient test_r, phi_r;
-
-  mooseAssert(ivar == 0 && jvar == 0,
-              "Invalid component in Jacobian Calculation"); // Only nonzero case for a 1D simulation
-
-  if (ivar == 0) // Case grad_test for r, requires contributions from stress_{rr}, stress_{\theta
-                 // \theta}, and stress_{\phi \phi}
-  {
-    test_r(0) = _grad_test[_i][_qp](0);
-    test_r(1) = _test[_i][_qp] / _q_point[_qp](0);
-    test_r(2) = _test[_i][_qp] / _q_point[_qp](0);
-  }
-
-  if (jvar == 0)
-  {
-    phi_r(0) = _grad_phi[_j][_qp](0);
-    phi_r(1) = _phi[_j][_qp] / _q_point[_qp](0);
-    phi_r(2) = _phi[_j][_qp] / _q_point[_qp](0);
-  }
-
-  return ElasticityTensorTools::elasticJacobian(_Jacobian_mult[_qp], ivar, jvar, test_r, phi_r);
 }
