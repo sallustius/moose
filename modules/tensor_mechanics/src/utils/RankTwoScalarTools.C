@@ -131,7 +131,7 @@ effectiveStrain(const RankTwoTensor & strain)
 Real
 hydrostatic(const RankTwoTensor & r2tensor)
 {
-  return r2tensor.trace() / 3.0;
+  return r2tensor.tr() / 3.0;
 }
 
 Real
@@ -143,7 +143,7 @@ L2norm(const RankTwoTensor & r2tensor)
 Real
 volumetricStrain(const RankTwoTensor & strain)
 {
-  Real val = strain.trace();
+  Real val = strain.tr();
   for (unsigned int i = 0; i < 2; ++i)
     for (unsigned int j = i + 1; j < 3; ++j)
       val += strain(i, i) * strain(j, j);
@@ -156,7 +156,7 @@ volumetricStrain(const RankTwoTensor & strain)
 Real
 firstInvariant(const RankTwoTensor & r2tensor)
 {
-  return r2tensor.trace();
+  return r2tensor.tr();
 }
 
 Real

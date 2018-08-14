@@ -114,7 +114,7 @@ TensorMechanicsPlasticMohrCoulomb::TensorMechanicsPlasticMohrCoulomb(
 Real
 TensorMechanicsPlasticMohrCoulomb::yieldFunction(const RankTwoTensor & stress, Real intnl) const
 {
-  Real mean_stress = stress.trace() / 3.0;
+  Real mean_stress = stress.tr() / 3.0;
   Real sinphi = std::sin(phi(intnl));
   Real cosphi = std::cos(phi(intnl));
   Real sin3Lode = stress.sin3Lode(_lode_cutoff, 0);
@@ -144,7 +144,7 @@ TensorMechanicsPlasticMohrCoulomb::yieldFunction(const RankTwoTensor & stress, R
 RankTwoTensor
 TensorMechanicsPlasticMohrCoulomb::df_dsig(const RankTwoTensor & stress, const Real sin_angle) const
 {
-  Real mean_stress = stress.trace() / 3.0;
+  Real mean_stress = stress.tr() / 3.0;
   RankTwoTensor dmean_stress = stress.dtrace() / 3.0;
   Real sin3Lode = stress.sin3Lode(_lode_cutoff, 0);
   if (std::abs(sin3Lode) <= _sin3tt)
@@ -193,7 +193,7 @@ TensorMechanicsPlasticMohrCoulomb::dyieldFunction_dintnl(const RankTwoTensor & s
   Real dsin_angle = cos_angle * dphi(intnl);
   Real dcos_angle = -sin_angle * dphi(intnl);
 
-  Real mean_stress = stress.trace() / 3.0;
+  Real mean_stress = stress.tr() / 3.0;
   Real sin3Lode = stress.sin3Lode(_lode_cutoff, 0);
   if (std::abs(sin3Lode) <= _sin3tt)
   {
@@ -235,7 +235,7 @@ TensorMechanicsPlasticMohrCoulomb::dflowPotential_dstress(const RankTwoTensor & 
 {
   RankFourTensor dr_dstress;
   Real sin_angle = std::sin(psi(intnl));
-  Real mean_stress = stress.trace() / 3.0;
+  Real mean_stress = stress.tr() / 3.0;
   RankTwoTensor dmean_stress = stress.dtrace() / 3.0;
   Real sin3Lode = stress.sin3Lode(_lode_cutoff, 0);
   if (std::abs(sin3Lode) <= _sin3tt)
@@ -319,7 +319,7 @@ TensorMechanicsPlasticMohrCoulomb::dflowPotential_dintnl(const RankTwoTensor & s
   Real sin_angle = std::sin(psi(intnl));
   Real dsin_angle = std::cos(psi(intnl)) * dpsi(intnl);
 
-  Real mean_stress = stress.trace() / 3.0;
+  Real mean_stress = stress.tr() / 3.0;
   RankTwoTensor dmean_stress = stress.dtrace() / 3.0;
   Real sin3Lode = stress.sin3Lode(_lode_cutoff, 0);
 
@@ -453,7 +453,7 @@ TensorMechanicsPlasticMohrCoulomb::smooth(const RankTwoTensor & stress) const
   Real smoother2 = _small_smoother2;
   if (_tip_scheme == "cap")
   {
-    Real x = stress.trace() / 3.0 - _cap_start;
+    Real x = stress.tr() / 3.0 - _cap_start;
     Real p = 0;
     if (x > 0)
       p = x * (1 - std::exp(-_cap_rate * x));
@@ -468,7 +468,7 @@ TensorMechanicsPlasticMohrCoulomb::dsmooth(const RankTwoTensor & stress) const
   Real dsmoother2 = 0;
   if (_tip_scheme == "cap")
   {
-    Real x = stress.trace() / 3.0 - _cap_start;
+    Real x = stress.tr() / 3.0 - _cap_start;
     Real p = 0;
     Real dp_dx = 0;
     if (x > 0)
@@ -487,7 +487,7 @@ TensorMechanicsPlasticMohrCoulomb::d2smooth(const RankTwoTensor & stress) const
   Real d2smoother2 = 0;
   if (_tip_scheme == "cap")
   {
-    Real x = stress.trace() / 3.0 - _cap_start;
+    Real x = stress.tr() / 3.0 - _cap_start;
     Real p = 0;
     Real dp_dx = 0;
     Real d2p_dx2 = 0;

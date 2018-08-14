@@ -279,7 +279,7 @@ protected:
                     const std::vector<Real> & intnl_old,
                     const RankFourTensor & E_ijkl,
                     Real ep_plastic_tolerance,
-                    RankTwoTensor & stress,
+                    ADRankTwoTensor & stress,
                     std::vector<Real> & intnl,
                     std::vector<Real> & pm,
                     std::vector<Real> & cumulative_pm,

@@ -181,7 +181,7 @@ PLC_LSH::computeCreep(const SymmTensor & strain_increment,
 {
   // compute deviatoric trial stress
   SymmTensor dev_trial_stress(stress_new);
-  dev_trial_stress.addDiag(-dev_trial_stress.trace() / 3.0);
+  dev_trial_stress.addDiag(-dev_trial_stress.tr() / 3.0);
 
   // compute effective trial stress
   Real dts_squared = dev_trial_stress.doubleContraction(dev_trial_stress);
@@ -272,7 +272,7 @@ PLC_LSH::computeLSH(const SymmTensor & strain_increment,
 
   // compute deviatoric trial stress
   SymmTensor dev_trial_stress(stress_new);
-  dev_trial_stress.addDiag(-stress_new.trace() / 3);
+  dev_trial_stress.addDiag(-stress_new.tr() / 3);
 
   // effective trial stress
   Real dts_squared = dev_trial_stress.doubleContraction(dev_trial_stress);

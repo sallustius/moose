@@ -81,12 +81,6 @@ inline DualNumberBase<T, D> DualNumberBase<T, D>::operator!() const
   return DualNumberBase<T, D>(!_val, !_deriv);
 }
 
-template <typename T, typename D>
-inline DualNumberBase<T, D>::operator T()
-{
-  return _val;
-}
-
 //
 // Member function definitions
 //

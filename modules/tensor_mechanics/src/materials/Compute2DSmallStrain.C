@@ -38,13 +38,13 @@ Compute2DSmallStrain::initialSetup()
   {
     if (_out_of_plane_direction == i)
     {
-      _disp[i] = &_zero;
-      _grad_disp[i] = &_grad_zero;
+      _disp[i] = &_ad_zero;
+      _grad_disp[i] = &_ad_grad_zero;
     }
     else
     {
-      _disp[i] = &coupledValue("displacements", i);
-      _grad_disp[i] = &coupledGradient("displacements", i);
+      _disp[i] = &adCoupledValue("displacements", i);
+      _grad_disp[i] = &adCoupledGradient("displacements", i);
     }
   }
 }

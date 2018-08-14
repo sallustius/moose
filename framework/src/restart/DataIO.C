@@ -101,6 +101,26 @@ dataStore(std::ostream & stream, RealTensorValue & v, void * /*context*/)
 
 template <>
 void
+dataStore(std::ostream & stream, RankTwoTensor & v, void * /*context*/)
+{
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
+      stream.write((char *)&v(i, j), sizeof(v(i, j)));
+}
+
+template <>
+void
+dataStore(std::ostream & stream, RankFourTensor & v, void * /*context*/)
+{
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
+      for (unsigned int k = 0; k < LIBMESH_DIM; k++)
+        for (unsigned int l = 0; l < LIBMESH_DIM; l++)
+          stream.write((char *)&v(i, j, k, l), sizeof(v(i, j, k, l)));
+}
+
+template <>
+void
 dataStore(std::ostream & stream, RealVectorValue & v, void * /*context*/)
 {
   // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
@@ -294,6 +314,38 @@ dataLoad(std::istream & stream, RealTensorValue & v, void * /*context*/)
       stream.read((char *)&r, sizeof(r));
       v(i, j) = r;
     }
+}
+
+template <>
+void
+dataLoad(std::istream & stream, RankTwoTensor & v, void * /*context*/)
+{
+  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
+  // won't work.
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
+    {
+      Real r = 0;
+      stream.read((char *)&r, sizeof(r));
+      v(i, j) = r;
+    }
+}
+
+template <>
+void
+dataLoad(std::istream & stream, RankFourTensor & v, void * /*context*/)
+{
+  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
+  // won't work.
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
+      for (unsigned int k = 0; k < LIBMESH_DIM; k++)
+        for (unsigned int l = 0; l < LIBMESH_DIM; l++)
+        {
+          Real r = 0;
+          stream.read((char *)&r, sizeof(r));
+          v(i, j, k, l) = r;
+        }
 }
 
 template <>

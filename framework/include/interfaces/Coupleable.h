@@ -544,8 +544,12 @@ protected:
 
   /// Zero value of a variable
   const VariableValue & _zero;
+  const ADVariableValue & _ad_zero;
+
   /// Zero gradient of a variable
   const VariableGradient & _grad_zero;
+  const ADVariableGradient & _ad_grad_zero;
+
   /// Zero second derivative of a variable
   const VariableSecond & _second_zero;
   /// Zero second derivative of a test function

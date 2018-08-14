@@ -94,27 +94,3 @@ StressDivergenceRZTensors::computeAverageGradientTest()
     _avg_grad_test[_i][_component] /= _current_elem_volume;
   }
 }
-
-void
-StressDivergenceRZTensors::computeAverageGradientPhi()
-{
-  _avg_grad_phi.resize(_phi.size());
-  for (_i = 0; _i < _phi.size(); ++_i)
-  {
-    _avg_grad_phi[_i].resize(2);
-    for (unsigned int component = 0; component < 2; ++component)
-    {
-      _avg_grad_phi[_i][component] = 0.0;
-      for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
-      {
-        if (component == 0)
-          _avg_grad_phi[_i][component] +=
-              (_grad_phi[_i][_qp](component) + _phi[_i][_qp] / _q_point[_qp](0)) * _JxW[_qp] *
-              _coord[_qp];
-        else
-          _avg_grad_phi[_i][component] += _grad_phi[_i][_qp](component) * _JxW[_qp] * _coord[_qp];
-      }
-      _avg_grad_phi[_i][component] /= _current_elem_volume;
-    }
-  }
-}

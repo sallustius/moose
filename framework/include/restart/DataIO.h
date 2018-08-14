@@ -353,6 +353,10 @@ template <>
 void dataStore(std::ostream & stream, std::stringstream & s, void * context);
 template <>
 void dataStore(std::ostream & stream, std::stringstream *& s, void * context);
+template <>
+void dataStore(std::ostream & stream, RankTwoTensor &, void *);
+template <>
+void dataStore(std::ostream & stream, RankFourTensor &, void *);
 
 // global load functions
 
@@ -543,6 +547,10 @@ template <>
 void dataLoad(std::istream & stream, std::stringstream & s, void * context);
 template <>
 void dataLoad(std::istream & stream, std::stringstream *& s, void * context);
+template <>
+void dataLoad(std::istream & stream, RankTwoTensor &, void *);
+template <>
+void dataLoad(std::istream & stream, RankFourTensor &, void *);
 
 // Scalar Helper Function
 template <typename P>

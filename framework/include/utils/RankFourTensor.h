@@ -10,12 +10,17 @@
 #ifndef RANKFOURTENSOR_H
 #define RANKFOURTENSOR_H
 
-// MOOSE includes
-#include "DataIO.h"
+#include "Moose.h"
 
 #include "libmesh/tensor_value.h"
 #include "libmesh/libmesh.h"
 #include "libmesh/vector_value.h"
+
+#include <petscsys.h>
+
+using libMesh::Real;
+using libMesh::RealGradient;
+using libMesh::RealTensorValue;
 
 // Forward declarations
 class MooseEnum;
@@ -331,21 +336,10 @@ protected:
    */
 
   void fillPrincipalFromInputVector(const std::vector<Real> & input);
-  template <class T>
-  friend void dataStore(std::ostream &, T &, void *);
-
-  template <class T>
-  friend void dataLoad(std::istream &, T &, void *);
 
   friend class RankTwoTensor;
   friend class RankThreeTensor;
 };
-
-template <>
-void dataStore(std::ostream &, RankFourTensor &, void *);
-
-template <>
-void dataLoad(std::istream &, RankFourTensor &, void *);
 
 inline RankFourTensor operator*(Real a, const RankFourTensor & b) { return b * a; }
 
