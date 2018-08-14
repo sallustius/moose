@@ -43,7 +43,6 @@ protected:
   virtual ADReal computeQpResidual() override;
 
   virtual void computeAverageGradientTest();
-  virtual void computeAverageGradientPhi();
 
   std::string _base_name;
 

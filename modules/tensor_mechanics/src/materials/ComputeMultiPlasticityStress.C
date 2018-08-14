@@ -365,7 +365,7 @@ ComputeMultiPlasticityStress::postReturnMap()
 
 bool
 ComputeMultiPlasticityStress::quickStep(const RankTwoTensor & stress_old,
-                                        RankTwoTensor & stress,
+                                        ADRankTwoTensor & stress,
                                         const std::vector<Real> & intnl_old,
                                         std::vector<Real> & intnl,
                                         std::vector<Real> & pm,
@@ -376,7 +376,7 @@ ComputeMultiPlasticityStress::quickStep(const RankTwoTensor & stress_old,
                                         const RankTwoTensor & strain_increment,
                                         std::vector<Real> & yf,
                                         unsigned int & iterations,
-                                        RankFourTensor & consistent_tangent_operator,
+                                        ADRankFourTensor & consistent_tangent_operator,
                                         const quickStep_called_from_t called_from,
                                         bool final_step)
 {
@@ -462,7 +462,7 @@ ComputeMultiPlasticityStress::quickStep(const RankTwoTensor & stress_old,
 
 bool
 ComputeMultiPlasticityStress::plasticStep(const RankTwoTensor & stress_old,
-                                          RankTwoTensor & stress,
+                                          ADRankTwoTensor & stress,
                                           const std::vector<Real> & intnl_old,
                                           std::vector<Real> & intnl,
                                           const RankTwoTensor & plastic_strain_old,
@@ -474,7 +474,7 @@ ComputeMultiPlasticityStress::plasticStep(const RankTwoTensor & stress_old,
                                           bool & linesearch_needed,
                                           bool & ld_encountered,
                                           bool & constraints_added,
-                                          RankFourTensor & consistent_tangent_operator)
+                                          ADRankFourTensor & consistent_tangent_operator)
 {
   /**
    * the idea in the following is to potentially subdivide the
@@ -609,7 +609,7 @@ ComputeMultiPlasticityStress::plasticStep(const RankTwoTensor & stress_old,
 
 bool
 ComputeMultiPlasticityStress::returnMap(const RankTwoTensor & stress_old,
-                                        RankTwoTensor & stress,
+                                        ADRankTwoTensor & stress,
                                         const std::vector<Real> & intnl_old,
                                         std::vector<Real> & intnl,
                                         const RankTwoTensor & plastic_strain_old,
@@ -1076,7 +1076,7 @@ ComputeMultiPlasticityStress::changeScheme(const std::vector<bool> & initial_act
 
 bool
 ComputeMultiPlasticityStress::singleStep(Real & nr_res2,
-                                         RankTwoTensor & stress,
+                                         ADRankTwoTensor & stress,
                                          const std::vector<Real> & intnl_old,
                                          std::vector<Real> & intnl,
                                          std::vector<Real> & pm,

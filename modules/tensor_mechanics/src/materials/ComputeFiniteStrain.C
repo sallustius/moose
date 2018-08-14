@@ -49,9 +49,9 @@ ComputeFiniteStrain::computeProperties()
   for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
   {
     // Deformation gradient
-    RankTwoTensor A((*_grad_disp[0])[_qp],
-                    (*_grad_disp[1])[_qp],
-                    (*_grad_disp[2])[_qp]); // Deformation gradient
+    ADRankTwoTensor A((*_grad_disp[0])[_qp],
+                      (*_grad_disp[1])[_qp],
+                      (*_grad_disp[2])[_qp]); // Deformation gradient
     RankTwoTensor Fbar((*_grad_disp_old[0])[_qp],
                        (*_grad_disp_old[1])[_qp],
                        (*_grad_disp_old[2])[_qp]); // Old Deformation gradient
@@ -158,7 +158,7 @@ ComputeFiniteStrain::computeQpIncrements(RankTwoTensor & total_strain_increment,
                          invFhat(0, 1) - invFhat(1, 0)};
 
       Real q = (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]) / 4.0;
-      Real trFhatinv_1 = invFhat.trace() - 1.0;
+      Real trFhatinv_1 = invFhat.tr() - 1.0;
       const Real p = trFhatinv_1 * trFhatinv_1 / 4.0;
 
       // cos theta_a
@@ -175,8 +175,9 @@ ComputeFiniteStrain::computeQpIncrements(RankTwoTensor & total_strain_increment,
         C2 = 0.125 + q * 0.03125 * (Utility::pow<2>(p) - 12.0 * (p - 1.0)) / Utility::pow<2>(p) +
              Utility::pow<2>(q) * (p - 2.0) * (Utility::pow<2>(p) - 10.0 * p + 32.0) /
                  Utility::pow<3>(p) +
-             Utility::pow<3>(q) * (1104.0 - 992.0 * p + 376.0 * Utility::pow<2>(p) -
-                                   72.0 * Utility::pow<3>(p) + 5.0 * Utility::pow<4>(p)) /
+             Utility::pow<3>(q) *
+                 (1104.0 - 992.0 * p + 376.0 * Utility::pow<2>(p) - 72.0 * Utility::pow<3>(p) +
+                  5.0 * Utility::pow<4>(p)) /
                  (512.0 * Utility::pow<4>(p));
       const Real C3 =
           0.5 * std::sqrt((p * q * (3.0 - q) + Utility::pow<3>(p) + Utility::pow<2>(q)) /

@@ -95,7 +95,7 @@ public:
     return 0;
   }
 
-  Real trace() const { return _xx + _yy + _zz; }
+  Real tr() const { return _xx + _yy + _zz; }
 
   Real component(unsigned int i) const
   {

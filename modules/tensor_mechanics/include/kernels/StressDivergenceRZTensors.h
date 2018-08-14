@@ -40,7 +40,6 @@ protected:
   virtual ADReal computeQpResidual() override;
 
   virtual void computeAverageGradientTest() override;
-  virtual void computeAverageGradientPhi() override;
 };
 
 #endif // STRESSDIVERGENCERZTENSORS_H

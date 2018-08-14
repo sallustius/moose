@@ -34,7 +34,7 @@ TensorMechanicsPlasticMeanCap::TensorMechanicsPlasticMeanCap(const InputParamete
 Real
 TensorMechanicsPlasticMeanCap::yieldFunction(const RankTwoTensor & stress, Real intnl) const
 {
-  return _a_over_3 * stress.trace() - _strength.value(intnl);
+  return _a_over_3 * stress.tr() - _strength.value(intnl);
 }
 
 RankTwoTensor

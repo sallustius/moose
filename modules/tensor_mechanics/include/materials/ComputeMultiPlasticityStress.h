@@ -241,7 +241,7 @@ protected:
    * @return true if the stress was successfully returned to the yield surface
    */
   virtual bool returnMap(const RankTwoTensor & stress_old,
-                         RankTwoTensor & stress,
+                         ADRankTwoTensor & stress,
                          const std::vector<Real> & intnl_old,
                          std::vector<Real> & intnl,
                          const RankTwoTensor & plastic_strain_old,
@@ -334,7 +334,7 @@ protected:
    * constraints wasn't reduced to zero via deactivation
    */
   virtual bool singleStep(Real & nr_res2,
-                          RankTwoTensor & stress,
+                          ADRankTwoTensor & stress,
                           const std::vector<Real> & intnl_old,
                           std::vector<Real> & intnl,
                           std::vector<Real> & pm,
@@ -481,7 +481,7 @@ protected:
    * way.
    */
   virtual bool quickStep(const RankTwoTensor & stress_old,
-                         RankTwoTensor & stress,
+                         ADRankTwoTensor & stress,
                          const std::vector<Real> & intnl_old,
                          std::vector<Real> & intnl,
                          std::vector<Real> & pm,
@@ -492,7 +492,7 @@ protected:
                          const RankTwoTensor & strain_increment,
                          std::vector<Real> & yf,
                          unsigned int & iterations,
-                         RankFourTensor & consistent_tangent_operator,
+                         ADRankFourTensor & consistent_tangent_operator,
                          const quickStep_called_from_t called_from,
                          bool final_step);
 
@@ -523,7 +523,7 @@ protected:
    * mooseError
    */
   virtual bool plasticStep(const RankTwoTensor & stress_old,
-                           RankTwoTensor & stress,
+                           ADRankTwoTensor & stress,
                            const std::vector<Real> & intnl_old,
                            std::vector<Real> & intnl,
                            const RankTwoTensor & plastic_strain_old,
@@ -535,7 +535,7 @@ protected:
                            bool & linesearch_needed,
                            bool & ld_encountered,
                            bool & constraints_added,
-                           RankFourTensor & consistent_tangent_operator);
+                           ADRankFourTensor & consistent_tangent_operator);
 
   //  bool checkAndModifyConstraints(bool nr_exit_condition, const RankTwoTensor & stress, const
   //  std::vector<Real> & intnl, const std::vector<Real> & pm, const std::vector<bool> &

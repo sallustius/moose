@@ -38,6 +38,9 @@
 #include "metaphysicl/testable.h"
 #include "metaphysicl/numberarray.h"
 
+#include "RankTwoTensor.h"
+#include "RankFourTensor.h"
+
 namespace MetaPhysicL
 {
 
@@ -124,7 +127,7 @@ public:
   template <typename T2>
   auto operator/=(const T2 & a) -> decltype(*this) &;
 
-  operator T();
+  operator T() const { return _val; }
 
 private:
   T _val;
@@ -166,6 +169,17 @@ class DualNumber<T, N, typename std::enable_if<TensorTraits<T>::value>::type>
 public:
   using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
 
+  DualNumber(const DualNumber<TypeVector<T>, N> & row1,
+             const DualNumber<TypeVector<T>, N> & row2,
+             const DualNumber<TypeVector<T>, N> & row3)
+    : DualNumberBase<T, NumberArray<N, T>>()
+  {
+    this->value() = RankTwoTensor(row1.value(), row2.value(), row3.value());
+    for (decltype(N) i = 0; i < N; ++i)
+      this->derivatives()[i] =
+          RankTwoTensor(row1.derivatives()[i], row2.derivatives()[i], row3.derivatives()[i]);
+  }
+
   auto row(const unsigned int r) const -> DualNumber<decltype(this->value().row(r)), N>;
 
   DualNumber<typename T::value_type, N> tr() const;
@@ -177,6 +191,30 @@ public:
                                                               const unsigned int j);
 
   void zero();
+
+  DualNumber<T, N> transpose() const
+  {
+    NumberArray<N, T> deriv;
+    for (decltype(N) i = 0; i < N; ++i)
+      deriv[i] = this->derivatives()[i].transpose();
+    return {this->value().transpose(), deriv};
+  }
+
+  DualNumber<RankFourTensor, N> positiveProjectionEigenDecomposition(std::vector<Real> & eigval,
+                                                                     RankTwoTensor & eigvec) const
+  {
+    NumberArray<N, RankFourTensor> deriv;
+    for (decltype(N) i = 0; i < N; ++i)
+      deriv[i] = this->derivatives()[i].positiveProjectionEigenDecomposition(eigval, eigvec);
+    return {this->value().positiveProjectionEigenDecomposition(eigval, eigvec), deriv};
+  }
+
+  void rotate(const RankTwoTensor & R)
+  {
+    this->value().rotate(R);
+    for (decltype(N) i = 0; i < N; ++i)
+      this->derivatives()[i].rotate(R);
+  }
 
 protected:
   std::map<std::pair<unsigned int, unsigned int>, DualNumberSurrogate<typename T::value_type, N>>
@@ -202,6 +240,22 @@ public:
 
   void zero();
 
+  DualNumber<RankFourTensor, N> invSymm() const
+  {
+    NumberArray<N, RankFourTensor> deriv;
+    for (decltype(N) i = 0; i < N; ++i)
+      deriv[i] = this->derivatives()[i].invSymm();
+    return {this->value().invSymm(), deriv};
+  }
+
+  template <typename T2>
+  void rotate(const T2 & R)
+  {
+    this->value().rotate(R);
+    for (decltype(N) i = 0; i < N; ++i)
+      this->derivatives()[i].rotate(R);
+  }
+
 protected:
   std::map<std::tuple<unsigned int, unsigned int, unsigned int, unsigned int>,
            DualNumberSurrogate<Real, N>>
@@ -219,7 +273,7 @@ struct DualNumberSurrogate
   DualNumberSurrogate(const T & n);
 
   template <typename T2,
-            typename MetaPhysicL::boostcopy::enable_if_c<VectorTraits<T2>::value, int> = 0>
+            typename MetaPhysicL::boostcopy::enable_if_c<VectorTraits<T2>::value, int>::type = 0>
   DualNumberSurrogate(const DualNumber<T2, N> & vector_dn, unsigned int i)
     : value(vector_dn.value())
   {
@@ -228,7 +282,7 @@ struct DualNumberSurrogate
   }
 
   template <typename T2,
-            typename MetaPhysicL::boostcopy::enable_if_c<TensorTraits<T2>::value, int> = 0>
+            typename MetaPhysicL::boostcopy::enable_if_c<TensorTraits<T2>::value, int>::type = 0>
   DualNumberSurrogate(const DualNumber<T2, N> & tensor_dn, unsigned int i, unsigned int j)
     : value(tensor_dn.value())
   {
@@ -237,7 +291,7 @@ struct DualNumberSurrogate
   }
 
   template <typename T2,
-            typename MetaPhysicL::boostcopy::enable_if_c<RankFourTraits<T2>::value, int> = 0>
+            typename MetaPhysicL::boostcopy::enable_if_c<RankFourTraits<T2>::value, int>::type = 0>
   DualNumberSurrogate(const DualNumber<T2, N> & rank4_dn,
                       unsigned int i,
                       unsigned int j,
@@ -253,9 +307,70 @@ struct DualNumberSurrogate
 
   DualNumberSurrogate<T, N> & operator=(const DualNumberSurrogate<T, N> & dns);
 
+  DualNumberSurrogate<T, N> & operator+=(const DualNumberSurrogate<T, N> & dns)
+  {
+    value += dns.value;
+    for (decltype(N) i = 0; i < N; ++i)
+      if (dns.derivatives[i])
+        *derivatives[i] += *dns.derivatives[i];
+    return *this;
+  }
+  DualNumberSurrogate<T, N> & operator-=(const DualNumberSurrogate<T, N> & dns)
+  {
+    value -= dns.value;
+    for (decltype(N) i = 0; i < N; ++i)
+      if (dns.derivatives[i])
+        *derivatives[i] -= *dns.derivatives[i];
+    return *this;
+  }
+  DualNumberSurrogate<T, N> & operator*=(const DualNumberSurrogate<T, N> & dns)
+  {
+    value *= dns.value;
+    for (decltype(N) i = 0; i < N; ++i)
+      if (dns.derivatives[i])
+        *derivatives[i] *= *dns.derivatives[i];
+    return *this;
+  }
+  DualNumberSurrogate<T, N> & operator/=(const DualNumberSurrogate<T, N> & dns)
+  {
+    value /= dns.value;
+    for (decltype(N) i = 0; i < N; ++i)
+      if (dns.derivatives[i])
+        *derivatives[i] /= *dns.derivatives[i];
+    return *this;
+  }
+
+  operator T() const { return value; }
+
   T & value;
   NumberArray<N, T *> derivatives;
 };
+
+#define DNS_compares(comparator)                                                                   \
+  template <typename T, size_t N>                                                                  \
+  bool operator comparator(const DualNumberSurrogate<T, N> & dns, const T & solo)                  \
+  {                                                                                                \
+    return dns.value comparator solo;                                                              \
+  }                                                                                                \
+  template <typename T, size_t N>                                                                  \
+  bool operator comparator(const T & solo, const DualNumberSurrogate<T, N> & dns)                  \
+  {                                                                                                \
+    return solo comparator dns.value;                                                              \
+  }                                                                                                \
+  template <typename T, size_t N>                                                                  \
+  bool operator comparator(const DualNumberSurrogate<T, N> & dns1,                                 \
+                           const DualNumberSurrogate<T, N> & dns2)                                 \
+  {                                                                                                \
+    return dns1.value comparator dns2.value;                                                       \
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
+
+DNS_compares(>);
+DNS_compares(<);
+DNS_compares(==);
+DNS_compares(!=);
+DNS_compares(>=);
+DNS_compares(<=);
 
 // Helper class to handle partial specialization for DualNumberBase
 // constructors

@@ -102,7 +102,7 @@ CappedDruckerPragerStressUpdate::preReturnMap(Real /*p_trial*/,
 void
 CappedDruckerPragerStressUpdate::computePQ(const RankTwoTensor & stress, Real & p, Real & q) const
 {
-  p = stress.trace();
+  p = stress.tr();
   q = std::sqrt(stress.secondInvariant());
 }
 
@@ -382,7 +382,7 @@ CappedDruckerPragerStressUpdate::setStressAfterReturn(const RankTwoTensor & stre
 {
   // stress = s_ij + de_ij tr(stress) / 3 = q / q_trial * s_ij^trial + de_ij p / 3 = q / q_trial *
   // (stress_ij^trial - de_ij tr(stress^trial) / 3) + de_ij p / 3
-  const Real p_trial = stress_trial.trace();
+  const Real p_trial = stress_trial.tr();
   stress = RankTwoTensor(RankTwoTensor::initIdentity) / 3.0 *
            (p_ok - (_in_q_trial == 0.0 ? 0.0 : p_trial * q_ok / _in_q_trial));
   if (_in_q_trial > 0)
@@ -441,7 +441,7 @@ CappedDruckerPragerStressUpdate::consistentTangentOperator(const RankTwoTensor &
 
   const RankTwoTensor s_over_q =
       (q == 0.0 ? RankTwoTensor()
-                : (stress - stress.trace() * RankTwoTensor(RankTwoTensor::initIdentity) / 3.0) / q);
+                : (stress - stress.tr() * RankTwoTensor(RankTwoTensor::initIdentity) / 3.0) / q);
 
   for (unsigned i = 0; i < _tensor_dimensionality; ++i)
     for (unsigned j = 0; j < _tensor_dimensionality; ++j)

@@ -178,6 +178,8 @@ typedef TensorDN<Real> ADRealTensorValue;
 
 typedef ADRealVectorValue ADRealGradient;
 typedef ADRealTensorValue ADRealTensor;
+typedef DualNumber<RankTwoTensor, AD_MAX_DOFS_PER_ELEM> ADRankTwoTensor;
+typedef DualNumber<RankFourTensor, AD_MAX_DOFS_PER_ELEM> ADRankFourTensor;
 
 typedef MooseArray<ADReal> ADVariableValue;
 typedef MooseArray<ADRealGradient> ADVariableGradient;

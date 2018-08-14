@@ -31,7 +31,7 @@ protected:
 
   /// Computes the current and old deformation gradients and passes back the
   /// total strain increment tensor
-  virtual void computeTotalStrainIncrement(RankTwoTensor & total_strain_increment);
+  virtual void computeTotalStrainIncrement(ADRankTwoTensor & total_strain_increment);
 };
 
 #endif // COMPUTEINCREMENTALSMALLSTRAIN_H

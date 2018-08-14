@@ -646,7 +646,7 @@ ComputeSmearedCrackingStress::computeCrackingRelease(int i,
 }
 
 void
-ComputeSmearedCrackingStress::updateStressTensorForCracking(RankTwoTensor & tensor,
+ComputeSmearedCrackingStress::updateStressTensorForCracking(ADRankTwoTensor & tensor,
                                                             const RealVectorValue & sigma)
 {
   // Get transformation matrix

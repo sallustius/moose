@@ -62,7 +62,7 @@ TensorMechanicsPlasticMeanCapTC::TensorMechanicsPlasticMeanCapTC(const InputPara
 Real
 TensorMechanicsPlasticMeanCapTC::yieldFunction(const RankTwoTensor & stress, Real intnl) const
 {
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
   if (tr >= t_str)
     return tr - t_str;
@@ -88,7 +88,7 @@ Real
 TensorMechanicsPlasticMeanCapTC::dyieldFunction_dintnl(const RankTwoTensor & stress,
                                                        Real intnl) const
 {
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
   if (tr >= t_str)
     return -dtensile_strength(intnl);
@@ -107,7 +107,7 @@ TensorMechanicsPlasticMeanCapTC::dyieldFunction_dintnl(const RankTwoTensor & str
 RankTwoTensor
 TensorMechanicsPlasticMeanCapTC::df_dsig(const RankTwoTensor & stress, Real intnl) const
 {
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
   if (tr >= t_str)
     return stress.dtrace();
@@ -129,7 +129,7 @@ RankFourTensor
 TensorMechanicsPlasticMeanCapTC::dflowPotential_dstress(const RankTwoTensor & stress,
                                                         Real intnl) const
 {
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
   if (tr >= t_str)
     return RankFourTensor();
@@ -146,7 +146,7 @@ RankTwoTensor
 TensorMechanicsPlasticMeanCapTC::dflowPotential_dintnl(const RankTwoTensor & stress,
                                                        Real intnl) const
 {
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
   if (tr >= t_str)
     return RankTwoTensor();
@@ -165,7 +165,7 @@ Real
 TensorMechanicsPlasticMeanCapTC::hardPotential(const RankTwoTensor & stress, Real intnl) const
 {
   // This is the key for this whole class!
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
 
   if (tr >= t_str)
@@ -185,7 +185,7 @@ RankTwoTensor
 TensorMechanicsPlasticMeanCapTC::dhardPotential_dstress(const RankTwoTensor & stress,
                                                         Real intnl) const
 {
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
   if (tr >= t_str)
     return RankTwoTensor();
@@ -202,7 +202,7 @@ Real
 TensorMechanicsPlasticMeanCapTC::dhardPotential_dintnl(const RankTwoTensor & stress,
                                                        Real intnl) const
 {
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
   if (tr >= t_str)
     return 0.0;
@@ -257,7 +257,7 @@ TensorMechanicsPlasticMeanCapTC::activeConstraints(const std::vector<Real> & f,
     return;
   }
 
-  const Real tr = stress.trace();
+  const Real tr = stress.tr();
   const Real t_str = tensile_strength(intnl);
   Real str;
   Real dirn;
@@ -282,7 +282,7 @@ TensorMechanicsPlasticMeanCapTC::activeConstraints(const std::vector<Real> & f,
   // and taking the trace of this and using
   // Tr(returned_stress) = str, gives
   // gamma = (Tr(stress) - str)/Tr(n)
-  Real gamma = (stress.trace() - str) / n.trace();
+  Real gamma = (stress.tr() - str) / n.tr();
 
   for (unsigned i = 0; i < 3; ++i)
     for (unsigned j = 0; j < 3; ++j)
@@ -333,19 +333,19 @@ TensorMechanicsPlasticMeanCapTC::returnMap(const RankTwoTensor & trial_stress,
   // In the following we want to solve
   // trial_stress - stress = E_ijkl * dpm * r   ...... (1)
   // and either
-  // stress.trace() = tensile_strength(intnl)  ...... (2a)
+  // stress.tr() = tensile_strength(intnl)  ...... (2a)
   // intnl = intnl_old + dpm                   ...... (3a)
   // or
-  // stress.trace() = compressive_strength(intnl) ... (2b)
+  // stress.tr() = compressive_strength(intnl) ... (2b)
   // intnl = intnl_old - dpm                   ...... (3b)
   // The former (2a and 3a) are chosen if
-  // trial_stress.trace() > tensile_strength(intnl_old)
+  // trial_stress.tr() > tensile_strength(intnl_old)
   // while the latter (2b and 3b) are chosen if
-  // trial_stress.trace() < compressive_strength(intnl_old)
+  // trial_stress.tr() < compressive_strength(intnl_old)
   // The variables we want to solve for are stress, dpm
   // and intnl.  We do this using a Newton approach, starting
   // with stress=trial_stress and intnl=intnl_old and dpm=0
-  const bool tensile_failure = (trial_stress.trace() >= tensile_strength(intnl_old));
+  const bool tensile_failure = (trial_stress.tr() >= tensile_strength(intnl_old));
   const Real dirn = (tensile_failure ? 1.0 : -1.0);
 
   RankTwoTensor n; // flow direction, which is E_ijkl * r
@@ -353,15 +353,15 @@ TensorMechanicsPlasticMeanCapTC::returnMap(const RankTwoTensor & trial_stress,
     for (unsigned j = 0; j < 3; ++j)
       for (unsigned k = 0; k < 3; ++k)
         n(i, j) += dirn * E_ijkl(i, j, k, k);
-  const Real n_trace = n.trace();
+  const Real n_trace = n.tr();
 
   // Perform a Newton-Raphson to find dpm when
-  // residual = trial_stress.trace() - tensile_strength(intnl) - dpm * n.trace()  [for
+  // residual = trial_stress.tr() - tensile_strength(intnl) - dpm * n.tr()  [for
   // tensile_failure=true]
   // or
-  // residual = trial_stress.trace() - compressive_strength(intnl) - dpm * n.trace()  [for
+  // residual = trial_stress.tr() - compressive_strength(intnl) - dpm * n.tr()  [for
   // tensile_failure=false]
-  Real trial_trace = trial_stress.trace();
+  Real trial_trace = trial_stress.tr();
   Real residual;
   Real jac;
   dpm[0] = 0;
@@ -408,7 +408,7 @@ TensorMechanicsPlasticMeanCapTC::consistentTangentOperator(
 
   Real df_dq;
   Real alpha;
-  if (trial_stress.trace() >= tensile_strength(intnl_old))
+  if (trial_stress.tr() >= tensile_strength(intnl_old))
   {
     df_dq = -dtensile_strength(intnl);
     alpha = 1.0;
@@ -425,7 +425,7 @@ TensorMechanicsPlasticMeanCapTC::consistentTangentOperator(
       for (unsigned int k = 0; k < 3; ++k)
         elas(i, j) += E_ijkl(i, j, k, k);
 
-  const Real hw = -df_dq + alpha * elas.trace();
+  const Real hw = -df_dq + alpha * elas.tr();
 
   return E_ijkl - alpha / hw * elas.outerProduct(elas);
 }
