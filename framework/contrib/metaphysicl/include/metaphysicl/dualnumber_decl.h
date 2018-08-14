@@ -200,10 +200,6 @@ public:
     return {this->value().transpose(), deriv};
   }
 
-  operator RankTwoTensor() const { return this->value(); }
-  operator TensorValue<typename T::value_type>() const { return this->value(); }
-  operator TypeVector<typename T::value_type>() const { return this->value(); }
-
   DualNumber<RankFourTensor, N> positiveProjectionEigenDecomposition(std::vector<Real> & eigval,
                                                                      RankTwoTensor & eigvec) const
   {
@@ -277,7 +273,7 @@ struct DualNumberSurrogate
   DualNumberSurrogate(const T & n);
 
   template <typename T2,
-            typename MetaPhysicL::boostcopy::enable_if_c<VectorTraits<T2>::value, int> = 0>
+            typename MetaPhysicL::boostcopy::enable_if_c<VectorTraits<T2>::value, int>::type = 0>
   DualNumberSurrogate(const DualNumber<T2, N> & vector_dn, unsigned int i)
     : value(vector_dn.value())
   {
@@ -286,7 +282,7 @@ struct DualNumberSurrogate
   }
 
   template <typename T2,
-            typename MetaPhysicL::boostcopy::enable_if_c<TensorTraits<T2>::value, int> = 0>
+            typename MetaPhysicL::boostcopy::enable_if_c<TensorTraits<T2>::value, int>::type = 0>
   DualNumberSurrogate(const DualNumber<T2, N> & tensor_dn, unsigned int i, unsigned int j)
     : value(tensor_dn.value())
   {
@@ -295,7 +291,7 @@ struct DualNumberSurrogate
   }
 
   template <typename T2,
-            typename MetaPhysicL::boostcopy::enable_if_c<RankFourTraits<T2>::value, int> = 0>
+            typename MetaPhysicL::boostcopy::enable_if_c<RankFourTraits<T2>::value, int>::type = 0>
   DualNumberSurrogate(const DualNumber<T2, N> & rank4_dn,
                       unsigned int i,
                       unsigned int j,

@@ -422,19 +422,8 @@ private:
   static constexpr unsigned int N = LIBMESH_DIM;
   static constexpr unsigned int N2 = N * N;
 
-  template <class T>
-  friend void dataStore(std::ostream &, T &, void *);
-
-  template <class T>
-  friend void dataLoad(std::istream &, T &, void *);
   friend class RankFourTensor;
   friend class RankThreeTensor;
 };
-
-template <>
-void dataStore(std::ostream & stream, RankTwoTensor &, void *);
-
-template <>
-void dataLoad(std::istream & stream, RankTwoTensor &, void *);
 
 #endif // RANKTWOTENSOR_H

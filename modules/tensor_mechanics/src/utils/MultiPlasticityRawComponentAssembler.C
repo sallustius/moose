@@ -347,13 +347,10 @@ MultiPlasticityRawComponentAssembler::buildActiveConstraints(const std::vector<R
 {
   mooseAssert(f.size() == _num_surfaces,
               "buildActiveConstraints called with f.size = " << f.size() << " while there are "
-                                                             << _num_surfaces
-                                                             << " surfaces");
+                                                             << _num_surfaces << " surfaces");
   mooseAssert(intnl.size() == _num_models,
-              "buildActiveConstraints called with intnl.size = " << intnl.size()
-                                                                 << " while there are "
-                                                                 << _num_models
-                                                                 << " models");
+              "buildActiveConstraints called with intnl.size = "
+                  << intnl.size() << " while there are " << _num_models << " models");
 
   if (_specialIC == "rock")
     buildActiveConstraintsRock(f, stress, intnl, Eijkl, act);
@@ -601,7 +598,7 @@ MultiPlasticityRawComponentAssembler::returnMapAll(const RankTwoTensor & trial_s
                                                    const std::vector<Real> & intnl_old,
                                                    const RankFourTensor & E_ijkl,
                                                    Real ep_plastic_tolerance,
-                                                   RankTwoTensor & stress,
+                                                   ADRankTwoTensor & stress,
                                                    std::vector<Real> & intnl,
                                                    std::vector<Real> & pm,
                                                    std::vector<Real> & cumulative_pm,

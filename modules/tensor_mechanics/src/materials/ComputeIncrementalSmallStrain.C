@@ -34,7 +34,7 @@ ComputeIncrementalSmallStrain::computeProperties()
   Real volumetric_strain = 0.0;
   for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
   {
-    RankTwoTensor total_strain_increment;
+    ADRankTwoTensor total_strain_increment;
     computeTotalStrainIncrement(total_strain_increment);
 
     _strain_increment[_qp] = total_strain_increment;

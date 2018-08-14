@@ -110,7 +110,7 @@ protected:
   virtual void updateState(RankTwoTensor & strain_increment,
                            RankTwoTensor & inelastic_strain_increment,
                            const RankTwoTensor & rotation_increment,
-                           RankTwoTensor & stress_new,
+                           ADRankTwoTensor & stress_new,
                            const RankTwoTensor & stress_old,
                            const RankFourTensor & elasticity_tensor,
                            const RankTwoTensor & elastic_strain_old,
