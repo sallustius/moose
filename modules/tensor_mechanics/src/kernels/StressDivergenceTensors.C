@@ -130,7 +130,7 @@ StressDivergenceTensors::computeQpResidual()
   Real residual = _stress[_qp].row(_component) * _grad_test[_i][_qp];
   // volumetric locking correction
   if (_volumetric_locking_correction)
-    residual += _stress[_qp].trace() / 3.0 *
+    residual += _stress[_qp].tr() / 3.0 *
                 (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component));
 
   return residual;
@@ -140,10 +140,7 @@ void
 StressDivergenceTensors::computeJacobian()
 {
   if (_volumetric_locking_correction)
-  {
     computeAverageGradientTest();
-    computeAverageGradientPhi();
-  }
   ADKernel::computeJacobian();
 }
 
@@ -151,10 +148,7 @@ void
 StressDivergenceTensors::computeOffDiagJacobian(MooseVariableFEBase & jvar)
 {
   if (_volumetric_locking_correction)
-  {
-    computeAverageGradientPhi();
     computeAverageGradientTest();
-  }
   ADKernel::computeOffDiagJacobian(jvar);
 }
 
@@ -171,24 +165,5 @@ StressDivergenceTensors::computeAverageGradientTest()
       _avg_grad_test[_i][_component] += _grad_test[_i][_qp](_component) * _JxW[_qp] * _coord[_qp];
 
     _avg_grad_test[_i][_component] /= _current_elem_volume;
-  }
-}
-
-void
-StressDivergenceTensors::computeAverageGradientPhi()
-{
-  // Calculate volume average derivatives for phi
-  _avg_grad_phi.resize(_phi.size());
-  for (_i = 0; _i < _phi.size(); ++_i)
-  {
-    _avg_grad_phi[_i].resize(3);
-    for (unsigned int component = 0; component < _mesh.dimension(); ++component)
-    {
-      _avg_grad_phi[_i][component] = 0.0;
-      for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
-        _avg_grad_phi[_i][component] += _grad_phi[_i][_qp](component) * _JxW[_qp] * _coord[_qp];
-
-      _avg_grad_phi[_i][component] /= _current_elem_volume;
-    }
   }
 }

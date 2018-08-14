@@ -31,7 +31,7 @@ public:
 protected:
   /// Computes the current and old deformation gradients with the assumptions for
   /// axisymmetric 1D problems, and returns the total strain increment tensor
-  void computeTotalStrainIncrement(RankTwoTensor & total_strain_increment) override;
+  void computeTotalStrainIncrement(ADRankTwoTensor & total_strain_increment) override;
 
   /// Computes the current dUy/dY; as a virtual function, this function is
   /// overwritten for the specific geometries defined by inheriting classes

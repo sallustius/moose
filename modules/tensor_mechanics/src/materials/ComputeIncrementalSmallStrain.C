@@ -40,14 +40,14 @@ ComputeIncrementalSmallStrain::computeProperties()
     _strain_increment[_qp] = total_strain_increment;
 
     if (_volumetric_locking_correction)
-      volumetric_strain += total_strain_increment.trace() * _JxW[_qp] * _coord[_qp];
+      volumetric_strain += total_strain_increment.tr() * _JxW[_qp] * _coord[_qp];
   }
   if (_volumetric_locking_correction)
     volumetric_strain /= _current_elem_volume;
 
   for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
   {
-    Real trace = _strain_increment[_qp].trace();
+    Real trace = _strain_increment[_qp].tr();
     if (_volumetric_locking_correction)
     {
       _strain_increment[_qp](0, 0) += (volumetric_strain - trace) / 3.0;
@@ -72,10 +72,10 @@ ComputeIncrementalSmallStrain::computeProperties()
 }
 
 void
-ComputeIncrementalSmallStrain::computeTotalStrainIncrement(RankTwoTensor & total_strain_increment)
+ComputeIncrementalSmallStrain::computeTotalStrainIncrement(ADRankTwoTensor & total_strain_increment)
 {
   // Deformation gradient
-  RankTwoTensor A(
+  ADRankTwoTensor A(
       (*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]); // Deformation gradient
   RankTwoTensor Fbar((*_grad_disp_old[0])[_qp],
                      (*_grad_disp_old[1])[_qp],

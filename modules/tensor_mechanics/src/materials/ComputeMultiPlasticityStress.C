@@ -365,7 +365,7 @@ ComputeMultiPlasticityStress::postReturnMap()
 
 bool
 ComputeMultiPlasticityStress::quickStep(const RankTwoTensor & stress_old,
-                                        RankTwoTensor & stress,
+                                        ADRankTwoTensor & stress,
                                         const std::vector<Real> & intnl_old,
                                         std::vector<Real> & intnl,
                                         std::vector<Real> & pm,
@@ -462,7 +462,7 @@ ComputeMultiPlasticityStress::quickStep(const RankTwoTensor & stress_old,
 
 bool
 ComputeMultiPlasticityStress::plasticStep(const RankTwoTensor & stress_old,
-                                          RankTwoTensor & stress,
+                                          ADRankTwoTensor & stress,
                                           const std::vector<Real> & intnl_old,
                                           std::vector<Real> & intnl,
                                           const RankTwoTensor & plastic_strain_old,

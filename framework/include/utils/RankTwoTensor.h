@@ -11,7 +11,6 @@
 #define RANKTWOTENSOR_H
 
 #include "Moose.h"
-
 #include "RankFourTensor.h"
 
 // Any requisite includes here
@@ -19,12 +18,15 @@
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
 
+#include <petscsys.h>
 #include <vector>
-#include "MooseRandom.h"
 
 // Forward declarations
 class RankTwoTensor;
-class RankFourTensor;
+template <typename T>
+class MooseArray;
+typedef MooseArray<Real> VariableValue;
+class ColumnMajorMatrix;
 
 template <typename T>
 void mooseSetToZero(T & v);

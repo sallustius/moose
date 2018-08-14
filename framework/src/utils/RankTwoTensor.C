@@ -14,6 +14,7 @@
 #include "MooseEnum.h"
 #include "MooseUtils.h"
 #include "ColumnMajorMatrix.h"
+#include "MooseRandom.h"
 
 #include "Conversion.h"
 

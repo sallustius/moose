@@ -481,7 +481,7 @@ protected:
    * way.
    */
   virtual bool quickStep(const RankTwoTensor & stress_old,
-                         RankTwoTensor & stress,
+                         ADRankTwoTensor & stress,
                          const std::vector<Real> & intnl_old,
                          std::vector<Real> & intnl,
                          std::vector<Real> & pm,
@@ -523,7 +523,7 @@ protected:
    * mooseError
    */
   virtual bool plasticStep(const RankTwoTensor & stress_old,
-                           RankTwoTensor & stress,
+                           ADRankTwoTensor & stress,
                            const std::vector<Real> & intnl_old,
                            std::vector<Real> & intnl,
                            const RankTwoTensor & plastic_strain_old,

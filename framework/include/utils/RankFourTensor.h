@@ -10,12 +10,17 @@
 #ifndef RANKFOURTENSOR_H
 #define RANKFOURTENSOR_H
 
-// MOOSE includes
-#include "DataIO.h"
+#include "Moose.h"
 
 #include "libmesh/tensor_value.h"
 #include "libmesh/libmesh.h"
 #include "libmesh/vector_value.h"
+
+#include <petscsys.h>
+
+using libMesh::Real;
+using libMesh::RealGradient;
+using libMesh::RealTensorValue;
 
 // Forward declarations
 class MooseEnum;
