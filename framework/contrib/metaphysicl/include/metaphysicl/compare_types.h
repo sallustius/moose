@@ -31,6 +31,7 @@
 // System includes
 #include <complex>
 #include <iostream>
+#include <type_traits>
 
 #include "libmesh/libmesh_common.h"
 
@@ -642,6 +643,16 @@ template <>
 struct RankFourTraits<RankFourTensor>
 {
   static const bool value = true;
+};
+
+template <typename T, template <typename> class W>
+struct is_same_template : std::false_type
+{
+};
+
+template <template <typename> class W, typename T>
+struct is_same_template<W<T>, W> : std::true_type
+{
 };
 } // namespace MetaPhysicL
 
