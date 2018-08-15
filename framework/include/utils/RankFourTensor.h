@@ -50,6 +50,8 @@ void mooseSetToZero<RankFourTensor>(RankFourTensor & v);
 class RankFourTensor
 {
 public:
+  typedef tuple_of<4, unsigned int> index_type;
+
   /// Initialization method
   enum InitMethod
   {
