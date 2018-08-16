@@ -127,7 +127,7 @@ StressDivergenceTensors::computeResidual()
 ADReal
 StressDivergenceTensors::computeQpResidual()
 {
-  Real residual = _stress[_qp].row(_component) * _grad_test[_i][_qp];
+  ADReal residual = _stress[_qp].row(_component) * _grad_test[_i][_qp];
   // volumetric locking correction
   if (_volumetric_locking_correction)
     residual += _stress[_qp].tr() / 3.0 *
