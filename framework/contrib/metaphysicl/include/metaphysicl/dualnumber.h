@@ -198,7 +198,7 @@ inline DualNumberSurrogate<T, N>::DualNumberSurrogate(const T & n) : value(n)
 
 DualNumber_op(+, Plus, a.derivatives(), b.derivatives(), a.derivatives() + b.derivatives());
 
-DualNumber_op(-, Minus, a.derivatives(), -b.derivatives, a.derivatives() - b.derivatives());
+DualNumber_op(-, Minus, a.derivatives(), -b.derivatives(), a.derivatives() - b.derivatives());
 
 DualNumber_op(*,
               Multiplies,
