@@ -9,6 +9,7 @@
 
 #include "GhostUserObject.h"
 #include "MooseMesh.h"
+#include "NonlinearSystem.h"
 
 // invalid_processor_id
 #include "libmesh/dof_object.h"
@@ -59,16 +60,17 @@ GhostUserObject::execute()
   const auto & mesh = _subproblem.mesh().getMesh();
 
   auto my_processor_id = processor_id();
+  auto & dof_map = _fe_problem.getNonlinearSystem().dofMap();
 
-  for (const auto & elem : mesh.active_element_ptr_range())
+  for (const auto & elem :
+       as_range(mesh.evaluable_elements_begin(dof_map), mesh.evaluable_elements_end(dof_map)))
   {
     _console << "Elem ID: " << elem->id() << std::flush;
 
-    _fe_problem.prepare(elem, _tid);
-    _fe_problem.reinitElem(elem, _tid);
-
     if (my_processor_id == 0 && elem->processor_id() != my_processor_id)
     {
+      _fe_problem.prepare(elem, _tid);
+      _fe_problem.reinitElem(elem, _tid);
       _console << ": " << _some_variable[0] << std::endl;
       _ghost_data[elem->id()] = _some_variable[0];
     }
