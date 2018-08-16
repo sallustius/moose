@@ -40,8 +40,8 @@ ComputeStrainBase::ComputeStrainBase(const InputParameters & parameters)
     _disp(3),
     _grad_disp(3),
     _base_name(isParamValid("base_name") ? getParam<std::string>("base_name") + "_" : ""),
-    _mechanical_strain(declareProperty<RankTwoTensor>(_base_name + "mechanical_strain")),
-    _total_strain(declareProperty<RankTwoTensor>(_base_name + "total_strain")),
+    _mechanical_strain(declareADProperty<RankTwoTensor>(_base_name + "mechanical_strain")),
+    _total_strain(declareADProperty<RankTwoTensor>(_base_name + "total_strain")),
     _eigenstrain_names(getParam<std::vector<MaterialPropertyName>>("eigenstrain_names")),
     _eigenstrains(_eigenstrain_names.size()),
     _global_strain(isParamValid("global_strain")
@@ -77,8 +77,8 @@ ComputeStrainBase::initialSetup()
   // set unused dimensions to zero
   for (unsigned i = _ndisp; i < 3; ++i)
   {
-    _disp[i] = &_zero;
-    _grad_disp[i] = &_grad_zero;
+    _disp[i] = &_ad_zero;
+    _grad_disp[i] = &_ad_grad_zero;
   }
 }
 

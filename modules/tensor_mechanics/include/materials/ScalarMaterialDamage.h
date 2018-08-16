@@ -28,9 +28,9 @@ public:
 
   virtual void updateDamage() override;
 
-  virtual void updateStressForDamage(RankTwoTensor & stress_new) override;
+  virtual void updateStressForDamage(ADRankTwoTensor & stress_new) override;
 
-  virtual void updateJacobianMultForDamage(RankFourTensor & jacobian_mult) override;
+  virtual void updateJacobianMultForDamage(ADRankFourTensor & jacobian_mult) override;
 
   virtual Real computeTimeStepLimit() override;
 

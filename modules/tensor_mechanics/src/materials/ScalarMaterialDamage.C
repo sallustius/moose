@@ -61,7 +61,7 @@ ScalarMaterialDamage::updateDamage()
 }
 
 void
-ScalarMaterialDamage::updateStressForDamage(RankTwoTensor & stress_new)
+ScalarMaterialDamage::updateStressForDamage(ADRankTwoTensor & stress_new)
 {
   // Avoid multiplying by a small negative number, which could occur if damage_index
   // is slightly greater than 1.0
@@ -70,7 +70,7 @@ ScalarMaterialDamage::updateStressForDamage(RankTwoTensor & stress_new)
 }
 
 void
-ScalarMaterialDamage::updateJacobianMultForDamage(RankFourTensor & jacobian_mult)
+ScalarMaterialDamage::updateJacobianMultForDamage(ADRankFourTensor & jacobian_mult)
 {
   jacobian_mult *= std::max((1.0 - (_use_old_damage ? _damage_index_old[_qp] : _damage_index[_qp])),
                             _residual_stiffness_fraction);
