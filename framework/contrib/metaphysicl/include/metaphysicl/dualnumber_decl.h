@@ -137,8 +137,14 @@ template <typename T, std::size_t N>
 struct DualNumberSurrogate;
 
 template <typename T, typename TBase, size_t N, typename R, class... PtrArgs, class... ParamArgs>
-DualNumber<R, N>
-return_dn(R (TBase::*fn)(PtrArgs...), DualNumber<T, N> & calling_dn, ParamArgs &&... args);
+DualNumber<R, N> return_dn(const R & (TBase::*fn)(PtrArgs...) const,
+                           const DualNumber<T, N> & calling_dn,
+                           ParamArgs &&... args);
+
+template <typename T, typename TBase, size_t N, typename R, class... PtrArgs, class... ParamArgs>
+DualNumber<R, N> return_dn(R (TBase::*fn)(PtrArgs...) const,
+                           const DualNumber<T, N> & calling_dn,
+                           ParamArgs &&... args);
 
 template <typename T, typename TBase, size_t N, typename R, class... PtrArgs, class... ParamArgs>
 DualNumberSurrogate<R, N> &
@@ -159,13 +165,17 @@ public:
 #define ConstReturnDecl(methodName)                                                                \
   template <class... Args>                                                                         \
   auto methodName(Args &&... args)                                                                 \
-      const->DualNumber<decltype(this->value().methodName(std::forward<Args>(args)...)), N>
+      const->DualNumber<typename std::remove_const<typename std::remove_reference<decltype(        \
+                            this->value().methodName(std::forward<Args>(args)...))>::type>::type,  \
+                        N>
 
 #define ConstReturnDef(methodName, condition)                                                      \
   template <typename T, std::size_t N>                                                             \
   template <class... Args>                                                                         \
   auto DualNumber<T, N, typename std::enable_if<condition>::type>::methodName(Args &&... args)     \
-      const->DualNumber<decltype(this->value().methodName(std::forward<Args>(args)...)), N>        \
+      const->DualNumber<typename std::remove_const<typename std::remove_reference<decltype(        \
+                            this->value().methodName(std::forward<Args>(args)...))>::type>::type,  \
+                        N>                                                                         \
   {                                                                                                \
     return return_dn(&T::methodName, *this, std::forward<Args>(args)...);                          \
   }                                                                                                \
@@ -493,7 +503,7 @@ DNS_compares(<=);
 template <typename T, typename TBase, size_t N, typename R, class... PtrArgs, class... ParamArgs>
 DualNumber<R, N>
 return_dn(const R & (TBase::*fn)(PtrArgs...) const,
-          DualNumber<T, N> & calling_dn,
+          const DualNumber<T, N> & calling_dn,
           ParamArgs &&... args)
 {
   NumberArray<N, R> deriv;
@@ -504,7 +514,9 @@ return_dn(const R & (TBase::*fn)(PtrArgs...) const,
 
 template <typename T, typename TBase, size_t N, typename R, class... PtrArgs, class... ParamArgs>
 DualNumber<R, N>
-return_dn(R (TBase::*fn)(PtrArgs...) const, DualNumber<T, N> & calling_dn, ParamArgs &&... args)
+return_dn(R (TBase::*fn)(PtrArgs...) const,
+          const DualNumber<T, N> & calling_dn,
+          ParamArgs &&... args)
 {
   NumberArray<N, R> deriv;
   for (decltype(N) di = 0; di < N; ++di)
