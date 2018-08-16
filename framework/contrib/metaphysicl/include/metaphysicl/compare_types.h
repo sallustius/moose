@@ -654,6 +654,17 @@ template <template <typename> class W, typename T>
 struct is_same_template<W<T>, W> : std::true_type
 {
 };
+
+template <typename T>
+struct template_parameter
+{
+};
+
+template <template <typename> class W, typename T>
+struct template_parameter<W<T>>
+{
+  typedef T type;
+};
 } // namespace MetaPhysicL
 
 #endif // METAPHYSICL_COMPARE_TYPES_H
