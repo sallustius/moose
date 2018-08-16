@@ -226,6 +226,12 @@ public:
     return returnval;
   }
 
+  void zero()
+  {
+    for (std::size_t i = 0; i != N; ++i)
+      _data[i] = T();
+  }
+
 private:
   T _data[N];
 };

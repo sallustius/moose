@@ -40,6 +40,7 @@
 
 #include "RankTwoTensor.h"
 #include "RankFourTensor.h"
+#include "MooseError.h"
 
 namespace MetaPhysicL
 {
@@ -75,6 +76,14 @@ public:
 
   DualNumberBase & operator=(const DualNumberBase<T, D> & src) = default;
 #endif
+
+  template <typename T2>
+  DualNumberBase & operator=(const T2 & value)
+  {
+    _val = value;
+    _deriv.zero();
+    return *this;
+  }
 
   T & value();
 
@@ -126,7 +135,13 @@ public:
   template <typename T2>
   auto operator/=(const T2 & a) -> decltype(*this) &;
 
-  operator T() const { return _val; }
+  operator T &()
+  {
+    mooseWarning("You are operating on a DualNumber value without operating on its derivatives. "
+                 "This may have a deleterious impact on your Jacobian calculations!");
+    return _val;
+  }
+  operator const T &() const { return _val; }
 
 private:
   T _val;
@@ -149,6 +164,11 @@ DualNumber<R, N> return_dn(R (TBase::*fn)(PtrArgs...) const,
 template <typename T, typename TBase, size_t N, typename R, class... PtrArgs, class... ParamArgs>
 DualNumberSurrogate<R, N> &
 return_dns(R & (TBase::*fn)(PtrArgs...), DualNumber<T, N> & calling_dn, ParamArgs &&... args);
+
+template <typename T, typename TBase, size_t N, class... PtrArgs, class... ParamArgs>
+void const_void_helper(void (TBase::*fn)(PtrArgs...) const,
+                       const DualNumber<T, N> & calling_dn,
+                       ParamArgs &&... args);
 
 template <typename T, typename TBase, size_t N, class... PtrArgs, class... ParamArgs>
 void
@@ -200,15 +220,29 @@ public:
   }                                                                                                \
   void ANONYMOUS_FUNCTION()
 
-#define VoidDecl(methodName, constness)                                                            \
+#define ConstVoidDecl(methodName)                                                                  \
   template <class... Args>                                                                         \
-  void methodName(Args &&... args) constness
+  void methodName(Args &&... args) const
 
-#define VoidDef(methodName, constness, condition)                                                  \
+#define ConstVoidDef(methodName, condition)                                                        \
   template <typename T, std::size_t N>                                                             \
   template <class... Args>                                                                         \
   void DualNumber<T, N, typename std::enable_if<condition>::type>::methodName(Args &&... args)     \
-      constness                                                                                    \
+      const                                                                                        \
+  {                                                                                                \
+    const_void_helper(&T::methodName, *this, std::forward<Args>(args)...);                         \
+  }                                                                                                \
+  void ANONYMOUS_FUNCTION()
+
+#define NonConstVoidDecl(methodName)                                                               \
+  template <class... Args>                                                                         \
+  void methodName(Args &&... args)
+
+#define NonConstVoidDef(methodName, condition)                                                     \
+  template <typename T, std::size_t N>                                                             \
+  template <class... Args>                                                                         \
+  void DualNumber<T, N, typename std::enable_if<condition>::type>::methodName(Args &&... args)     \
+                                                                                                   \
   {                                                                                                \
     void_helper(&T::methodName, *this, std::forward<Args>(args)...);                               \
   }                                                                                                \
@@ -227,7 +261,7 @@ public:
 
   ConstReturnDecl(operator());
   NonConstReturnDecl(operator());
-  VoidDecl(zero, );
+  NonConstVoidDecl(zero);
 
   std::map<typename T::index_type, DualNumberSurrogate<typename T::value_type, N>>
       dual_number_surrogates;
@@ -243,10 +277,9 @@ ConstReturnDef(operator(),
 NonConstReturnDef(operator(),
                   is_same_template<T COMMA TypeVector>::value ||
                       is_same_template<T COMMA VectorValue>::value);
-VoidDef(zero,
-        ,
-        is_same_template<T COMMA TypeVector>::value ||
-            is_same_template<T COMMA VectorValue>::value);
+NonConstVoidDef(zero,
+                is_same_template<T COMMA TypeVector>::value ||
+                    is_same_template<T COMMA VectorValue>::value);
 
 // Tensor
 template <typename T, std::size_t N>
@@ -261,11 +294,11 @@ public:
 
   ConstReturnDecl(operator());
   NonConstReturnDecl(operator());
-  VoidDecl(zero, );
+  NonConstVoidDecl(zero);
   ConstReturnDecl(row);
   ConstReturnDecl(tr);
   ConstReturnDecl(transpose);
-  VoidDecl(rotate, );
+  NonConstVoidDecl(rotate);
 
   std::map<typename T::index_type, DualNumberSurrogate<typename T::value_type, N>>
       dual_number_surrogates;
@@ -277,10 +310,9 @@ ConstReturnDef(operator(),
 NonConstReturnDef(operator(),
                   is_same_template<T COMMA TypeTensor>::value ||
                       is_same_template<T COMMA TensorValue>::value);
-VoidDef(zero,
-        ,
-        is_same_template<T COMMA TypeTensor>::value ||
-            is_same_template<T COMMA TensorValue>::value);
+NonConstVoidDef(zero,
+                is_same_template<T COMMA TypeTensor>::value ||
+                    is_same_template<T COMMA TensorValue>::value);
 ConstReturnDef(row,
                is_same_template<T COMMA TypeTensor>::value ||
                    is_same_template<T COMMA TensorValue>::value);
@@ -290,10 +322,9 @@ ConstReturnDef(tr,
 ConstReturnDef(transpose,
                is_same_template<T COMMA TypeTensor>::value ||
                    is_same_template<T COMMA TensorValue>::value);
-VoidDef(rotate,
-        ,
-        is_same_template<T COMMA TypeTensor>::value ||
-            is_same_template<T COMMA TensorValue>::value);
+NonConstVoidDef(rotate,
+                is_same_template<T COMMA TypeTensor>::value ||
+                    is_same_template<T COMMA TensorValue>::value);
 
 // RankTwo
 template <typename T, std::size_t N>
@@ -303,9 +334,21 @@ class DualNumber<T, N, typename std::enable_if<std::is_same<T, RankTwoTensor>::v
 public:
   using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
 
-  DualNumber(const DualNumber<TypeVector<T>, N> & row1,
-             const DualNumber<TypeVector<T>, N> & row2,
-             const DualNumber<TypeVector<T>, N> & row3)
+  template <typename T2>
+  DualNumber(const DualNumber<TypeVector<T2>, N> & row1,
+             const DualNumber<TypeVector<T2>, N> & row2,
+             const DualNumber<TypeVector<T2>, N> & row3)
+    : DualNumberBase<T, NumberArray<N, T>>()
+  {
+    this->value() = RankTwoTensor(row1.value(), row2.value(), row3.value());
+    for (decltype(N) i = 0; i < N; ++i)
+      this->derivatives()[i] =
+          RankTwoTensor(row1.derivatives()[i], row2.derivatives()[i], row3.derivatives()[i]);
+  }
+  template <typename T2>
+  DualNumber(const DualNumber<VectorValue<T2>, N> & row1,
+             const DualNumber<VectorValue<T2>, N> & row2,
+             const DualNumber<VectorValue<T2>, N> & row3)
     : DualNumberBase<T, NumberArray<N, T>>()
   {
     this->value() = RankTwoTensor(row1.value(), row2.value(), row3.value());
@@ -316,12 +359,14 @@ public:
 
   ConstReturnDecl(operator());
   NonConstReturnDecl(operator());
-  VoidDecl(zero, );
+  NonConstVoidDecl(zero);
   ConstReturnDecl(row);
   ConstReturnDecl(tr);
   ConstReturnDecl(transpose);
-  VoidDecl(rotate, );
+  NonConstVoidDecl(rotate);
   ConstReturnDecl(positiveProjectionEigenDecomposition);
+  ConstVoidDecl(symmetricEigenvaluesEigenvectors);
+  ConstReturnDecl(deviatoric);
 
   std::map<typename T::index_type, DualNumberSurrogate<typename T::value_type, N>>
       dual_number_surrogates;
@@ -329,12 +374,14 @@ public:
 
 ConstReturnDef(operator(), std::is_same<T COMMA RankTwoTensor>::value);
 NonConstReturnDef(operator(), std::is_same<T COMMA RankTwoTensor>::value);
-VoidDef(zero, , std::is_same<T COMMA RankTwoTensor>::value);
+NonConstVoidDef(zero, std::is_same<T COMMA RankTwoTensor>::value);
 ConstReturnDef(row, std::is_same<T COMMA RankTwoTensor>::value);
 ConstReturnDef(tr, std::is_same<T COMMA RankTwoTensor>::value);
 ConstReturnDef(transpose, std::is_same<T COMMA RankTwoTensor>::value);
-VoidDef(rotate, , std::is_same<T COMMA RankTwoTensor>::value);
+NonConstVoidDef(rotate, std::is_same<T COMMA RankTwoTensor>::value);
 ConstReturnDef(positiveProjectionEigenDecomposition, std::is_same<T COMMA RankTwoTensor>::value);
+ConstVoidDef(symmetricEigenvaluesEigenvectors, std::is_same<T COMMA RankTwoTensor>::value);
+ConstReturnDef(deviatoric, std::is_same<T COMMA RankTwoTensor>::value);
 
 // RankFour
 template <typename T, std::size_t N>
@@ -347,8 +394,8 @@ public:
 
   ConstReturnDecl(operator());
   NonConstReturnDecl(operator());
-  VoidDecl(zero, );
-  VoidDecl(rotate, );
+  NonConstVoidDecl(zero);
+  NonConstVoidDecl(rotate);
   ConstReturnDecl(invSymm);
 
   std::map<typename T::index_type, DualNumberSurrogate<Real, N>> dual_number_surrogates;
@@ -356,8 +403,8 @@ public:
 
 ConstReturnDef(operator(), std::is_same<T COMMA RankFourTensor>::value);
 NonConstReturnDef(operator(), std::is_same<T COMMA RankFourTensor>::value);
-VoidDef(zero, , std::is_same<T COMMA RankFourTensor>::value);
-VoidDef(rotate, , std::is_same<T COMMA RankFourTensor>::value);
+NonConstVoidDef(zero, std::is_same<T COMMA RankFourTensor>::value);
+NonConstVoidDef(rotate, std::is_same<T COMMA RankFourTensor>::value);
 ConstReturnDef(invSymm, std::is_same<T COMMA RankFourTensor>::value);
 
 template <typename T, std::size_t N>
@@ -434,6 +481,22 @@ struct DualNumberSurrogate
     }
     return *this;
   }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator=(const T2 & in_value)
+  {
+    value = in_value;
+    for (decltype(N) i = 0; i < N; ++i)
+      *derivatives[i] = 0;
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator=(const DualNumber<T2, N> & in_dn)
+  {
+    value = in_dn.value();
+    for (decltype(N) i = 0; i < N; ++i)
+      *derivatives[i] = in_dn.derivatives()[i];
+    return *this;
+  }
 
   DualNumberSurrogate<T, N> & operator+=(const DualNumberSurrogate<T, N> & dns)
   {
@@ -465,6 +528,62 @@ struct DualNumberSurrogate
     for (decltype(N) i = 0; i < N; ++i)
       if (dns.derivatives[i])
         *derivatives[i] /= *dns.derivatives[i];
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator+=(const T2 & in_value)
+  {
+    value += in_value;
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator-=(const T2 & in_value)
+  {
+    value -= in_value;
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator*=(const T2 & in_value)
+  {
+    value *= in_value;
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator/=(const T2 & in_value)
+  {
+    value /= in_value;
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator+=(const DualNumber<T, N> & in_dn)
+  {
+    value += in_dn.value();
+    for (decltype(N) i = 0; i < N; ++i)
+      *derivatives[i] += in_dn.derivatives()[i];
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator-=(const DualNumber<T, N> & in_dn)
+  {
+    value -= in_dn.value();
+    for (decltype(N) i = 0; i < N; ++i)
+      *derivatives[i] -= in_dn.derivatives()[i];
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator*=(const DualNumber<T, N> & in_dn)
+  {
+    value *= in_dn.value();
+    for (decltype(N) i = 0; i < N; ++i)
+      *derivatives[i] *= in_dn.derivatives()[i];
+    return *this;
+  }
+  template <typename T2>
+  DualNumberSurrogate<T, N> & operator/=(const DualNumber<T, N> & in_dn)
+  {
+    value /= in_dn.value();
+    for (decltype(N) i = 0; i < N; ++i)
+      *derivatives[i] /= in_dn.derivatives()[i];
     return *this;
   }
 
@@ -539,9 +658,20 @@ return_dns(R & (TBase::*)(PtrArgs...), DualNumber<T, N> & calling_dn, ParamArgs 
   return calling_dn.dual_number_surrogates.at(key);
 }
 
-template <typename T, size_t N, class... PtrArgs, class... ParamArgs>
+template <typename T, typename TBase, size_t N, class... PtrArgs, class... ParamArgs>
 void
-void_helper(void (T::*fn)(PtrArgs...), DualNumber<T, N> & calling_dn, ParamArgs &&... args)
+const_void_helper(void (TBase::*fn)(PtrArgs...) const,
+                  const DualNumber<T, N> & calling_dn,
+                  ParamArgs &&... args)
+{
+  (calling_dn.value().*fn)(std::forward<ParamArgs>(args)...);
+  for (decltype(N) i = 0; i < N; ++i)
+    (calling_dn.derivatives()[i].*fn)(std::forward<ParamArgs>(args)...);
+}
+
+template <typename T, typename TBase, size_t N, class... PtrArgs, class... ParamArgs>
+void
+void_helper(void (TBase::*fn)(PtrArgs...), DualNumber<T, N> & calling_dn, ParamArgs &&... args)
 {
   (calling_dn.value().*fn)(std::forward<ParamArgs>(args)...);
   for (decltype(N) i = 0; i < N; ++i)
