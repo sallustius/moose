@@ -137,13 +137,14 @@ public:
 
   operator T &()
   {
-    mooseWarning("You are operating on a DualNumber value without operating on its derivatives. "
-                 "This may have a deleterious impact on your Jacobian calculations!");
+    mooseDoOnce(mooseWarning("This message will only appear once: You are operating on a "
+                             "DualNumber value without operating on its derivatives. "
+                             "This may have a deleterious impact on your Jacobian calculations!"));
     return _val;
   }
   operator const T &() const { return _val; }
 
-private:
+protected:
   T _val;
   D _deriv;
 };
@@ -180,6 +181,9 @@ class DualNumber : public DualNumberBase<T, NumberArray<N, T>>
 {
 public:
   using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
+
+  DualNumber<T, N> operator-() const { return DualNumber<T, N>(-this->_val, -this->_deriv); }
+  DualNumber<T, N> operator!() const { return DualNumber<T, N>(!this->_val, !this->_deriv); }
 };
 
 #define ConstReturnDecl(methodName)                                                                \
@@ -259,6 +263,9 @@ class DualNumber<T,
 public:
   using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
 
+  DualNumber<T, N> operator-() const { return DualNumber<T, N>(-this->_val, -this->_deriv); }
+  DualNumber<T, N> operator!() const { return DualNumber<T, N>(!this->_val, !this->_deriv); }
+
   ConstReturnDecl(operator());
   NonConstReturnDecl(operator());
   NonConstVoidDecl(zero);
@@ -291,6 +298,9 @@ class DualNumber<T,
 {
 public:
   using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
+
+  DualNumber<T, N> operator-() const { return DualNumber<T, N>(-this->_val, -this->_deriv); }
+  DualNumber<T, N> operator!() const { return DualNumber<T, N>(!this->_val, !this->_deriv); }
 
   ConstReturnDecl(operator());
   NonConstReturnDecl(operator());
@@ -333,6 +343,9 @@ class DualNumber<T, N, typename std::enable_if<std::is_same<T, RankTwoTensor>::v
 {
 public:
   using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
+
+  DualNumber<T, N> operator-() const { return DualNumber<T, N>(-this->_val, -this->_deriv); }
+  DualNumber<T, N> operator!() const { return DualNumber<T, N>(!this->_val, !this->_deriv); }
 
   template <typename T2>
   DualNumber(const DualNumber<TypeVector<T2>, N> & row1,
@@ -391,6 +404,9 @@ class DualNumber<T, N, typename std::enable_if<std::is_same<T, RankFourTensor>::
 public:
   using DualNumberBase<T, NumberArray<N, T>>::DualNumberBase;
   using DualNumberBase<T, NumberArray<N, T>>::operator=;
+
+  DualNumber<T, N> operator-() const { return DualNumber<T, N>(-this->_val, -this->_deriv); }
+  DualNumber<T, N> operator!() const { return DualNumber<T, N>(!this->_val, !this->_deriv); }
 
   ConstReturnDecl(operator());
   NonConstReturnDecl(operator());

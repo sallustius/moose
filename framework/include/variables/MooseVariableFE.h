@@ -340,6 +340,22 @@ public:
     secondPhiFace();
     return _ad_second_u;
   }
+  const ADVariableValue & adSlnNeighbor()
+  {
+    _need_neighbor_ad_u = true;
+    return _neighbor_ad_u;
+  }
+  const ADVariableGradient & adGradSlnNeighbor()
+  {
+    _need_neighbor_ad_grad_u = true;
+    return _neighbor_ad_grad_u;
+  }
+  const ADVariableSecond & adSecondSlnNeighbor()
+  {
+    _need_neighbor_ad_second_u = true;
+    secondPhiFaceNeighbor();
+    return _neighbor_ad_second_u;
+  }
 
   const FieldVariableValue & uDot() { return _u_dot; }
   const VariableValue & duDotDu() { return _du_dot_du; }
@@ -544,6 +560,7 @@ public:
   virtual void computeNodalNeighborValues() override;
 
   void computeAD(const unsigned int & num_dofs, const unsigned int & nqp);
+  void computeADNeighbor(const unsigned int & num_dofs, const unsigned int & nqp);
 
 protected:
   /// Our assembly
@@ -591,6 +608,9 @@ protected:
   bool _need_ad_u;
   bool _need_ad_grad_u;
   bool _need_ad_second_u;
+  bool _need_neighbor_ad_u;
+  bool _need_neighbor_ad_grad_u;
+  bool _need_neighbor_ad_second_u;
 
   bool _need_u_old_neighbor;
   bool _need_u_older_neighbor;
@@ -729,8 +749,12 @@ protected:
   ADVariableValue _ad_u;
   ADVariableGradient _ad_grad_u;
   ADVariableSecond _ad_second_u;
-
   std::vector<ADReal> _ad_dofs;
+
+  ADVariableValue _neighbor_ad_u;
+  ADVariableGradient _neighbor_ad_grad_u;
+  ADVariableSecond _neighbor_ad_second_u;
+  std::vector<ADReal> _neighbor_ad_dofs;
 
   FieldVariableValue _u_neighbor;
   FieldVariableValue _u_old_neighbor;

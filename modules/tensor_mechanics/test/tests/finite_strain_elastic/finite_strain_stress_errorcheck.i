@@ -58,7 +58,7 @@
 [Preconditioning]
   [./smp]
     type = SMP
-    # full = true
+    full = true
   [../]
 []
 
