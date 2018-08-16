@@ -623,7 +623,7 @@ ComputeMultiPlasticityStress::returnMap(const RankTwoTensor & stress_old,
                                         bool & ld_encountered,
                                         bool & constraints_added,
                                         bool final_step,
-                                        RankFourTensor & consistent_tangent_operator,
+                                        ADRankFourTensor & consistent_tangent_operator,
                                         std::vector<Real> & cumulative_pm)
 {
 
@@ -1385,7 +1385,7 @@ ComputeMultiPlasticityStress::residual2(const std::vector<Real> & pm,
 
 bool
 ComputeMultiPlasticityStress::lineSearch(Real & nr_res2,
-                                         RankTwoTensor & stress,
+                                         ADRankTwoTensor & stress,
                                          const std::vector<Real> & intnl_old,
                                          std::vector<Real> & intnl,
                                          std::vector<Real> & pm,
