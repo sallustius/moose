@@ -27,5 +27,5 @@ ADCoupledValueTest::ADCoupledValueTest(const InputParameters & parameters)
 ADReal
 ADCoupledValueTest::computeQpResidual()
 {
-  return -_v[_qp] * _test[_i][_qp];
+  return _test[_i][_qp] * -_v[_qp];
 }

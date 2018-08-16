@@ -4,6 +4,7 @@
     input = 'ad_material.i'
     exodiff = 'ad_material_out.e'
     absent_out = '7 Nonlinear'
+    allow_warnings = true
   [../]
   [./test_adreg]
     type = 'Exodiff'
@@ -12,6 +13,7 @@
     prereq = 'test_adad'
     cli_args = "Kernels/diff/prop_to_use='adreg'"
     expect_out = '14 Nonlinear'
+    allow_warnings = true
   [../]
   [./test_regad]
     type = 'Exodiff'
@@ -20,6 +22,7 @@
     prereq = 'test_adreg'
     cli_args = "Kernels/diff/prop_to_use='regad'"
     expect_out = '14 Nonlinear'
+    allow_warnings = true
   [../]
   [./test_regreg]
     type = 'Exodiff'
@@ -28,5 +31,6 @@
     prereq = 'test_regad'
     cli_args = "Kernels/diff/prop_to_use='regreg'"
     expect_out = '14 Nonlinear'
+    allow_warnings = true
   [../]
 []

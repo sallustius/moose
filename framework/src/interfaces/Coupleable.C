@@ -355,33 +355,26 @@ Coupleable::adCoupledValue(const std::string & var_name, unsigned int comp)
   if (!_coupleable_neighbor)
   {
     if (_c_nodal)
-    {
       mooseError("Not implemented");
-      // return (_c_is_implicit) ? var->nodalSln() : var->nodalSlnOld();
-    }
     else
     {
       if (_c_is_implicit)
         return var->adSln();
       else
-      {
         mooseError("Not implemented");
-
-        // return (_c_is_implicit) ? var->adSln() : mooseErrorvar->slnOld();
-      }
     }
   }
   else
   {
-    return var->adSln(); // This is NOT right - FIXME
-
-    // mooseError("Not implemented");
-    /*
-    if (_nodal)
-      return (_c_is_implicit) ? var->nodalSlnNeighbor() : var->nodalSlnOldNeighbor();
+    if (_c_nodal)
+      mooseError("Not implemented");
     else
-      return (_c_is_implicit) ? var->slnNeighbor() : var->slnOldNeighbor();
-    */
+    {
+      if (_c_is_implicit)
+        return var->adSlnNeighbor();
+      else
+        mooseError("Not implemented");
+    }
   }
 }
 
@@ -751,13 +744,14 @@ Coupleable::adCoupledGradient(const std::string & var_name, unsigned int comp)
     if (_c_is_implicit)
       return var->adGradSln();
     else
-      mooseError("Not Implemented!");
-    // return (_c_is_implicit) ? var->gradSln() : var->gradSlnOld();
+      mooseError("Not implemented");
   }
   else
   {
-    mooseError("Not Implemented!");
-    // return (_c_is_implicit) ? var->gradSlnNeighbor() : var->gradSlnOldNeighbor();
+    if (_c_is_implicit)
+      return var->adGradSlnNeighbor();
+    else
+      mooseError("Not implemented");
   }
 }
 
