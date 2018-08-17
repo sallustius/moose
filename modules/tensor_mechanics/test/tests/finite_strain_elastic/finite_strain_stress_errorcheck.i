@@ -66,7 +66,6 @@
 
 [Executioner]
   petsc_options = '-pc_svd_monitor -snes_test_jacobian -snes_test_jacobian_view -snes_converged_reason -ksp_converged_reason'
-  # petsc_options = '-pc_svd_monitor -snes_converged_reason -ksp_converged_reason'
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'svd'
   type = Transient
