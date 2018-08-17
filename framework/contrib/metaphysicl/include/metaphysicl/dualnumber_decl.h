@@ -534,16 +534,25 @@ struct DualNumberSurrogate
   {
     value *= dns.value;
     for (decltype(N) i = 0; i < N; ++i)
+    {
       if (dns.derivatives[i])
-        *derivatives[i] *= *dns.derivatives[i];
+        *derivatives[i] = dns.value * *derivatives[i] + value * *dns.derivatives[i];
+      else
+        *derivatives[i] *= dns.value;
+    }
     return *this;
   }
   DualNumberSurrogate<T, N> & operator/=(const DualNumberSurrogate<T, N> & dns)
   {
     value /= dns.value;
     for (decltype(N) i = 0; i < N; ++i)
+    {
       if (dns.derivatives[i])
-        *derivatives[i] /= *dns.derivatives[i];
+        *derivatives[i] =
+            (dns.value * *derivatives[i] - value * *dns.derivatives[i]) / (dns.value * dns.value);
+      else
+        *derivatives[i] /= dns.value;
+    }
     return *this;
   }
   template <typename T2>
@@ -562,12 +571,16 @@ struct DualNumberSurrogate
   DualNumberSurrogate<T, N> & operator*=(const T2 & in_value)
   {
     value *= in_value;
+    for (decltype(N) i = 0; i < N; ++i)
+      *derivatives[i] *= in_value;
     return *this;
   }
   template <typename T2>
   DualNumberSurrogate<T, N> & operator/=(const T2 & in_value)
   {
     value /= in_value;
+    for (decltype(N) i = 0; i < N; ++i)
+      *derivatives[i] /= in_value;
     return *this;
   }
   template <typename T2>
@@ -591,7 +604,7 @@ struct DualNumberSurrogate
   {
     value *= in_dn.value();
     for (decltype(N) i = 0; i < N; ++i)
-      *derivatives[i] *= in_dn.derivatives()[i];
+      *derivatives[i] = in_dn.value() * *derivatives[i] + value * in_dn.derivatives()[i];
     return *this;
   }
   template <typename T2>
@@ -599,11 +612,18 @@ struct DualNumberSurrogate
   {
     value /= in_dn.value();
     for (decltype(N) i = 0; i < N; ++i)
-      *derivatives[i] /= in_dn.derivatives()[i];
+      *derivatives[i] = (in_dn.value() * *derivatives[i] - value * in_dn.derivatives()[i]) /
+                        (in_dn.value() * in_dn.value);
     return *this;
   }
 
-  operator T() const { return value; }
+  operator T() const
+  {
+    mooseDoOnce(mooseWarning("This message will only appear once: You are operating on a "
+                             "DualNumber value without operating on its derivatives. "
+                             "This may have a deleterious impact on your Jacobian calculations!"));
+    return value;
+  }
 
   T & value;
   NumberArray<N, T *> derivatives;
