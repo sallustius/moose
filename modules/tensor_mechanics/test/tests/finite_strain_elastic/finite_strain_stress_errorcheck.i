@@ -1,47 +1,45 @@
 [Mesh]
   type = GeneratedMesh
-  dim = 2
-  nx = 1
-  ny = 1
-[]
-
-[Variables]
-  [./disp_x]
-  [../]
-  [./disp_y]
-  [../]
+  dim = 3
+  nx = 5
+  ny = 5
+  nz = 5
 []
 
 [GlobalParams]
-  displacements = 'disp_x disp_y'
-  # scaling = 1e-6
+  displacements = 'disp_x disp_y disp_z'
 []
 
 [Modules/TensorMechanics/Master]
   [./all]
     strain = SMALL
-    add_variables = false
-    use_displaced_mesh = false
+    add_variables = true
   [../]
 []
 
 [BCs]
   [./symmy]
-    type = DirichletBC
+    type = PresetBC
     variable = disp_y
     boundary = bottom
     value = 0
   [../]
   [./symmx]
-    type = DirichletBC
+    type = PresetBC
     variable = disp_x
     boundary = left
     value = 0
   [../]
+  [./symmz]
+    type = PresetBC
+    variable = disp_z
+    boundary = back
+    value = 0
+  [../]
   [./tdisp]
-    type = DirichletBC
-    variable = disp_y
-    boundary = top
+    type = PresetBC
+    variable = disp_z
+    boundary = front
     value = 0.1
   [../]
 []
@@ -49,8 +47,8 @@
 [Materials]
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1
-    poissons_ratio = 0
+    youngs_modulus = 1.0e10
+    poissons_ratio = 0.3
   [../]
   [./stress]
     type = ComputeLinearElasticStress
@@ -65,18 +63,15 @@
 []
 
 [Executioner]
-  petsc_options = '-pc_svd_monitor -snes_test_jacobian -snes_test_jacobian_view -snes_converged_reason -ksp_converged_reason'
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'svd'
   type = Transient
   dt = 0.05
 
+  #Preconditioned JFNK (default)
   solve_type = 'NEWTON'
+
+  petsc_options_iname = -pc_hypre_type
+  petsc_options_value = boomeramg
 
   dtmin = 0.05
   num_steps = 1
-[]
-
-[Outputs]
-  exodus = true
 []
