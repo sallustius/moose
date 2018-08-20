@@ -151,7 +151,7 @@ FiniteStrainPlasticMaterial::returnMap(const RankTwoTensor & sig_old,
                                        const RankTwoTensor & plastic_strain_old,
                                        const RankTwoTensor & delta_d,
                                        const RankFourTensor & E_ijkl,
-                                       ADRankTwoTensor & sig,
+                                       RankTwoTensor & sig,
                                        Real & eqvpstrain,
                                        RankTwoTensor & plastic_strain)
 {

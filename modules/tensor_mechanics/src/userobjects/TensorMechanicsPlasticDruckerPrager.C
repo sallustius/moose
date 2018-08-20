@@ -79,7 +79,7 @@ TensorMechanicsPlasticDruckerPrager::yieldFunction(const RankTwoTensor & stress,
   Real aaa;
   Real bbb;
   bothAB(intnl, aaa, bbb);
-  return std::sqrt(stress.secondInvariant()) + stress.tr() * bbb - aaa;
+  return std::sqrt(stress.secondInvariant()) + stress.trace() * bbb - aaa;
 }
 
 RankTwoTensor
@@ -105,7 +105,7 @@ TensorMechanicsPlasticDruckerPrager::dyieldFunction_dintnl(const RankTwoTensor &
   Real daaa;
   Real dbbb;
   dbothAB(intnl, daaa, dbbb);
-  return stress.tr() * dbbb - daaa;
+  return stress.trace() * dbbb - daaa;
 }
 
 RankTwoTensor

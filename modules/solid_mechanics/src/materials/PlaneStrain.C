@@ -99,7 +99,7 @@ PlaneStrain::computeStrain(const unsigned qp,
     volumetric_strain /= volume; // average volumetric strain
 
     // strain increment at _qp
-    Real trace = strain_increment.tr();
+    Real trace = strain_increment.trace();
     strain_increment.xx() += volumetric_strain - trace / dim;
     strain_increment.yy() += volumetric_strain - trace / dim;
     strain_increment.zz() += volumetric_strain - trace / dim;

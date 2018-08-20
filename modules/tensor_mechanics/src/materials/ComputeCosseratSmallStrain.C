@@ -46,7 +46,7 @@ ComputeCosseratSmallStrain::ComputeCosseratSmallStrain(const InputParameters & p
 void
 ComputeCosseratSmallStrain::computeQpProperties()
 {
-  ADRankTwoTensor strain((*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]);
+  RankTwoTensor strain((*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]);
   RealVectorValue wc_vector((*_wc[0])[_qp], (*_wc[1])[_qp], (*_wc[2])[_qp]);
 
   for (unsigned i = 0; i < LIBMESH_DIM; ++i)

@@ -27,10 +27,10 @@ Compute1DIncrementalStrain::Compute1DIncrementalStrain(const InputParameters & p
 }
 
 void
-Compute1DIncrementalStrain::computeTotalStrainIncrement(ADRankTwoTensor & total_strain_increment)
+Compute1DIncrementalStrain::computeTotalStrainIncrement(RankTwoTensor & total_strain_increment)
 {
   // Deformation gradient calculation for 1D problems
-  ADRankTwoTensor A(
+  RankTwoTensor A(
       (*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]); // Deformation gradient
   RankTwoTensor Fbar((*_grad_disp_old[0])[_qp],
                      (*_grad_disp_old[1])[_qp],

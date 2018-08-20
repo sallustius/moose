@@ -88,7 +88,7 @@ protected:
    * @param tensor Stress tensor to be updated
    * @param sigma Vector of stresses in crack directions
    */
-  void updateStressTensorForCracking(ADRankTwoTensor & tensor, const RealVectorValue & sigma);
+  void updateStressTensorForCracking(RankTwoTensor & tensor, const RealVectorValue & sigma);
 
   /**
    * Check to see whether there was cracking in any diretion in the previous

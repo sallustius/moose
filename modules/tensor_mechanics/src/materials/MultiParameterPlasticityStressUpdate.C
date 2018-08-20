@@ -8,7 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "MultiParameterPlasticityStressUpdate.h"
-#include "Conversion.h" // for stringify
+#include "Conversion.h"      // for stringify
 
 // libMesh includes
 #include "libmesh/utility.h" // for Utility::pow
@@ -144,7 +144,7 @@ void
 MultiParameterPlasticityStressUpdate::updateState(RankTwoTensor & strain_increment,
                                                   RankTwoTensor & inelastic_strain_increment,
                                                   const RankTwoTensor & rotation_increment,
-                                                  ADRankTwoTensor & stress_new,
+                                                  RankTwoTensor & stress_new,
                                                   const RankTwoTensor & stress_old,
                                                   const RankFourTensor & elasticity_tensor,
                                                   const RankTwoTensor & /*elastic_strain_old*/,

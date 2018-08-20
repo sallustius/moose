@@ -365,7 +365,7 @@ ComputeMultiPlasticityStress::postReturnMap()
 
 bool
 ComputeMultiPlasticityStress::quickStep(const RankTwoTensor & stress_old,
-                                        ADRankTwoTensor & stress,
+                                        RankTwoTensor & stress,
                                         const std::vector<Real> & intnl_old,
                                         std::vector<Real> & intnl,
                                         std::vector<Real> & pm,
@@ -376,7 +376,7 @@ ComputeMultiPlasticityStress::quickStep(const RankTwoTensor & stress_old,
                                         const RankTwoTensor & strain_increment,
                                         std::vector<Real> & yf,
                                         unsigned int & iterations,
-                                        ADRankFourTensor & consistent_tangent_operator,
+                                        RankFourTensor & consistent_tangent_operator,
                                         const quickStep_called_from_t called_from,
                                         bool final_step)
 {
@@ -462,7 +462,7 @@ ComputeMultiPlasticityStress::quickStep(const RankTwoTensor & stress_old,
 
 bool
 ComputeMultiPlasticityStress::plasticStep(const RankTwoTensor & stress_old,
-                                          ADRankTwoTensor & stress,
+                                          RankTwoTensor & stress,
                                           const std::vector<Real> & intnl_old,
                                           std::vector<Real> & intnl,
                                           const RankTwoTensor & plastic_strain_old,
@@ -474,7 +474,7 @@ ComputeMultiPlasticityStress::plasticStep(const RankTwoTensor & stress_old,
                                           bool & linesearch_needed,
                                           bool & ld_encountered,
                                           bool & constraints_added,
-                                          ADRankFourTensor & consistent_tangent_operator)
+                                          RankFourTensor & consistent_tangent_operator)
 {
   /**
    * the idea in the following is to potentially subdivide the
@@ -609,7 +609,7 @@ ComputeMultiPlasticityStress::plasticStep(const RankTwoTensor & stress_old,
 
 bool
 ComputeMultiPlasticityStress::returnMap(const RankTwoTensor & stress_old,
-                                        ADRankTwoTensor & stress,
+                                        RankTwoTensor & stress,
                                         const std::vector<Real> & intnl_old,
                                         std::vector<Real> & intnl,
                                         const RankTwoTensor & plastic_strain_old,
@@ -623,7 +623,7 @@ ComputeMultiPlasticityStress::returnMap(const RankTwoTensor & stress_old,
                                         bool & ld_encountered,
                                         bool & constraints_added,
                                         bool final_step,
-                                        ADRankFourTensor & consistent_tangent_operator,
+                                        RankFourTensor & consistent_tangent_operator,
                                         std::vector<Real> & cumulative_pm)
 {
 
@@ -1076,7 +1076,7 @@ ComputeMultiPlasticityStress::changeScheme(const std::vector<bool> & initial_act
 
 bool
 ComputeMultiPlasticityStress::singleStep(Real & nr_res2,
-                                         ADRankTwoTensor & stress,
+                                         RankTwoTensor & stress,
                                          const std::vector<Real> & intnl_old,
                                          std::vector<Real> & intnl,
                                          std::vector<Real> & pm,
@@ -1385,7 +1385,7 @@ ComputeMultiPlasticityStress::residual2(const std::vector<Real> & pm,
 
 bool
 ComputeMultiPlasticityStress::lineSearch(Real & nr_res2,
-                                         ADRankTwoTensor & stress,
+                                         RankTwoTensor & stress,
                                          const std::vector<Real> & intnl_old,
                                          std::vector<Real> & intnl,
                                          std::vector<Real> & pm,

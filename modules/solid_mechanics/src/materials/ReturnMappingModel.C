@@ -88,7 +88,7 @@ ReturnMappingModel::computeStress(const Elem & /*current_elem*/,
 {
   // compute deviatoric trial stress
   SymmTensor dev_trial_stress(stress_new);
-  dev_trial_stress.addDiag(-dev_trial_stress.tr() / 3.0);
+  dev_trial_stress.addDiag(-dev_trial_stress.trace() / 3.0);
 
   // compute effective trial stress
   Real dts_squared = dev_trial_stress.doubleContraction(dev_trial_stress);
@@ -96,7 +96,7 @@ ReturnMappingModel::computeStress(const Elem & /*current_elem*/,
 
   // compute effective strain increment
   SymmTensor dev_strain_increment(strain_increment);
-  dev_strain_increment.addDiag(-strain_increment.tr() / 3.0);
+  dev_strain_increment.addDiag(-strain_increment.trace() / 3.0);
   _effective_strain_increment = dev_strain_increment.doubleContraction(dev_strain_increment);
   _effective_strain_increment = std::sqrt(2.0 / 3.0 * _effective_strain_increment);
 

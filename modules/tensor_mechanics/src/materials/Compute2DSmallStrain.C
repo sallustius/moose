@@ -38,13 +38,13 @@ Compute2DSmallStrain::initialSetup()
   {
     if (_out_of_plane_direction == i)
     {
-      _disp[i] = &_ad_zero;
-      _grad_disp[i] = &_ad_grad_zero;
+      _disp[i] = &_zero;
+      _grad_disp[i] = &_grad_zero;
     }
     else
     {
-      _disp[i] = &adCoupledValue("displacements", i);
-      _grad_disp[i] = &adCoupledGradient("displacements", i);
+      _disp[i] = &coupledValue("displacements", i);
+      _grad_disp[i] = &coupledGradient("displacements", i);
     }
   }
 }
@@ -87,7 +87,7 @@ Compute2DSmallStrain::computeProperties()
     }
 
     if (_volumetric_locking_correction)
-      volumetric_strain += _total_strain[_qp].tr() * _JxW[_qp] * _coord[_qp];
+      volumetric_strain += _total_strain[_qp].trace() * _JxW[_qp] * _coord[_qp];
   }
 
   if (_volumetric_locking_correction)
@@ -97,7 +97,7 @@ Compute2DSmallStrain::computeProperties()
   {
     if (_volumetric_locking_correction)
     {
-      Real trace = _total_strain[_qp].tr();
+      Real trace = _total_strain[_qp].trace();
       _total_strain[_qp](0, 0) += (volumetric_strain - trace) / 3.0;
       _total_strain[_qp](1, 1) += (volumetric_strain - trace) / 3.0;
       _total_strain[_qp](2, 2) += (volumetric_strain - trace) / 3.0;

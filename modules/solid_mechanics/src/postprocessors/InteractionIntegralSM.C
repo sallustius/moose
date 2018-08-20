@@ -228,7 +228,7 @@ InteractionIntegralSM::computeQpIntegral()
   // - the term including the derivative of alpha is not implemented
   Real term4 = 0.0;
   if (_has_temp)
-    term4 = scalar_q * aux_stress.tr() * (*_current_instantaneous_thermal_expansion_coef)[_qp] *
+    term4 = scalar_q * aux_stress.trace() * (*_current_instantaneous_thermal_expansion_coef)[_qp] *
             grad_temp_cf(0);
 
   Real q_avg_seg = 1.0;

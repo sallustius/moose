@@ -89,7 +89,7 @@ RankTwoTensor
 TensorMechanicsPlasticIsotropicSD::dj2_dSkl(const RankTwoTensor & stress) const
 {
   RankTwoTensor a;
-  const Real trace = stress.tr();
+  const Real trace = stress.trace();
   for (unsigned i = 0; i < 3; ++i)
     for (unsigned j = 0; j < 3; ++j)
       a(i, j) = (trace - stress(i, j)) * -1 * (i == j) + stress(i, j) * (i != j);
@@ -100,7 +100,7 @@ TensorMechanicsPlasticIsotropicSD::dj2_dSkl(const RankTwoTensor & stress) const
 Real
 TensorMechanicsPlasticIsotropicSD::yieldFunction(const RankTwoTensor & stress, Real intnl) const
 {
-  return _a * (_b * stress.tr() +
+  return _a * (_b * stress.trace() +
                std::pow(std::pow(stress.secondInvariant(), 1.5) - _c * stress.thirdInvariant(),
                         1.0 / 3.0)) -
          yieldStrength(intnl);

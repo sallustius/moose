@@ -40,12 +40,12 @@ ComputeStrainBase::ComputeStrainBase(const InputParameters & parameters)
     _disp(3),
     _grad_disp(3),
     _base_name(isParamValid("base_name") ? getParam<std::string>("base_name") + "_" : ""),
-    _mechanical_strain(declareADProperty<RankTwoTensor>(_base_name + "mechanical_strain")),
-    _total_strain(declareADProperty<RankTwoTensor>(_base_name + "total_strain")),
+    _mechanical_strain(declareProperty<RankTwoTensor>(_base_name + "mechanical_strain")),
+    _total_strain(declareProperty<RankTwoTensor>(_base_name + "total_strain")),
     _eigenstrain_names(getParam<std::vector<MaterialPropertyName>>("eigenstrain_names")),
     _eigenstrains(_eigenstrain_names.size()),
     _global_strain(isParamValid("global_strain")
-                       ? &getADMaterialProperty<RankTwoTensor>(_base_name + "global_strain")
+                       ? &getMaterialProperty<RankTwoTensor>(_base_name + "global_strain")
                        : NULL),
     _volumetric_locking_correction(getParam<bool>("volumetric_locking_correction")),
     _current_elem_volume(_assembly.elemVolume())
@@ -53,7 +53,7 @@ ComputeStrainBase::ComputeStrainBase(const InputParameters & parameters)
   for (unsigned int i = 0; i < _eigenstrains.size(); ++i)
   {
     _eigenstrain_names[i] = _base_name + _eigenstrain_names[i];
-    _eigenstrains[i] = &getADMaterialProperty<RankTwoTensor>(_eigenstrain_names[i]);
+    _eigenstrains[i] = &getMaterialProperty<RankTwoTensor>(_eigenstrain_names[i]);
   }
 
   if (_ndisp == 1 && _volumetric_locking_correction)
@@ -70,15 +70,15 @@ ComputeStrainBase::initialSetup()
   // fetch coupled variables and gradients (as stateful properties if necessary)
   for (unsigned int i = 0; i < _ndisp; ++i)
   {
-    _disp[i] = &adCoupledValue("displacements", i);
-    _grad_disp[i] = &adCoupledGradient("displacements", i);
+    _disp[i] = &coupledValue("displacements", i);
+    _grad_disp[i] = &coupledGradient("displacements", i);
   }
 
   // set unused dimensions to zero
   for (unsigned i = _ndisp; i < 3; ++i)
   {
-    _disp[i] = &_ad_zero;
-    _grad_disp[i] = &_ad_grad_zero;
+    _disp[i] = &_zero;
+    _grad_disp[i] = &_grad_zero;
   }
 }
 
