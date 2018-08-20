@@ -37,19 +37,19 @@ protected:
 
   /// Coupled displacement variables
   unsigned int _ndisp;
-  std::vector<const ADVariableValue *> _disp;
-  std::vector<const ADVariableGradient *> _grad_disp;
+  std::vector<const VariableValue *> _disp;
+  std::vector<const VariableGradient *> _grad_disp;
 
   std::string _base_name;
 
-  ADMaterialProperty<RankTwoTensor> & _mechanical_strain;
+  MaterialProperty<RankTwoTensor> & _mechanical_strain;
 
-  ADMaterialProperty<RankTwoTensor> & _total_strain;
+  MaterialProperty<RankTwoTensor> & _total_strain;
 
   std::vector<MaterialPropertyName> _eigenstrain_names;
-  std::vector<const ADMaterialProperty<RankTwoTensor> *> _eigenstrains;
+  std::vector<const MaterialProperty<RankTwoTensor> *> _eigenstrains;
 
-  const ADMaterialProperty<RankTwoTensor> * _global_strain;
+  const MaterialProperty<RankTwoTensor> * _global_strain;
 
   bool _volumetric_locking_correction;
   const Real & _current_elem_volume;

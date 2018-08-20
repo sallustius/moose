@@ -93,8 +93,8 @@ protected:
   RankTwoTensor dflowPotential_dintnl(const RankTwoTensor & stress, Real intnl) const override;
 
   /**
-   * The hardening potential.  Note that it is -1 for stress.tr() > _strength,
-   * and +1 for stress.tr() < _c_strength.  This implements the idea that
+   * The hardening potential.  Note that it is -1 for stress.trace() > _strength,
+   * and +1 for stress.trace() < _c_strength.  This implements the idea that
    * tensile failure will cause a massive reduction in compressive strength
    * @param stress the stress at which to calculate the hardening potential
    * @param intnl internal parameter

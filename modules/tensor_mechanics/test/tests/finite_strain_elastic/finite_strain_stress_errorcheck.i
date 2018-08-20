@@ -1,9 +1,6 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  nx = 5
-  ny = 5
-  nz = 5
 []
 
 [GlobalParams]
@@ -12,7 +9,7 @@
 
 [Modules/TensorMechanics/Master]
   [./all]
-    strain = SMALL
+    strain = FINITE
     add_variables = true
   [../]
 []
@@ -55,19 +52,12 @@
   [../]
 []
 
-[Preconditioning]
-  [./smp]
-    type = SMP
-    full = true
-  [../]
-[]
-
 [Executioner]
   type = Transient
   dt = 0.05
 
   #Preconditioned JFNK (default)
-  solve_type = 'NEWTON'
+  solve_type = 'PJFNK'
 
   petsc_options_iname = -pc_hypre_type
   petsc_options_value = boomeramg

@@ -64,7 +64,7 @@ void
 RadialReturnStressUpdate::updateState(RankTwoTensor & strain_increment,
                                       RankTwoTensor & inelastic_strain_increment,
                                       const RankTwoTensor & /*rotation_increment*/,
-                                      ADRankTwoTensor & stress_new,
+                                      RankTwoTensor & stress_new,
                                       const RankTwoTensor & /*stress_old*/,
                                       const RankFourTensor & elasticity_tensor,
                                       const RankTwoTensor & elastic_strain_old,

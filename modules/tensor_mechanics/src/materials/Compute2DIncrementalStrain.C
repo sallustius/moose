@@ -37,13 +37,13 @@ Compute2DIncrementalStrain::initialSetup()
   {
     if (_out_of_plane_direction == i)
     {
-      _disp[i] = &_ad_zero;
-      _grad_disp[i] = &_ad_grad_zero;
+      _disp[i] = &_zero;
+      _grad_disp[i] = &_grad_zero;
     }
     else
     {
-      _disp[i] = &adCoupledValue("displacements", i);
-      _grad_disp[i] = &adCoupledGradient("displacements", i);
+      _disp[i] = &coupledValue("displacements", i);
+      _grad_disp[i] = &coupledGradient("displacements", i);
     }
 
     if (_fe_problem.isTransient() && i != _out_of_plane_direction)
@@ -54,10 +54,10 @@ Compute2DIncrementalStrain::initialSetup()
 }
 
 void
-Compute2DIncrementalStrain::computeTotalStrainIncrement(ADRankTwoTensor & total_strain_increment)
+Compute2DIncrementalStrain::computeTotalStrainIncrement(RankTwoTensor & total_strain_increment)
 {
   // Deformation gradient calculation for 2D problems
-  ADRankTwoTensor A(
+  RankTwoTensor A(
       (*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]); // Deformation gradient
   RankTwoTensor Fbar((*_grad_disp_old[0])[_qp],
                      (*_grad_disp_old[1])[_qp],

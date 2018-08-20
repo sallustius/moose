@@ -188,7 +188,7 @@ AbaqusCreepMaterial::computeStress()
   _trial_stress[_qp] = trial_stress;
   _trial_stress[_qp] += _stress_old[_qp];
   _dev_trial_stress[_qp] = _trial_stress[_qp];
-  _dev_trial_stress[_qp].addDiag(-_trial_stress[_qp].tr() / 3.0);
+  _dev_trial_stress[_qp].addDiag(-_trial_stress[_qp].trace() / 3.0);
 
   // Calculate effective trial stress (_ets)
   Real dts_squared = _dev_trial_stress[_qp].doubleContraction(_dev_trial_stress[_qp]);
@@ -230,7 +230,7 @@ AbaqusCreepMaterial::computeStress()
   _ESW[0] = _total_swell_old[_qp];  // Metal swell at the start of the increment
   _ESW[1] = _total_swell[_qp];      // Metal swell at the end of the increment
   _QTILD = _ets[_qp];               // Von mises equivalent stress
-  _P = -_trial_stress[_qp].tr(); // Equivalent pressure stress
+  _P = -_trial_stress[_qp].trace(); // Equivalent pressure stress
 
   // Connection to extern statement
   _creep(_DECRA,
@@ -276,8 +276,8 @@ AbaqusCreepMaterial::computeStress()
   _total_swell[_qp] = _swell_inc[_qp];
   _total_swell[_qp] += _total_swell_old[_qp];
 
-  Real p = -_trial_stress[_qp].tr();
-  Real pold = -_trial_stress_old[_qp].tr();
+  Real p = -_trial_stress[_qp].trace();
+  Real pold = -_trial_stress_old[_qp].trace();
 
   Real creep_inc_used = 0.0;
   Real swell_inc_used = 0.0;

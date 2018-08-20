@@ -65,7 +65,7 @@ CappedDruckerPragerCosseratStressUpdate::setStressAfterReturn(const RankTwoTenso
   // symm_stress = (s_ij+s_ji)/2 + de_ij tr(stress) / 3
   //             = q / q_trial * (s_ij^trial+s_ji^trial)/2 + de_ij p / 3
   //             = q / q_trial * (symm_stress_ij^trial - de_ij tr(stress^trial) / 3) + de_ij p / 3
-  const Real p_trial = stress_trial.tr();
+  const Real p_trial = stress_trial.trace();
   RankTwoTensor symm_stress = RankTwoTensor(RankTwoTensor::initIdentity) / 3.0 *
                               (p_ok - (_in_q_trial == 0.0 ? 0.0 : p_trial * q_ok / _in_q_trial));
   if (_in_q_trial > 0)
@@ -106,7 +106,7 @@ CappedDruckerPragerCosseratStressUpdate::consistentTangentOperator(
   const RankTwoTensor s_over_q =
       (q == 0.0 ? RankTwoTensor()
                 : (0.5 * (stress + stress.transpose()) -
-                   stress.tr() * RankTwoTensor(RankTwoTensor::initIdentity) / 3.0) /
+                   stress.trace() * RankTwoTensor(RankTwoTensor::initIdentity) / 3.0) /
                       q);
   const RankTwoTensor E_s_over_q = Eijkl.innerProductTranspose(s_over_q); // not symmetric in kl
   const RankTwoTensor Ekl =

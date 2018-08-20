@@ -29,7 +29,7 @@ public:
 protected:
   virtual void computeQpStress();
 
-  const ADMaterialProperty<RankTwoTensor> & _mechanical_strain;
+  const MaterialProperty<RankTwoTensor> & _mechanical_strain;
 };
 
 #endif // COMPUTELINEARELASTICSTRESS_H

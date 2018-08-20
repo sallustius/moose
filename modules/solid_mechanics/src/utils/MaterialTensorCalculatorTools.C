@@ -63,13 +63,13 @@ effectiveStrain(const SymmTensor & symm_strain)
 Real
 hydrostatic(const SymmTensor & symm_tensor)
 {
-  return symm_tensor.tr() / 3.0;
+  return symm_tensor.trace() / 3.0;
 }
 
 Real
 volumetricStrain(const SymmTensor & symm_strain)
 {
-  Real value = symm_strain.tr();
+  Real value = symm_strain.trace();
   value += symm_strain.xx() * symm_strain.yy() + symm_strain.yy() * symm_strain.zz() +
            symm_strain.zz() * symm_strain.xx() +
            symm_strain.xx() * symm_strain.yy() * symm_strain.zz();
@@ -79,7 +79,7 @@ volumetricStrain(const SymmTensor & symm_strain)
 Real
 firstInvariant(const SymmTensor & symm_tensor)
 {
-  return symm_tensor.tr();
+  return symm_tensor.trace();
 }
 
 Real

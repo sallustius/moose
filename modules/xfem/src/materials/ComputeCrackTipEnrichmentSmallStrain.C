@@ -104,8 +104,7 @@ ComputeCrackTipEnrichmentSmallStrain::computeQpProperties()
 
   RankTwoTensor enrich_strain = (grad_tensor_enrich + grad_tensor_enrich.transpose()) / 2.0;
 
-  ADRankTwoTensor grad_tensor(
-      RankTwoTensor((*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]));
+  RankTwoTensor grad_tensor((*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]);
 
   _total_strain[_qp] = (grad_tensor + grad_tensor.transpose()) / 2.0;
 

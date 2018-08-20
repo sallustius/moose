@@ -40,14 +40,14 @@ public:
    * Update the current stress tensor for effects of damage.
    * @param stress_new Undamaged stress to be modified by the damage model
    */
-  virtual void updateStressForDamage(ADRankTwoTensor & stress_new) = 0;
+  virtual void updateStressForDamage(RankTwoTensor & stress_new) = 0;
 
   /**
    * Update the material constitutive matrix
    * @param jacobian_mult Material constitutive matrix to be modified for
    * effects of damage
    */
-  virtual void updateJacobianMultForDamage(ADRankFourTensor & jacobian_mult) = 0;
+  virtual void updateJacobianMultForDamage(RankFourTensor & jacobian_mult) = 0;
 
   /**
    * Compute the limiting value of the time step for this material

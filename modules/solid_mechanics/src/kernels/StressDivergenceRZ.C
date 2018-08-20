@@ -122,7 +122,7 @@ StressDivergenceRZ::computeQpResidual()
     // volumetric locking correction
     if (_volumetric_locking_correction)
       div += (_avg_grad_test[_i][0] - _grad_test[_i][_qp](0) - _test[_i][_qp] / _q_point[_qp](0)) *
-             (_stress[_qp].tr()) / 3.0;
+             (_stress[_qp].trace()) / 3.0;
   }
   else if (_component == 1)
   {
@@ -134,7 +134,7 @@ StressDivergenceRZ::computeQpResidual()
 
     // volumetric locking correction
     if (_volumetric_locking_correction)
-      div += (_avg_grad_test[_i][1] - _grad_test[_i][_qp](1)) * (_stress[_qp].tr()) / 3.0;
+      div += (_avg_grad_test[_i][1] - _grad_test[_i][_qp](1)) * (_stress[_qp].trace()) / 3.0;
   }
   else
   {

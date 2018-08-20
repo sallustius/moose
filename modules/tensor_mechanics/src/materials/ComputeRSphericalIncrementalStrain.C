@@ -45,7 +45,7 @@ ComputeRSphericalIncrementalStrain::initialSetup()
 
 void
 ComputeRSphericalIncrementalStrain::computeTotalStrainIncrement(
-    ADRankTwoTensor & total_strain_increment)
+    RankTwoTensor & total_strain_increment)
 {
   // Deformation gradient calculation in cylindrical coordinates
   RankTwoTensor A;    // Deformation gradient

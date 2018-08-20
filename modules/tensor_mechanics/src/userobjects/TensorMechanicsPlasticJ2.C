@@ -181,7 +181,7 @@ TensorMechanicsPlasticJ2::returnMap(const RankTwoTensor & trial_stress,
                                               // the normal to the yield surface, at the trial
                                               // stress
   returned_stress = 2.0 / 3.0 * nn * yieldStrength(returned_intnl);
-  returned_stress.addIa(1.0 / 3.0 * trial_stress.tr());
+  returned_stress.addIa(1.0 / 3.0 * trial_stress.trace());
   delta_dp = nn * dpm[0];
 
   return true;
