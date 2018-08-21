@@ -81,7 +81,7 @@ TensorMechanicsPlasticOrthotropic::yieldFunction(const RankTwoTensor & stress, R
 {
   const RankTwoTensor j2prime = _l1 * stress;
   const RankTwoTensor j3prime = _l2 * stress;
-  return _b * stress.trace() +
+  return _b * stress.tr() +
          std::pow(std::pow(-j2prime.generalSecondInvariant(), 3.0 / 2.0) - j3prime.det(),
                   1.0 / 3.0) -
          yieldStrength(intnl);

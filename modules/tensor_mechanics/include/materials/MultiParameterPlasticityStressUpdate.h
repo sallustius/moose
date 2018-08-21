@@ -32,7 +32,7 @@ InputParameters validParams<MultiParameterPlasticityStressUpdate>();
  *
  * For instance, CappedDruckerPrager plasticity has _num_sp = 2
  * and defines
- * S[0] = p = stress.trace()
+ * S[0] = p = stress.tr()
  * S[1] = q = sqrt(stress.secondInvariant())
  *
  * The point of the stress_params is to reduce the number of
