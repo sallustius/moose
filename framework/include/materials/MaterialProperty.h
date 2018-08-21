@@ -29,13 +29,6 @@ template <typename P>
 PropertyValue * _init_helper(int size, PropertyValue * prop, const P * the_type);
 
 /**
- * Vector Init helper routine so that specialization isn't needed for basic vector MaterialProperty
- * types
- */
-template <typename P>
-PropertyValue * _init_helper(int size, PropertyValue * prop, const std::vector<P> * the_type);
-
-/**
  * Abstract definition of a property value.
  */
 class PropertyValue
@@ -177,14 +170,6 @@ public:
    */
   template <typename P>
   friend PropertyValue * _init_helper(int size, PropertyValue * prop, const P * the_type);
-
-  /**
-   * Friend helper function to handle vector material property initializations
-   * This function is an overload for the vector version
-   */
-  template <typename P>
-  friend PropertyValue *
-  _init_helper(int size, PropertyValue * prop, const std::vector<P> * the_type);
 
 private:
   /// private copy constructor to avoid shallow copying of material properties
@@ -355,25 +340,5 @@ _init_helper(int size, PropertyValue * /*prop*/, const P *)
   copy->_value.resize(size, MetaPhysicL::DualNumber<P, AD_MAX_DOFS_PER_ELEM>{});
   return copy;
 }
-
-  // // Vector Init Helper Function
-  // template <typename P>
-  // PropertyValue *
-  // _init_helper(int size, PropertyValue * /*prop*/, const std::vector<P> *)
-  // {
-  //   typedef MaterialProperty<std::vector<P>> PropType;
-  //   PropType * copy = new PropType;
-  //   copy->_value.resize(
-  //       size,
-  //       std::vector<MetaPhysicL::DualNumber<P, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM,
-  //       P>>>{});
-
-  //   // We don't know the size of the underlying vector at each
-  //   // quadrature point, the user will be responsible for resizing it
-  //   // and filling in the entries...
-
-  //   // Return the copy we allocated
-  //   return copy;
-  // }
 
 #endif
