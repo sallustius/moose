@@ -10,7 +10,9 @@
 #ifndef GHOSTUSEROBJECT_H
 #define GHOSTUSEROBJECT_H
 
-#include "ElementUserObject.h"
+#include "GeneralUserObject.h"
+#include "Coupleable.h"
+#include "MooseVariableDependencyInterface.h"
 
 // Forward Declarations
 class GhostUserObject;
@@ -22,7 +24,9 @@ InputParameters validParams<GhostUserObject>();
  * User object to calculate ghosted elements on a single processor or the union across all
  * processors.
  */
-class GhostUserObject : public ElementUserObject
+class GhostUserObject : public GeneralUserObject,
+                        public Coupleable,
+                        public MooseVariableDependencyInterface
 {
 public:
   GhostUserObject(const InputParameters & parameters);
@@ -35,10 +39,17 @@ public:
   Real getElementalValue(dof_id_type element_id) const;
 
 protected:
+  void buildRange();
+
+  std::vector<MooseVariableFEBase *> _fe_vars;
+
   std::map<dof_id_type, Real> _ghost_data;
+
   dof_id_type _rank;
 
   const VariableValue & _some_variable;
+
+  std::unique_ptr<StoredRange<std::set<const Elem *>::iterator, const Elem *>> _elem_range;
 };
 
 #endif // GHOSTUSEROBJECT_H
