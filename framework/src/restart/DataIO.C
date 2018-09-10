@@ -10,6 +10,8 @@
 #include "DataIO.h"
 #include "MooseMesh.h"
 #include "ColumnMajorMatrix.h"
+#include "RankTwoTensor.h"
+#include "RankFourTensor.h"
 
 #include "libmesh/numeric_vector.h"
 #include "libmesh/dense_matrix.h"

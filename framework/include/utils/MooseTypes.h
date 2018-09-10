@@ -23,8 +23,13 @@
 #include "libmesh/tensor_value.h"
 #include "libmesh/type_n_tensor.h"
 
-#include "metaphysicl/dualnumber.h"
+#include "metaphysicl/nddualnumber.h"
 #include "metaphysicl/numberarray.h"
+
+#include "DualNumberTypeVector.h"
+#include "DualNumberVectorValue.h"
+#include "DualNumberTypeTensor.h"
+#include "DualNumberTensorValue.h"
 
 // BOOST include
 #include "bitmask_operators.h"
@@ -77,6 +82,8 @@
  */
 template <typename>
 class MooseArray;
+class RankTwoTensor;
+class RankFourTensor;
 
 /**
  * MOOSE typedefs
@@ -157,17 +164,17 @@ typedef MooseArray<std::vector<VectorValue<Real>>> VectorVariableTestCurl;
  * DualNumber naming
  */
 #define AD_MAX_DOFS_PER_ELEM 100
-using MetaPhysicL::DualNumber;
+using MetaPhysicL::NDDualNumber;
 using MetaPhysicL::NumberArray;
 
 template <typename T>
-using ScalarDN = DualNumber<T, AD_MAX_DOFS_PER_ELEM>;
+using ScalarDN = NDDualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>>;
 template <typename T, template <class> class W>
-using TemplateDN = DualNumber<W<T>, AD_MAX_DOFS_PER_ELEM>;
+using TemplateDN = NDDualNumber<W<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, W<T>>>;
 template <typename T>
-using VectorDN = DualNumber<VectorValue<T>, AD_MAX_DOFS_PER_ELEM>;
+using VectorDN = NDDualNumber<VectorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<T>>>;
 template <typename T>
-using TensorDN = DualNumber<TensorValue<T>, AD_MAX_DOFS_PER_ELEM>;
+using TensorDN = NDDualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<T>>>;
 
 /*
  * Some helpful typedefs for AD
@@ -178,8 +185,10 @@ typedef TensorDN<Real> ADRealTensorValue;
 
 typedef ADRealVectorValue ADRealGradient;
 typedef ADRealTensorValue ADRealTensor;
-typedef DualNumber<RankTwoTensor, AD_MAX_DOFS_PER_ELEM> ADRankTwoTensor;
-typedef DualNumber<RankFourTensor, AD_MAX_DOFS_PER_ELEM> ADRankFourTensor;
+typedef NDDualNumber<RankTwoTensor, NumberArray<AD_MAX_DOFS_PER_ELEM, RankTwoTensor>>
+    ADRankTwoTensor;
+typedef NDDualNumber<RankFourTensor, NumberArray<AD_MAX_DOFS_PER_ELEM, RankFourTensor>>
+    ADRankFourTensor;
 
 typedef MooseArray<ADReal> ADVariableValue;
 typedef MooseArray<ADRealGradient> ADVariableGradient;

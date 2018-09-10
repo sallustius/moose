@@ -12,13 +12,17 @@
 #include "MooseTypes.h"
 #include <iostream>
 
+using MetaPhysicL::DualNumber;
+using MetaPhysicL::NDDualNumber;
+using MetaPhysicL::NumberArray;
+
 const double tol = 1e-8;
 
 TEST(DualNumberTypesTest, Test)
 {
-  DualNumber<Real, NumberArray<2, Real>> scalar_ad_prop;
-  DualNumber<VectorValue<Real>, NumberArray<2, VectorValue<Real>>> vector_ad_prop;
-  DualNumber<TensorValue<Real>, NumberArray<2, TensorValue<Real>>> tensor_ad_prop;
+  NDDualNumber<Real, NumberArray<2, Real>> scalar_ad_prop;
+  NDDualNumber<VectorValue<Real>, NumberArray<2, VectorValue<Real>>> vector_ad_prop;
+  NDDualNumber<TensorValue<Real>, NumberArray<2, TensorValue<Real>>> tensor_ad_prop;
 
   Real scalar_reg_prop;
   RealVectorValue vector_reg_prop;
@@ -280,9 +284,9 @@ TEST(DualNumberTypesTest, Test)
   EXPECT_NEAR(tensor_comparator(2, 2).derivatives()[0], -245160, tol);
   EXPECT_NEAR(tensor_comparator(2, 2).derivatives()[1], -326880, tol);
 
-  scalar_reg_prop = scalar_ad_prop;
-  vector_reg_prop = vector_ad_prop;
-  tensor_reg_prop = tensor_ad_prop;
+  scalar_reg_prop = scalar_ad_prop.value();
+  vector_reg_prop = vector_ad_prop.value();
+  tensor_reg_prop = tensor_ad_prop.value();
   EXPECT_NEAR(scalar_reg_prop, 768, tol);
   EXPECT_NEAR(vector_reg_prop(0), 25, tol);
   EXPECT_NEAR(vector_reg_prop(1), 52, tol);

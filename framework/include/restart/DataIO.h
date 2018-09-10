@@ -22,7 +22,7 @@
 #ifdef LIBMESH_HAVE_CXX11_TYPE_TRAITS
 #include <type_traits>
 #endif
-#include "metaphysicl/dualnumber.h"
+#include "metaphysicl/nddualnumber.h"
 #include "metaphysicl/numberarray.h"
 
 // C++ includes
@@ -36,6 +36,8 @@
 
 // Forward declarations
 class ColumnMajorMatrix;
+class RankTwoTensor;
+class RankFourTensor;
 namespace libMesh
 {
 template <typename T>
@@ -315,7 +317,7 @@ dataStore(std::ostream & stream, HashMap<T, U> & m, void * context)
 template <typename T>
 inline void
 dataStore(std::ostream & stream,
-          MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM> & dn,
+          MetaPhysicL::NDDualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
           void * context)
 {
   dataStore(stream, dn.value(), context);
@@ -509,7 +511,7 @@ dataLoad(std::istream & stream, HashMap<T, U> & m, void * context)
 template <typename T>
 inline void
 dataLoad(std::ostream & stream,
-         MetaPhysicL::DualNumber<T, AD_MAX_DOFS_PER_ELEM> & dn,
+         MetaPhysicL::NDDualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
          void * context)
 {
   dataLoad(stream, dn.value(), context);
