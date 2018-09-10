@@ -50,7 +50,7 @@ ADMatTypes::computeQpProperties()
   _tensor_ad_prop[_qp] = 2. * _tensor_ad_prop[_qp] + _tensor_ad_prop[_qp] * 2.;
   _tensor_ad_prop[_qp] = 2. * _tensor_ad_prop[_qp] - _tensor_ad_prop[_qp] * 2.;
 
-  _scalar_reg_prop[_qp] = _scalar_ad_prop[_qp];
-  _vector_reg_prop[_qp] = _vector_ad_prop[_qp];
-  _tensor_reg_prop[_qp] = _tensor_ad_prop[_qp];
+  _scalar_reg_prop[_qp] = _scalar_ad_prop[_qp].value();
+  _vector_reg_prop[_qp] = _vector_ad_prop[_qp].value();
+  _tensor_reg_prop[_qp] = _tensor_ad_prop[_qp].value();
 }

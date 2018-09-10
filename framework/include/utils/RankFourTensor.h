@@ -15,12 +15,14 @@
 #include "libmesh/tensor_value.h"
 #include "libmesh/libmesh.h"
 #include "libmesh/vector_value.h"
+#include "libmesh/tuple_of.h"
 
 #include <petscsys.h>
 
 using libMesh::Real;
 using libMesh::RealGradient;
 using libMesh::RealTensorValue;
+using libMesh::tuple_of;
 
 // Forward declarations
 class MooseEnum;
