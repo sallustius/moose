@@ -69,7 +69,7 @@ DynamicStressDivergenceTensors::computeQpResidual()
     residual += _stress[_qp].row(_component) * _grad_test[_i][_qp];
 
     if (_volumetric_locking_correction)
-      residual += _stress[_qp].tr() / 3.0 *
+      residual += _stress[_qp].trace() / 3.0 *
                   (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component));
   }
   else if (_dt > 0)
@@ -82,9 +82,9 @@ DynamicStressDivergenceTensors::computeQpResidual()
         (_alpha * _zeta[_qp] / _dt) * _stress_older[_qp].row(_component) * _grad_test[_i][_qp];
 
     if (_volumetric_locking_correction)
-      residual += (_stress[_qp].tr() * (1.0 + _alpha + (1.0 + _alpha) * _zeta[_qp] / _dt) -
-                   (_alpha + (1.0 + 2.0 * _alpha) * _zeta[_qp] / _dt) * _stress_old[_qp].tr() +
-                   (_alpha * _zeta[_qp] / _dt) * _stress_older[_qp].tr()) /
+      residual += (_stress[_qp].trace() * (1.0 + _alpha + (1.0 + _alpha) * _zeta[_qp] / _dt) -
+                   (_alpha + (1.0 + 2.0 * _alpha) * _zeta[_qp] / _dt) * _stress_old[_qp].trace() +
+                   (_alpha * _zeta[_qp] / _dt) * _stress_older[_qp].trace()) /
                   3.0 * (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component));
   }
 

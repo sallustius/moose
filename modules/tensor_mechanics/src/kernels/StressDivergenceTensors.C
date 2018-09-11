@@ -144,7 +144,7 @@ StressDivergenceTensors::computeQpResidual()
   Real residual = _stress[_qp].row(_component) * _grad_test[_i][_qp];
   // volumetric locking correction
   if (_volumetric_locking_correction)
-    residual += _stress[_qp].tr() / 3.0 *
+    residual += _stress[_qp].trace() / 3.0 *
                 (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component));
 
   return residual;
@@ -248,7 +248,7 @@ StressDivergenceTensors::computeQpJacobian()
       phi(1, 2) = phi(2, 1) = _grad_phi[_j][_qp](1);
     }
 
-    jacobian += (_Jacobian_mult[_qp] * phi).tr() *
+    jacobian += (_Jacobian_mult[_qp] * phi).trace() *
                 (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
   }
   return jacobian;
@@ -306,7 +306,7 @@ StressDivergenceTensors::computeQpOffDiagJacobian(unsigned int jvar)
         for (unsigned int i = 0; i < 3; ++i)
           phi(coupled_component, i) = _grad_phi[_j][_qp](i);
 
-        jacobian += (_Jacobian_mult[_qp] * phi).tr() *
+        jacobian += (_Jacobian_mult[_qp] * phi).trace() *
                     (_avg_grad_test[_i][_component] - _grad_test[_i][_qp](_component)) / 3.0;
       }
 

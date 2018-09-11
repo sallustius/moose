@@ -158,7 +158,7 @@ ComputeFiniteStrain::computeQpIncrements(RankTwoTensor & total_strain_increment,
                          invFhat(0, 1) - invFhat(1, 0)};
 
       Real q = (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]) / 4.0;
-      Real trFhatinv_1 = invFhat.tr() - 1.0;
+      Real trFhatinv_1 = invFhat.trace() - 1.0;
       const Real p = trFhatinv_1 * trFhatinv_1 / 4.0;
 
       // cos theta_a

@@ -93,7 +93,7 @@ PorousFlowVolumetricStrain::computeQpProperties()
                      (*_grad_disp_old[1])[_qp],
                      (*_grad_disp_old[2])[_qp]); // Old Deformation gradient
 
-  _vol_total_strain_qp[_qp] = A.tr();
+  _vol_total_strain_qp[_qp] = A.trace();
 
   A -= Fbar; // A = grad_disp - grad_disp_old
 
@@ -101,7 +101,7 @@ PorousFlowVolumetricStrain::computeQpProperties()
   const Real andy = (_consistent ? 1.0 + (*_grad_disp_old[0])[_qp](0) +
                                        (*_grad_disp_old[1])[_qp](1) + (*_grad_disp_old[2])[_qp](2)
                                  : 1.0);
-  _vol_strain_rate_qp[_qp] = total_strain_increment.tr() / _dt / andy;
+  _vol_strain_rate_qp[_qp] = total_strain_increment.trace() / _dt / andy;
 
   // prepare the derivatives with zeroes
   _dvol_strain_rate_qp_dvar[_qp].resize(_num_var, RealGradient());

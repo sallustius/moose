@@ -86,7 +86,7 @@ TensorMechanicsPlasticTensile::TensorMechanicsPlasticTensile(const InputParamete
 Real
 TensorMechanicsPlasticTensile::yieldFunction(const RankTwoTensor & stress, Real intnl) const
 {
-  Real mean_stress = stress.tr() / 3.0;
+  Real mean_stress = stress.trace() / 3.0;
   Real sin3Lode = stress.sin3Lode(_lode_cutoff, 0);
   if (sin3Lode <= _sin3tt)
   {
@@ -110,7 +110,7 @@ RankTwoTensor
 TensorMechanicsPlasticTensile::dyieldFunction_dstress(const RankTwoTensor & stress,
                                                       Real /*intnl*/) const
 {
-  Real mean_stress = stress.tr() / 3.0;
+  Real mean_stress = stress.trace() / 3.0;
   RankTwoTensor dmean_stress = stress.dtrace() / 3.0;
   Real sin3Lode = stress.sin3Lode(_lode_cutoff, 0);
   if (sin3Lode <= _sin3tt)
@@ -158,7 +158,7 @@ RankFourTensor
 TensorMechanicsPlasticTensile::dflowPotential_dstress(const RankTwoTensor & stress,
                                                       Real /*intnl*/) const
 {
-  Real mean_stress = stress.tr() / 3.0;
+  Real mean_stress = stress.trace() / 3.0;
   RankTwoTensor dmean_stress = stress.dtrace() / 3.0;
   Real sin3Lode = stress.sin3Lode(_lode_cutoff, 0);
   if (sin3Lode <= _sin3tt)
@@ -256,7 +256,7 @@ TensorMechanicsPlasticTensile::smooth(const RankTwoTensor & stress) const
   Real smoother2 = _small_smoother2;
   if (_tip_scheme == "cap")
   {
-    Real x = stress.tr() / 3.0 - _cap_start;
+    Real x = stress.trace() / 3.0 - _cap_start;
     Real p = 0;
     if (x > 0)
       p = x * (1 - std::exp(-_cap_rate * x));
@@ -271,7 +271,7 @@ TensorMechanicsPlasticTensile::dsmooth(const RankTwoTensor & stress) const
   Real dsmoother2 = 0;
   if (_tip_scheme == "cap")
   {
-    Real x = stress.tr() / 3.0 - _cap_start;
+    Real x = stress.trace() / 3.0 - _cap_start;
     Real p = 0;
     Real dp_dx = 0;
     if (x > 0)
@@ -290,7 +290,7 @@ TensorMechanicsPlasticTensile::d2smooth(const RankTwoTensor & stress) const
   Real d2smoother2 = 0;
   if (_tip_scheme == "cap")
   {
-    Real x = stress.tr() / 3.0 - _cap_start;
+    Real x = stress.trace() / 3.0 - _cap_start;
     Real p = 0;
     Real dp_dx = 0;
     Real d2p_dx2 = 0;
