@@ -233,6 +233,9 @@ public:
   /// returns A_ij - de_ij*tr(A)/3, where A are the _coords
   RankTwoTensor deviatoric() const;
 
+  /// returns the trace of the tensor, ie _coords[i][i] (sum i = 0, 1, 2)
+  Real trace() const;
+
   /// retuns the inverse of the tensor
   RankTwoTensor inverse() const;
 
