@@ -107,11 +107,10 @@ Coupleable::~Coupleable()
       delete itt;
     }
   for (auto & it : _ad_default_value)
-    for (auto itt : it.second)
-    {
-      itt->release();
-      delete itt;
-    }
+  {
+    it.second->release();
+    delete it.second;
+  }
 
   _default_value_zero.release();
   _default_gradient.release();
