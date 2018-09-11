@@ -63,7 +63,7 @@ TensorMechanicsPlasticDruckerPragerHyperbolic::yieldFunction(const RankTwoTensor
   Real aaa;
   Real bbb;
   bothAB(intnl, aaa, bbb);
-  return std::sqrt(stress.secondInvariant() + _smoother2) + stress.tr() * bbb - aaa;
+  return std::sqrt(stress.secondInvariant() + _smoother2) + stress.trace() * bbb - aaa;
 }
 
 RankTwoTensor
@@ -129,7 +129,7 @@ TensorMechanicsPlasticDruckerPragerHyperbolic::returnMap(const RankTwoTensor & t
   const Real mu = E_ijkl(0, 1, 0, 1);
   const Real lambda = E_ijkl(0, 0, 0, 0) - 2.0 * mu;
   const Real bulky = 3.0 * lambda + 2.0 * mu;
-  const Real Tr_trial = trial_stress.tr();
+  const Real Tr_trial = trial_stress.trace();
   const Real J2trial = trial_stress.secondInvariant();
 
   // Perform a Newton-Raphson to find dpm when
