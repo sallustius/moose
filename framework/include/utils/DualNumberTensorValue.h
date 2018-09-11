@@ -9,47 +9,47 @@
 #include "metaphysicl/compare_types.h"
 #include "metaphysicl/nddualnumber.h"
 
-using MetaPhysicL::DualNumber;
-using MetaPhysicL::NotADuckDualNumber;
+namespace MetaPhysicL
+{
 
 template <typename T, bool reverseorder>
-struct MetaPhysicL::PlusType<libMesh::TensorValue<T>, libMesh::TensorValue<T>, reverseorder>
+struct PlusType<libMesh::TensorValue<T>, libMesh::TensorValue<T>, reverseorder>
 {
   typedef libMesh::TensorValue<T> supertype;
 };
 
 template <typename T, bool reverseorder>
-struct MetaPhysicL::MinusType<libMesh::TensorValue<T>, libMesh::TensorValue<T>, reverseorder>
+struct MinusType<libMesh::TensorValue<T>, libMesh::TensorValue<T>, reverseorder>
 {
   typedef libMesh::TensorValue<T> supertype;
 };
 
 template <typename T, bool reverseorder>
-struct MetaPhysicL::MultipliesType<libMesh::TensorValue<T>, libMesh::TensorValue<T>, reverseorder>
+struct MultipliesType<libMesh::TensorValue<T>, libMesh::TensorValue<T>, reverseorder>
 {
   typedef libMesh::TensorValue<T> supertype;
 };
 
 template <typename T, bool reverseorder>
-struct MetaPhysicL::MultipliesType<Real, libMesh::TensorValue<T>, reverseorder>
+struct MultipliesType<Real, libMesh::TensorValue<T>, reverseorder>
 {
   typedef libMesh::TensorValue<T> supertype;
 };
 
 template <typename T>
-struct MetaPhysicL::MultipliesType<libMesh::TensorValue<T>, libMesh::TypeVector<T>>
+struct MultipliesType<libMesh::TensorValue<T>, libMesh::TypeVector<T>>
 {
   typedef libMesh::TypeVector<T> supertype;
 };
 
 template <typename T>
-struct MetaPhysicL::MultipliesType<libMesh::TensorValue<T>, libMesh::VectorValue<T>>
+struct MultipliesType<libMesh::TensorValue<T>, libMesh::VectorValue<T>>
 {
   typedef libMesh::TypeVector<T> supertype;
 };
 
 template <typename T>
-struct MetaPhysicL::DividesType<libMesh::TensorValue<T>, Real>
+struct DividesType<libMesh::TensorValue<T>, Real>
 {
   typedef libMesh::TensorValue<T> supertype;
 };
@@ -68,5 +68,6 @@ public:
   {
   }
 };
+}
 #endif
 #endif

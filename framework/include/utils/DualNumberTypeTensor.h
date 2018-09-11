@@ -8,41 +8,45 @@
 #include "libmesh/type_tensor.h"
 #include "metaphysicl/compare_types.h"
 
+namespace MetaPhysicL
+{
+
 template <typename T, bool reverseorder>
-struct MetaPhysicL::PlusType<libMesh::TypeTensor<T>, libMesh::TypeTensor<T>, reverseorder>
+struct PlusType<libMesh::TypeTensor<T>, libMesh::TypeTensor<T>, reverseorder>
 {
   typedef libMesh::TypeTensor<T> supertype;
 };
 
 template <typename T, bool reverseorder>
-struct MetaPhysicL::MinusType<libMesh::TypeTensor<T>, libMesh::TypeTensor<T>, reverseorder>
+struct MinusType<libMesh::TypeTensor<T>, libMesh::TypeTensor<T>, reverseorder>
 {
   typedef libMesh::TypeTensor<T> supertype;
 };
 
 template <typename T, bool reverseorder>
-struct MetaPhysicL::MultipliesType<libMesh::TypeTensor<T>, libMesh::TypeTensor<T>, reverseorder>
+struct MultipliesType<libMesh::TypeTensor<T>, libMesh::TypeTensor<T>, reverseorder>
 {
   typedef libMesh::TypeTensor<T> supertype;
 };
 
 template <typename T, bool reverseorder>
-struct MetaPhysicL::MultipliesType<Real, libMesh::TypeTensor<T>, reverseorder>
+struct MultipliesType<Real, libMesh::TypeTensor<T>, reverseorder>
 {
   typedef libMesh::TypeTensor<T> supertype;
 };
 
 template <typename T>
-struct MetaPhysicL::MultipliesType<libMesh::TypeTensor<T>, libMesh::TypeVector<T>>
+struct MultipliesType<libMesh::TypeTensor<T>, libMesh::TypeVector<T>>
 {
   typedef libMesh::TypeVector<T> supertype;
 };
 
 template <typename T>
-struct MetaPhysicL::DividesType<libMesh::TypeTensor<T>, Real>
+struct DividesType<libMesh::TypeTensor<T>, Real>
 {
   typedef libMesh::TypeTensor<T> supertype;
 };
+}
 
 #endif
 #endif
