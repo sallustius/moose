@@ -103,22 +103,16 @@ dataStore(std::ostream & stream, RealTensorValue & v, void * /*context*/)
 
 template <>
 void
-dataStore(std::ostream & stream, RankTwoTensor & v, void * /*context*/)
+dataStore(std::ostream & stream, RankTwoTensor & rtt, void * context)
 {
-  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
-    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
-      stream.write((char *)&v(i, j), sizeof(v(i, j)));
+  dataStore(stream, rtt._coords, context);
 }
 
 template <>
 void
-dataStore(std::ostream & stream, RankFourTensor & v, void * /*context*/)
+dataStore(std::ostream & stream, RankFourTensor & rft, void * context)
 {
-  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
-    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
-      for (unsigned int k = 0; k < LIBMESH_DIM; k++)
-        for (unsigned int l = 0; l < LIBMESH_DIM; l++)
-          stream.write((char *)&v(i, j, k, l), sizeof(v(i, j, k, l)));
+  dataStore(stream, rft._vals, context);
 }
 
 template <>
@@ -320,34 +314,16 @@ dataLoad(std::istream & stream, RealTensorValue & v, void * /*context*/)
 
 template <>
 void
-dataLoad(std::istream & stream, RankTwoTensor & v, void * /*context*/)
+dataLoad(std::istream & stream, RankTwoTensor & rtt, void * context)
 {
-  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
-  // won't work.
-  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
-    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
-    {
-      Real r = 0;
-      stream.read((char *)&r, sizeof(r));
-      v(i, j) = r;
-    }
+  dataLoad(stream, rtt._coords, context);
 }
 
 template <>
 void
-dataLoad(std::istream & stream, RankFourTensor & v, void * /*context*/)
+dataLoad(std::istream & stream, RankFourTensor & rft, void * context)
 {
-  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
-  // won't work.
-  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
-    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
-      for (unsigned int k = 0; k < LIBMESH_DIM; k++)
-        for (unsigned int l = 0; l < LIBMESH_DIM; l++)
-        {
-          Real r = 0;
-          stream.read((char *)&r, sizeof(r));
-          v(i, j, k, l) = r;
-        }
+  dataLoad(stream, rft._vals, context);
 }
 
 template <>

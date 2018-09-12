@@ -11,7 +11,6 @@
 #define RANKTWOTENSOR_H
 
 #include "Moose.h"
-#include "RankFourTensor.h"
 
 // Any requisite includes here
 #include "libmesh/libmesh.h"
@@ -23,6 +22,8 @@
 
 // Forward declarations
 class RankTwoTensor;
+class RankFourTensor;
+class MooseEnum;
 template <typename T>
 class MooseArray;
 typedef MooseArray<Real> VariableValue;
@@ -425,6 +426,11 @@ private:
   static constexpr unsigned int N = LIBMESH_DIM;
   static constexpr unsigned int N2 = N * N;
 
+  template <class T>
+  friend void dataStore(std::ostream &, T &, void *);
+
+  template <class T>
+  friend void dataLoad(std::istream &, T &, void *);
   friend class RankFourTensor;
   friend class RankThreeTensor;
 };

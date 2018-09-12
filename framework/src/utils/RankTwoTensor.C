@@ -15,6 +15,7 @@
 #include "MooseUtils.h"
 #include "ColumnMajorMatrix.h"
 #include "MooseRandom.h"
+#include "RankFourTensor.h"
 
 #include "Conversion.h"
 
