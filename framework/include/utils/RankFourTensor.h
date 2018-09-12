@@ -333,6 +333,11 @@ protected:
    */
 
   void fillPrincipalFromInputVector(const std::vector<Real> & input);
+  template <class T>
+  friend void dataStore(std::ostream &, T &, void *);
+
+  template <class T>
+  friend void dataLoad(std::istream &, T &, void *);
 
   friend class RankTwoTensor;
   friend class RankThreeTensor;
