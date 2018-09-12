@@ -10,6 +10,7 @@
 #include "gtest/gtest.h"
 
 #include "RankTwoTensor.h"
+#include "RankFourTensor.h"
 
 TEST(RankTwoEigenRoutines, symmetricEigenvalues)
 {

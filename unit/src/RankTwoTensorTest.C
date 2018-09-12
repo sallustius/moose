@@ -9,6 +9,7 @@
 
 #include "RankTwoTensorTest.h"
 #include "RankTwoScalarTools.h"
+#include "RankFourTensor.h"
 
 TEST_F(RankTwoTensorTest, L2norm)
 {
