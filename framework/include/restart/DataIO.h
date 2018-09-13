@@ -510,14 +510,14 @@ dataLoad(std::istream & stream, HashMap<T, U> & m, void * context)
 
 template <typename T>
 inline void
-dataLoad(std::ostream & stream,
+dataLoad(std::istream & stream,
          MetaPhysicL::NDDualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
          void * context)
 {
   dataLoad(stream, dn.value(), context);
 
-  for (auto & derivative : dn.derivatives())
-    dataLoad(stream, derivative, context);
+  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
+    dataLoad(stream, dn.derivatives()[i], context);
 }
 
 // Specializations (defined in .C)
