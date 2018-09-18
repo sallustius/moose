@@ -17,16 +17,17 @@
 // libmesh includes
 #include "libmesh/threads.h"
 
-template <>
+template <ComputeStage compute_stage>
 InputParameters
-validParams<ADKernel>()
+validParams<ADKernel<compute_stage>>()
 {
   InputParameters params = validParams<KernelBase>();
   params.registerBase("Kernel");
   return params;
 }
 
-ADKernel::ADKernel(const InputParameters & parameters)
+template <ComputeStage compute_stage>
+ADKernel<compute_stage>::ADKernel(const InputParameters & parameters)
   : KernelBase(parameters),
     MooseVariableInterface<Real>(this,
                                  false,
@@ -37,8 +38,8 @@ ADKernel::ADKernel(const InputParameters & parameters)
     _test(_var.phi()),
     _grad_test(_var.gradPhi()),
     _phi(_assembly.phi(_var)),
-    _u(_var.adSln()),
-    _grad_u(_var.adGradSln()),
+    _u(_var.adSln<compute_stage>()),
+    _grad_u(_var.adGradSln<compute_stage>()),
     _u_dot(_var.uDot()),
     _du_dot_du(_var.duDotDu())
 {
@@ -87,10 +88,14 @@ ADKernel::ADKernel(const InputParameters & parameters)
   _has_diag_save_in = _diag_save_in.size() > 0;
 }
 
-ADKernel::~ADKernel() {}
+template <ComputeStage compute_stage>
+ADKernel<compute_stage>::~ADKernel()
+{
+}
 
+template <ComputeStage compute_stage>
 void
-ADKernel::computeResidual()
+ADKernel<compute_stage>::computeResidual()
 {
   DenseVector<Number> & re = _assembly.residualBlock(_var.number());
   _local_re.resize(re.size());
@@ -110,8 +115,9 @@ ADKernel::computeResidual()
   }
 }
 
+template <ComputeStage compute_stage>
 void
-ADKernel::computeJacobian()
+ADKernel<compute_stage>::computeJacobian()
 {
   DenseMatrix<Number> & ke = _assembly.jacobianBlock(_var.number(), _var.number());
   _local_ke.resize(ke.m(), ke.n());
@@ -145,8 +151,9 @@ ADKernel::computeJacobian()
   }
 }
 
+template <ComputeStage compute_stage>
 void
-ADKernel::computeOffDiagJacobian(MooseVariableFEBase & jvar)
+ADKernel<compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
 {
   auto jvar_num = jvar.number();
 
@@ -172,8 +179,9 @@ ADKernel::computeOffDiagJacobian(MooseVariableFEBase & jvar)
   }
 }
 
+template <ComputeStage compute_stage>
 void
-ADKernel::computeOffDiagJacobianScalar(unsigned int /*jvar*/)
+ADKernel<compute_stage>::computeOffDiagJacobianScalar(unsigned int /*jvar*/)
 {
   /*
   DenseMatrix<Number> & ke = _assembly.jacobianBlock(_var.number(), jvar);

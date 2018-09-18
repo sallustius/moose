@@ -61,9 +61,13 @@ protected:
 
   ///@{
   /// Reference to Kernel storage structures
-  MooseObjectTagWarehouse<KernelBase> & _kernels;
+  const MooseObjectTagWarehouse<KernelBase> & _kernels;
 
   MooseObjectWarehouse<KernelBase> * _tag_kernels;
+
+  const MooseObjectTagWarehouse<ADKernel<RESIDUAL>> & _ad_residual_kernels;
+
+  MooseObjectWarehouse<ADKernel<RESIDUAL>> * _tag_ad_residual_kernels;
   ///@}
 };
 

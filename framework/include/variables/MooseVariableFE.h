@@ -323,16 +323,33 @@ public:
     return _curl_u_older;
   }
 
+  template <ComputeStage compute_stage>
   const ADVariableValue & adSln()
   {
     _need_ad_u = true;
     return _ad_u;
   }
+  template <>
+  const VariableValue & adSln<RESIDUAL>()
+  {
+    _need_ad_u = true;
+    return _ad_u.value();
+  }
+
+  template <ComputeStage compute_stage>
   const ADVariableGradient & adGradSln()
   {
     _need_ad_grad_u = true;
     return _ad_grad_u;
   }
+  template <>
+  const VariableGradient & adGradSln<RESIDUAL>()
+  {
+    _need_ad_grad_u = true;
+    return _ad_grad_u.value();
+  }
+
+  template <ComputeStage compute_stage>
   const ADVariableSecond & adSecondSln()
   {
     _need_ad_second_u = true;
@@ -340,21 +357,54 @@ public:
     secondPhiFace();
     return _ad_second_u;
   }
+  template <>
+  const VariableSecond & adSecondSln<RESIDUAL>()
+  {
+    _need_ad_second_u = true;
+    secondPhi();
+    secondPhiFace();
+    return _ad_second_u.value();
+  }
+
+  template <ComputeStage compute_stage>
   const ADVariableValue & adSlnNeighbor()
   {
     _need_neighbor_ad_u = true;
     return _neighbor_ad_u;
   }
+  template <>
+  const VariableValue & adSlnNeighbor<RESIDUAL>()
+  {
+    _need_neighbor_ad_u = true;
+    return _neighbor_ad_u.value();
+  }
+
+  template <ComputeStage compute_stage>
   const ADVariableGradient & adGradSlnNeighbor()
   {
     _need_neighbor_ad_grad_u = true;
     return _neighbor_ad_grad_u;
   }
+  template <>
+  const VariableGradient & adGradSlnNeighbor<RESIDUAL>()
+  {
+    _need_neighbor_ad_grad_u = true;
+    return _neighbor_ad_grad_u.value();
+  }
+
+  template <ComputeStage compute_stage>
   const ADVariableSecond & adSecondSlnNeighbor()
   {
     _need_neighbor_ad_second_u = true;
     secondPhiFaceNeighbor();
     return _neighbor_ad_second_u;
+  }
+  template <>
+  const VariableSecond & adSecondSlnNeighbor<RESIDUAL>()
+  {
+    _need_neighbor_ad_second_u = true;
+    secondPhiFaceNeighbor();
+    return _neighbor_ad_second_u.value();
   }
 
   const FieldVariableValue & uDot() { return _u_dot; }
