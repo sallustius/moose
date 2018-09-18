@@ -196,6 +196,56 @@ typedef MooseArray<ADRealTensor> ADVariableSecond;
 
 namespace Moose
 {
+enum ComputeStage
+{
+  RESIDUAL,
+  JACOBIAN
+};
+}
+
+template <ComputeStage compute_stage>
+struct VariableValueType
+{
+  typedef VariableValue type;
+};
+template <>
+struct VariableValueType<JACOBIAN>
+{
+  typedef ADVariableValue type;
+};
+template <ComputeStage compute_stage>
+struct VariableGradientType
+{
+  typedef VariableGradient type;
+};
+template <>
+struct VariableGradientType<JACOBIAN>
+{
+  typedef ADVariableGradient type;
+};
+template <ComputeStage compute_stage>
+struct VariableSecondType
+{
+  typedef VariableSecond type;
+};
+template <>
+struct VariableSecondType<JACOBIAN>
+{
+  typedef ADVariableSecond type;
+};
+template <ComputeStage compute_stage>
+struct ResidualReturnType
+{
+  typedef Real type;
+};
+template <>
+struct ResidualReturnType<JACOBIAN>
+{
+  typedef ADReal type;
+};
+
+namespace Moose
+{
 const SubdomainID ANY_BLOCK_ID = libMesh::Elem::invalid_subdomain_id - 1;
 const SubdomainID INVALID_BLOCK_ID = libMesh::Elem::invalid_subdomain_id;
 const BoundaryID ANY_BOUNDARY_ID = static_cast<BoundaryID>(-1);

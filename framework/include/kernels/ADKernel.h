@@ -14,9 +14,10 @@
 
 class ADKernel;
 
-template <>
-InputParameters validParams<ADKernel>();
+template <ComputeStage compute_stage>
+InputParameters validParams<ADKernel<compute_stage>>();
 
+template <ComputeStage compute_stage>
 class ADKernel : public KernelBase, public MooseVariableInterface<Real>
 {
 public:
@@ -34,7 +35,7 @@ public:
 
 protected:
   /// Compute this Kernel's contribution to the residual at the current quadrature point
-  virtual ADReal computeQpResidual() = 0;
+  virtual typename ResidualReturnType<compute_stage>::type computeQpResidual() = 0;
 
   /// This is a regular kernel so we cast to a regular MooseVariable
   MooseVariable & _var;
@@ -49,10 +50,10 @@ protected:
   const VariablePhiValue & _phi;
 
   /// Holds the solution at current quadrature points
-  const ADVariableValue & _u;
+  const typename VariableValueType<compute_stage>::type & _u;
 
   /// Holds the solution gradient at the current quadrature points
-  const ADVariableGradient & _grad_u;
+  const typename VariableValueGradient<compute_stage>::type & _grad_u;
 
   /// Time derivative of u
   const VariableValue & _u_dot;

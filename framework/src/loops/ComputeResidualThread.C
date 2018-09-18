@@ -30,7 +30,8 @@ ComputeResidualThread::ComputeResidualThread(FEProblemBase & fe_problem,
     _integrated_bcs(_nl.getIntegratedBCWarehouse()),
     _dg_kernels(_nl.getDGKernelWarehouse()),
     _interface_kernels(_nl.getInterfaceKernelWarehouse()),
-    _kernels(_nl.getKernelWarehouse())
+    _kernels(_nl.getKernelWarehouse()),
+    _ad_residual_kernels(_nl.getADResidualKernelWarehouse())
 {
 }
 
@@ -44,7 +45,9 @@ ComputeResidualThread::ComputeResidualThread(ComputeResidualThread & x, Threads:
     _dg_kernels(x._dg_kernels),
     _interface_kernels(x._interface_kernels),
     _kernels(x._kernels),
-    _tag_kernels(x._tag_kernels)
+    _tag_kernels(x._tag_kernels),
+    _ad_residual_kernels(x._ad_residual_kernels),
+    _tag_ad_residual_kernels(x._tag_ad_residual_kernels)
 {
 }
 
@@ -76,14 +79,24 @@ ComputeResidualThread::subdomainChanged()
   // If users pass a empty vector or a full size of vector,
   // we take all kernels
   if (!_tags.size() || _tags.size() == _fe_problem.numVectorTags())
+  {
     _tag_kernels = &_kernels;
+    _tag_ad_residual_kernels = &_ad_residual_kernels;
+  }
   // If we have one tag only,
   // We call tag based storage
   else if (_tags.size() == 1)
+  {
     _tag_kernels = &(_kernels.getVectorTagObjectWarehouse(*(_tags.begin()), _tid));
+    _tag_ad_residual_kernels =
+        &(_ad_residual_kernels.getVectorTagObjectWarehouse(*(_tags.begin()), _tid));
+  }
   // This one may be expensive
   else
+  {
     _tag_kernels = &(_kernels.getVectorTagsObjectWarehouse(_tags, _tid));
+    _tag_ad_residual_kernels = &(_ad_residual_kernels.getVectorTagsObjectWarehouse(_tags, _tid));
+  }
 }
 
 void
@@ -101,6 +114,12 @@ ComputeResidualThread::onElement(const Elem * elem)
   if (_tag_kernels->hasActiveBlockObjects(_subdomain, _tid))
   {
     const auto & kernels = _tag_kernels->getActiveBlockObjects(_subdomain, _tid);
+    for (const auto & kernel : kernels)
+      kernel->computeResidual();
+  }
+  if (_tag_ad_residual_kernels->hasActiveBlockObjects(_subdomain, _tid))
+  {
+    const auto & kernels = _tag_ad_residual_kernels->getActiveBlockObjects(_subdomain, _tid);
     for (const auto & kernel : kernels)
       kernel->computeResidual();
   }
