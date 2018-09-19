@@ -194,14 +194,11 @@ typedef MooseArray<ADReal> ADVariableValue;
 typedef MooseArray<ADRealGradient> ADVariableGradient;
 typedef MooseArray<ADRealTensor> ADVariableSecond;
 
-namespace Moose
-{
 enum ComputeStage
 {
   RESIDUAL,
   JACOBIAN
 };
-}
 
 template <ComputeStage compute_stage>
 struct VariableValueType

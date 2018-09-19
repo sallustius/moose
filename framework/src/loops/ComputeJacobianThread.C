@@ -31,7 +31,6 @@ ComputeJacobianThread::ComputeJacobianThread(FEProblemBase & fe_problem,
     _dg_kernels(_nl.getDGKernelWarehouse()),
     _interface_kernels(_nl.getInterfaceKernelWarehouse()),
     _kernels(_nl.getKernelWarehouse()),
-    _ad_jacobian_kernels(_nl.getADJacobianKernelWarehouse()),
     _tags(tags)
 {
 }
@@ -46,8 +45,6 @@ ComputeJacobianThread::ComputeJacobianThread(ComputeJacobianThread & x, Threads:
     _interface_kernels(x._interface_kernels),
     _kernels(x._kernels),
     _warehouse(x._warehouse),
-    _ad_jacobian_kernels(x._ad_jacobian_kernels),
-    _tag_ad_jacobian_kernels(x._tag_ad_jacobian_kernels),
     _tags(x._tags)
 {
 }

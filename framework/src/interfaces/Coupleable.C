@@ -342,41 +342,6 @@ Coupleable::coupledValue(const std::string & var_name, unsigned int comp)
   }
 }
 
-const ADVariableValue &
-Coupleable::adCoupledValue(const std::string & var_name, unsigned int comp)
-{
-  if (!isCoupled(var_name))
-    return *getADDefaultValue(var_name);
-
-  coupledCallback(var_name, false);
-  MooseVariable * var = getVar(var_name, comp);
-
-  if (!_coupleable_neighbor)
-  {
-    if (_c_nodal)
-      mooseError("Not implemented");
-    else
-    {
-      if (_c_is_implicit)
-        return var->adSln();
-      else
-        mooseError("Not implemented");
-    }
-  }
-  else
-  {
-    if (_c_nodal)
-      mooseError("Not implemented");
-    else
-    {
-      if (_c_is_implicit)
-        return var->adSlnNeighbor();
-      else
-        mooseError("Not implemented");
-    }
-  }
-}
-
 const VariableValue &
 Coupleable::coupledVectorTagValue(const std::string & var_name, TagID tag, unsigned int comp)
 {
@@ -724,34 +689,6 @@ Coupleable::coupledGradient(const std::string & var_name, unsigned int comp)
     return (_c_is_implicit) ? var->gradSln() : var->gradSlnOld();
   else
     return (_c_is_implicit) ? var->gradSlnNeighbor() : var->gradSlnOldNeighbor();
-}
-
-const ADVariableGradient &
-Coupleable::adCoupledGradient(const std::string & var_name, unsigned int comp)
-{
-  if (!isCoupled(var_name)) // Return default 0
-    return _ad_default_gradient;
-
-  coupledCallback(var_name, false);
-  if (_c_nodal)
-    mooseError("Nodal variables do not have gradients");
-
-  MooseVariable * var = getVar(var_name, comp);
-
-  if (!_coupleable_neighbor)
-  {
-    if (_c_is_implicit)
-      return var->adGradSln();
-    else
-      mooseError("Not implemented");
-  }
-  else
-  {
-    if (_c_is_implicit)
-      return var->adGradSlnNeighbor();
-    else
-      mooseError("Not implemented");
-  }
 }
 
 const VariableGradient &

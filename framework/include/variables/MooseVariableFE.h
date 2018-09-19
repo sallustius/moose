@@ -324,87 +324,48 @@ public:
   }
 
   template <ComputeStage compute_stage>
-  const ADVariableValue & adSln()
+  const typename VariableValueType<compute_stage>::type & adSln()
   {
     _need_ad_u = true;
     return _ad_u;
   }
-  template <>
-  const VariableValue & adSln<RESIDUAL>()
-  {
-    _need_ad_u = true;
-    return _ad_u.value();
-  }
 
   template <ComputeStage compute_stage>
-  const ADVariableGradient & adGradSln()
+  const typename VariableGradientType<compute_stage>::type & adGradSln()
   {
     _need_ad_grad_u = true;
     return _ad_grad_u;
   }
-  template <>
-  const VariableGradient & adGradSln<RESIDUAL>()
-  {
-    _need_ad_grad_u = true;
-    return _ad_grad_u.value();
-  }
 
   template <ComputeStage compute_stage>
-  const ADVariableSecond & adSecondSln()
+  const typename VariableSecondType<compute_stage>::type & adSecondSln()
   {
     _need_ad_second_u = true;
     secondPhi();
     secondPhiFace();
     return _ad_second_u;
   }
-  template <>
-  const VariableSecond & adSecondSln<RESIDUAL>()
-  {
-    _need_ad_second_u = true;
-    secondPhi();
-    secondPhiFace();
-    return _ad_second_u.value();
-  }
 
   template <ComputeStage compute_stage>
-  const ADVariableValue & adSlnNeighbor()
+  const typename VariableValueType<compute_stage>::type & adSlnNeighbor()
   {
     _need_neighbor_ad_u = true;
     return _neighbor_ad_u;
   }
-  template <>
-  const VariableValue & adSlnNeighbor<RESIDUAL>()
-  {
-    _need_neighbor_ad_u = true;
-    return _neighbor_ad_u.value();
-  }
 
   template <ComputeStage compute_stage>
-  const ADVariableGradient & adGradSlnNeighbor()
+  const typename VariableGradientType<compute_stage>::type & adGradSlnNeighbor()
   {
     _need_neighbor_ad_grad_u = true;
     return _neighbor_ad_grad_u;
   }
-  template <>
-  const VariableGradient & adGradSlnNeighbor<RESIDUAL>()
-  {
-    _need_neighbor_ad_grad_u = true;
-    return _neighbor_ad_grad_u.value();
-  }
 
   template <ComputeStage compute_stage>
-  const ADVariableSecond & adSecondSlnNeighbor()
+  const typename VariableSecondType<compute_stage>::type & adSecondSlnNeighbor()
   {
     _need_neighbor_ad_second_u = true;
     secondPhiFaceNeighbor();
     return _neighbor_ad_second_u;
-  }
-  template <>
-  const VariableSecond & adSecondSlnNeighbor<RESIDUAL>()
-  {
-    _need_neighbor_ad_second_u = true;
-    secondPhiFaceNeighbor();
-    return _neighbor_ad_second_u.value();
   }
 
   const FieldVariableValue & uDot() { return _u_dot; }
@@ -853,5 +814,62 @@ protected:
   friend class ValueThresholdMarker;
   friend class ValueRangeMarker;
 };
+
+template <>
+template <>
+const VariableValue &
+MooseVariableFE<Real>::adSln<RESIDUAL>()
+{
+  _need_ad_u = true;
+  return _u;
+}
+
+template <>
+template <>
+const VariableGradient &
+MooseVariableFE<Real>::adGradSln<RESIDUAL>()
+{
+  _need_ad_grad_u = true;
+  return _grad_u;
+}
+
+template <>
+template <>
+const VariableSecond &
+MooseVariableFE<Real>::adSecondSln<RESIDUAL>()
+{
+  _need_ad_second_u = true;
+  secondPhi();
+  secondPhiFace();
+  return _second_u;
+}
+
+template <>
+template <>
+const VariableValue &
+MooseVariableFE<Real>::adSlnNeighbor<RESIDUAL>()
+{
+  _need_neighbor_ad_u = true;
+  return _u_neighbor;
+}
+
+template <>
+template <>
+const VariableGradient &
+MooseVariableFE<Real>::adGradSlnNeighbor<RESIDUAL>()
+{
+  _need_neighbor_ad_grad_u = true;
+  return _grad_u_neighbor;
+}
+
+template <>
+template <>
+const VariableSecond &
+MooseVariableFE<Real>::adSecondSlnNeighbor<RESIDUAL>()
+{
+  _need_neighbor_ad_second_u = true;
+  secondPhiFaceNeighbor();
+  return _second_u_neighbor;
+}
 
 #endif /* MOOSEVARIABLEFE_H */
