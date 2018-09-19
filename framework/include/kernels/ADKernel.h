@@ -12,10 +12,13 @@
 
 #include "KernelBase.h"
 
+template <ComputeStage compute_stage>
 class ADKernel;
 
-template <ComputeStage compute_stage>
-InputParameters validParams<ADKernel<compute_stage>>();
+template <>
+InputParameters validParams<ADKernel<RESIDUAL>>();
+template <>
+InputParameters validParams<ADKernel<JACOBIAN>>();
 
 template <ComputeStage compute_stage>
 class ADKernel : public KernelBase, public MooseVariableInterface<Real>
@@ -53,7 +56,7 @@ protected:
   const typename VariableValueType<compute_stage>::type & _u;
 
   /// Holds the solution gradient at the current quadrature points
-  const typename VariableValueGradient<compute_stage>::type & _grad_u;
+  const typename VariableGradientType<compute_stage>::type & _grad_u;
 
   /// Time derivative of u
   const VariableValue & _u_dot;

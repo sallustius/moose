@@ -17,13 +17,20 @@
 // libmesh includes
 #include "libmesh/threads.h"
 
-template <ComputeStage compute_stage>
+template <>
 InputParameters
-validParams<ADKernel<compute_stage>>()
+validParams<ADKernel<RESIDUAL>>()
 {
   InputParameters params = validParams<KernelBase>();
   params.registerBase("Kernel");
   return params;
+}
+
+template <>
+InputParameters
+validParams<ADKernel<JACOBIAN>>()
+{
+  return validParams<ADKernel<RESIDUAL>>();
 }
 
 template <ComputeStage compute_stage>
@@ -115,6 +122,12 @@ ADKernel<compute_stage>::computeResidual()
   }
 }
 
+template <>
+void
+ADKernel<JACOBIAN>::computeResidual()
+{
+}
+
 template <ComputeStage compute_stage>
 void
 ADKernel<compute_stage>::computeJacobian()
@@ -151,6 +164,12 @@ ADKernel<compute_stage>::computeJacobian()
   }
 }
 
+template <>
+void
+ADKernel<RESIDUAL>::computeJacobian()
+{
+}
+
 template <ComputeStage compute_stage>
 void
 ADKernel<compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
@@ -177,6 +196,12 @@ ADKernel<compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
       }
     }
   }
+}
+
+template <>
+void
+ADKernel<RESIDUAL>::computeOffDiagJacobian(MooseVariableFEBase &)
+{
 }
 
 template <ComputeStage compute_stage>
