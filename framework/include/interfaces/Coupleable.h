@@ -13,16 +13,13 @@
 #include <map>
 #include "MooseTypes.h"
 #include "MooseArray.h"
+#include "MooseVariableFE.h"
+#include "InputParameters.h"
 
 // Forward declarations
-class InputParameters;
 class MooseVariableScalar;
 class MooseObject;
-class MooseVariableFEBase;
-template <typename>
-class MooseVariableFE;
-typedef MooseVariableFE<Real> MooseVariable;
-typedef MooseVariableFE<RealVectorValue> VectorMooseVariable;
+
 namespace libMesh
 {
 template <typename T>
@@ -128,7 +125,7 @@ protected:
    * @see Kernel::value
    */
   template <ComputeStage compute_stage>
-  virtual const typename VariableValueType<compute_stage>::type &
+  const typename VariableValueType<compute_stage>::type &
   adCoupledValue(const std::string & var_name, unsigned int comp = 0);
 
   /**
@@ -242,7 +239,7 @@ protected:
    * @see Kernel::gradient
    */
   template <ComputeStage compute_stage>
-  virtual const typename VariableGradientType<compute_stage>::type &
+  const typename VariableGradientType<compute_stage>::type &
   adCoupledGradient(const std::string & var_name, unsigned int comp = 0);
 
   /**
@@ -630,7 +627,7 @@ private:
    * @param var_name the name of the variable for which to retrieve a default value
    * @return VariableValue * a pointer to the associated VarirableValue.
    */
-  template <CompareStage compare_stage>
+  template <ComputeStage compare_stage>
   typename VariableValueType<compare_stage>::type * getADDefaultValue(const std::string & var_name);
 
   /**
@@ -639,9 +636,8 @@ private:
    * @param var_name the name of the variable for which to retrieve a default gradient
    * @return VariableGradient * a pointer to the associated VariableGradient.
    */
-  template <CompareStage compare_stage>
-  typename VariableGradientType<compare_stage>::type
-  getADDefaultGradient(const std::string & var_name);
+  template <ComputeStage compare_stage>
+  typename VariableGradientType<compare_stage>::type getADDefaultGradient();
 
   /**
    * Helper method to return (and insert if necessary) the default value
@@ -702,7 +698,7 @@ const typename VariableGradientType<compute_stage>::type &
 Coupleable::adCoupledGradient(const std::string & var_name, unsigned int comp)
 {
   if (!isCoupled(var_name)) // Return default 0
-    return getADDefaultGradient<compute_stage>(var_name);
+    return getADDefaultGradient<compute_stage>();
 
   coupledCallback(var_name, false);
   if (_c_nodal)
@@ -743,24 +739,16 @@ Coupleable::getADDefaultValue(const std::string & var_name)
 }
 
 template <>
-VarialeValue *
-Coupleable::getADDefaultValue<RESIDUAL>(const std::string & var_name)
-{
-  return getDefaultValue(var_name);
-}
+VariableValue * Coupleable::getADDefaultValue<RESIDUAL>(const std::string & var_name);
 
 template <ComputeStage compute_stage>
 typename VariableGradientType<compute_stage>::type
-Coupleable::getADDefaultGradient(const std::string & var_name)
+Coupleable::getADDefaultGradient()
 {
   return _ad_default_gradient;
 }
 
 template <>
-VariableGradient
-Coupleable::getADDefaultGradient<RESIDUAL>(const std::string & var_name)
-{
-  return _default_gradient;
-}
+VariableGradient Coupleable::getADDefaultGradient<RESIDUAL>();
 
 #endif /* COUPLEABLE_H */

@@ -1689,5 +1689,62 @@ MooseVariableFE<OutputType>::isVector() const
   return std::is_same<OutputType, RealVectorValue>::value;
 }
 
+template <>
+template <>
+const VariableValue &
+MooseVariableFE<Real>::adSln<RESIDUAL>()
+{
+  _need_ad_u = true;
+  return _u;
+}
+
+template <>
+template <>
+const VariableGradient &
+MooseVariableFE<Real>::adGradSln<RESIDUAL>()
+{
+  _need_ad_grad_u = true;
+  return _grad_u;
+}
+
+template <>
+template <>
+const VariableSecond &
+MooseVariableFE<Real>::adSecondSln<RESIDUAL>()
+{
+  _need_ad_second_u = true;
+  secondPhi();
+  secondPhiFace();
+  return _second_u;
+}
+
+template <>
+template <>
+const VariableValue &
+MooseVariableFE<Real>::adSlnNeighbor<RESIDUAL>()
+{
+  _need_neighbor_ad_u = true;
+  return _u_neighbor;
+}
+
+template <>
+template <>
+const VariableGradient &
+MooseVariableFE<Real>::adGradSlnNeighbor<RESIDUAL>()
+{
+  _need_neighbor_ad_grad_u = true;
+  return _grad_u_neighbor;
+}
+
+template <>
+template <>
+const VariableSecond &
+MooseVariableFE<Real>::adSecondSlnNeighbor<RESIDUAL>()
+{
+  _need_neighbor_ad_second_u = true;
+  secondPhiFaceNeighbor();
+  return _second_u_neighbor;
+}
+
 template class MooseVariableFE<Real>;
 template class MooseVariableFE<RealVectorValue>;

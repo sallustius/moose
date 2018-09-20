@@ -27,7 +27,7 @@ ADCoupledMaterial::ADCoupledMaterial(const InputParameters & parameters)
   : Material(parameters),
     _ad_mat_prop(declareADProperty<Real>(getParam<MaterialPropertyName>("ad_mat_prop"))),
     _regular_mat_prop(declareProperty<Real>(getParam<MaterialPropertyName>("regular_mat_prop"))),
-    _coupled_var(adCoupledValue("coupled_var"))
+    _coupled_var(adCoupledValue<JACOBIAN>("coupled_var"))
 {
 }
 

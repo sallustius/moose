@@ -285,21 +285,6 @@ Coupleable::getDefaultValue(const std::string & var_name, unsigned int comp)
   return default_value_it->second[comp];
 }
 
-ADVariableValue *
-Coupleable::getADDefaultValue(const std::string & var_name)
-{
-  std::map<std::string, ADVariableValue *>::iterator default_value_it =
-      _ad_default_value.find(var_name);
-  if (default_value_it == _ad_default_value.end())
-  {
-    ADVariableValue * value =
-        new ADVariableValue(_coupleable_max_qps, _c_parameters.defaultCoupledValue(var_name));
-    default_value_it = _ad_default_value.insert(std::make_pair(var_name, value)).first;
-  }
-
-  return default_value_it->second;
-}
-
 VectorVariableValue *
 Coupleable::getVectorDefaultValue(const std::string & var_name)
 {
@@ -1199,4 +1184,18 @@ Coupleable::validateExecutionerType(const std::string & name, const std::string 
                name,
                "\" when using a \"Steady\" executioner is not allowed. This value is available "
                "only in transient simulations.");
+}
+
+template <>
+VariableValue *
+Coupleable::getADDefaultValue<RESIDUAL>(const std::string & var_name)
+{
+  return getDefaultValue(var_name, 0);
+}
+
+template <>
+VariableGradient
+Coupleable::getADDefaultGradient<RESIDUAL>()
+{
+  return _default_gradient;
 }

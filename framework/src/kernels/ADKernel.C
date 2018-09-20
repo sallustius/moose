@@ -22,7 +22,7 @@ InputParameters
 validParams<ADKernel<RESIDUAL>>()
 {
   InputParameters params = validParams<KernelBase>();
-  params.registerBase("Kernel");
+  params.registerBase("ADKernel");
   return params;
 }
 
@@ -110,7 +110,7 @@ ADKernel<compute_stage>::computeResidual()
 
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual().value();
+      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
 
   re += _local_re;
 

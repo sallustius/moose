@@ -817,59 +817,26 @@ protected:
 
 template <>
 template <>
-const VariableValue &
-MooseVariableFE<Real>::adSln<RESIDUAL>()
-{
-  _need_ad_u = true;
-  return _u;
-}
+const VariableValue & MooseVariableFE<Real>::adSln<RESIDUAL>();
 
 template <>
 template <>
-const VariableGradient &
-MooseVariableFE<Real>::adGradSln<RESIDUAL>()
-{
-  _need_ad_grad_u = true;
-  return _grad_u;
-}
+const VariableGradient & MooseVariableFE<Real>::adGradSln<RESIDUAL>();
 
 template <>
 template <>
-const VariableSecond &
-MooseVariableFE<Real>::adSecondSln<RESIDUAL>()
-{
-  _need_ad_second_u = true;
-  secondPhi();
-  secondPhiFace();
-  return _second_u;
-}
+const VariableSecond & MooseVariableFE<Real>::adSecondSln<RESIDUAL>();
 
 template <>
 template <>
-const VariableValue &
-MooseVariableFE<Real>::adSlnNeighbor<RESIDUAL>()
-{
-  _need_neighbor_ad_u = true;
-  return _u_neighbor;
-}
+const VariableValue & MooseVariableFE<Real>::adSlnNeighbor<RESIDUAL>();
 
 template <>
 template <>
-const VariableGradient &
-MooseVariableFE<Real>::adGradSlnNeighbor<RESIDUAL>()
-{
-  _need_neighbor_ad_grad_u = true;
-  return _grad_u_neighbor;
-}
+const VariableGradient & MooseVariableFE<Real>::adGradSlnNeighbor<RESIDUAL>();
 
 template <>
 template <>
-const VariableSecond &
-MooseVariableFE<Real>::adSecondSlnNeighbor<RESIDUAL>()
-{
-  _need_neighbor_ad_second_u = true;
-  secondPhiFaceNeighbor();
-  return _second_u_neighbor;
-}
+const VariableSecond & MooseVariableFE<Real>::adSecondSlnNeighbor<RESIDUAL>();
 
 #endif /* MOOSEVARIABLEFE_H */
