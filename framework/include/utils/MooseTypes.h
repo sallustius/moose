@@ -84,6 +84,10 @@ template <typename>
 class MooseArray;
 class RankTwoTensor;
 class RankFourTensor;
+template <typename>
+class MaterialProperty;
+template <typename>
+class ADMaterialProperty;
 
 /**
  * MOOSE typedefs
@@ -239,6 +243,16 @@ template <>
 struct ResidualReturnType<JACOBIAN>
 {
   typedef ADReal type;
+};
+template <ComputeStage compute_stage, typename mat_prop_type>
+struct MaterialPropertyType
+{
+  typedef MaterialProperty<mat_prop_type> type;
+};
+template <typename mat_prop_type>
+struct MaterialPropertyType<JACOBIAN, mat_prop_type>
+{
+  typedef ADMaterialProperty<mat_prop_type> type;
 };
 
 namespace Moose
