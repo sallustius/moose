@@ -38,7 +38,6 @@ protected:
   using ADKernel<compute_stage>::_i;
   using ADKernel<compute_stage>::_qp;
   using ADKernel<compute_stage>::_grad_u;
-  using Coupleable::adCoupledGradient;
 
 private:
   const typename VariableGradientType<compute_stage>::type & _velocity_vector;

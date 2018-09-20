@@ -25,7 +25,6 @@ protected:
   using ADKernel<compute_stage>::_test;
   using ADKernel<compute_stage>::_i;
   using ADKernel<compute_stage>::_qp;
-  using Coupleable::adCoupledValue;
 };
 
 template <>

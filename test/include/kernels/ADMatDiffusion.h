@@ -40,9 +40,6 @@ protected:
   using ADKernel<compute_stage>::_grad_u;
   using ADKernel<compute_stage>::_i;
   using ADKernel<compute_stage>::_qp;
-  using MaterialPropertyInterface::getADMaterialProperty;
-  using MaterialPropertyInterface::getMaterialProperty;
-  using MooseObject::getParam;
 };
 
 #endif // ADMATDIFFUSION_H
