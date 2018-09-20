@@ -1194,7 +1194,7 @@ Coupleable::getADDefaultValue<RESIDUAL>(const std::string & var_name)
 }
 
 template <>
-VariableGradient
+VariableGradient &
 Coupleable::getADDefaultGradient<RESIDUAL>()
 {
   return _default_gradient;

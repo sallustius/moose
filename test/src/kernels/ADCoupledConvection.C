@@ -1,0 +1,40 @@
+//* This file is part of the MOOSE framework
+//* https://www.mooseframework.org
+//*
+//* All rights reserved, see COPYRIGHT for full restrictions
+//* https://github.com/idaholab/moose/blob/master/COPYRIGHT
+//*
+//* Licensed under LGPL 2.1, please see LICENSE for details
+//* https://www.gnu.org/licenses/lgpl-2.1.html
+#include "ADCoupledConvection.h"
+
+registerADMooseObject("MooseTestApp", ADCoupledConvection);
+
+template <>
+InputParameters
+validParams<ADCoupledConvection<RESIDUAL>>()
+{
+  InputParameters params = validParams<ADKernel<RESIDUAL>>();
+  params.addRequiredCoupledVar("velocity_vector", "Velocity Vector for the Convection ADKernel");
+  return params;
+}
+template <>
+InputParameters
+validParams<ADCoupledConvection<JACOBIAN>>()
+{
+  return validParams<ADCoupledConvection<RESIDUAL>>();
+}
+
+template <ComputeStage compute_stage>
+ADCoupledConvection<compute_stage>::ADCoupledConvection(const InputParameters & parameters)
+  : ADKernel<compute_stage>(parameters),
+    _velocity_vector(adCoupledGradient<compute_stage>("velocity_vector"))
+{
+}
+
+template <ComputeStage compute_stage>
+typename ResidualReturnType<compute_stage>::type
+ADCoupledConvection<compute_stage>::computeQpResidual()
+{
+  return _test[_i][_qp] * _velocity_vector[_qp] * _grad_u[_qp];
+}

@@ -637,7 +637,7 @@ private:
    * @return VariableGradient * a pointer to the associated VariableGradient.
    */
   template <ComputeStage compare_stage>
-  typename VariableGradientType<compare_stage>::type getADDefaultGradient();
+  typename VariableGradientType<compare_stage>::type & getADDefaultGradient();
 
   /**
    * Helper method to return (and insert if necessary) the default value
@@ -742,13 +742,13 @@ template <>
 VariableValue * Coupleable::getADDefaultValue<RESIDUAL>(const std::string & var_name);
 
 template <ComputeStage compute_stage>
-typename VariableGradientType<compute_stage>::type
+typename VariableGradientType<compute_stage>::type &
 Coupleable::getADDefaultGradient()
 {
   return _ad_default_gradient;
 }
 
 template <>
-VariableGradient Coupleable::getADDefaultGradient<RESIDUAL>();
+VariableGradient & Coupleable::getADDefaultGradient<RESIDUAL>();
 
 #endif /* COUPLEABLE_H */

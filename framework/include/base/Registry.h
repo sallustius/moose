@@ -42,7 +42,7 @@
 /// Add AD MooseObjects (e.g. both residual and jacobian objects) to the registry with the given app name/label.  classname is the (unquoted)
 /// c++ class template.  Each class template should only be registered once.
 #define registerADMooseObject(app, templatename)                                                   \
-  static char combineNames(dummyvar_for_registering_obj_##templatename_residual, __LINE__) =       \
+  static char combineNames(dummyvar_for_registering_obj_##templatename##_residual, __LINE__) =     \
       Registry::add<templatename<RESIDUAL>>({app,                                                  \
                                              #templatename "<RESIDUAL>",                           \
                                              "",                                                   \
@@ -54,7 +54,7 @@
                                              __LINE__,                                             \
                                              "",                                                   \
                                              ""});                                                 \
-  static char combineNames(dummyvar_for_registering_obj_##templatename_jacobian, __LINE__) =       \
+  static char combineNames(dummyvar_for_registering_obj_##templatename##_jacobian, __LINE__) =     \
       Registry::add<templatename<JACOBIAN>>({app,                                                  \
                                              #templatename "<JACOBIAN>",                           \
                                              "",                                                   \
