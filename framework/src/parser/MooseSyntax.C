@@ -33,7 +33,7 @@ associateSyntax(Syntax & syntax, ActionFactory & action_factory)
   registerSyntaxTask("AddKernelAction", "AuxKernels/*", "add_aux_kernel");
   registerSyntaxTask("AddKernelAction", "Bounds/*", "add_aux_kernel");
 
-  registerSyntaxTask("AddADKernelAction", "ADKernels/*", "add_kernel");
+  registerSyntaxTask("AddADKernelAction", "ADKernels/*", "add_ad_kernel");
 
   registerSyntaxTask("AddScalarKernelAction", "ScalarKernels/*", "add_scalar_kernel");
   registerSyntaxTask("AddScalarKernelAction", "AuxScalarKernels/*", "add_aux_scalar_kernel");
