@@ -22,7 +22,7 @@ template <>
 InputParameters
 validParams<ADCoupledValueTest<JACOBIAN>>()
 {
-  return validParams<ADCoupledValueTest<JACOBIAN>>();
+  return validParams<ADCoupledValueTest<RESIDUAL>>();
 }
 
 template <ComputeStage compute_stage>
