@@ -44,7 +44,7 @@
 #define registerADMooseObject(app, templatename)                                                   \
   static char combineNames(dummyvar_for_registering_obj_##templatename_residual, __LINE__) =       \
       Registry::add<templatename<RESIDUAL>>({app,                                                  \
-                                             #templatename + "<RESIDUAL>",                         \
+                                             #templatename "<RESIDUAL>",                           \
                                              "",                                                   \
                                              "",                                                   \
                                              nullptr,                                              \
@@ -56,7 +56,7 @@
                                              ""});                                                 \
   static char combineNames(dummyvar_for_registering_obj_##templatename_jacobian, __LINE__) =       \
       Registry::add<templatename<JACOBIAN>>({app,                                                  \
-                                             #templatename + "<JACOBIAN>",                         \
+                                             #templatename "<JACOBIAN>",                           \
                                              "",                                                   \
                                              "",                                                   \
                                              nullptr,                                              \

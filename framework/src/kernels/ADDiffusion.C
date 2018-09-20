@@ -34,8 +34,8 @@ ADDiffusion<compute_stage>::ADDiffusion(const InputParameters & parameters)
 }
 
 template <ComputeStage compute_stage>
-ADReal
-ADDiffusion<compoute_stage>::computeQpResidual()
+typename ResidualReturnType<compute_stage>::type
+ADDiffusion<compute_stage>::computeQpResidual()
 {
   return _grad_u[_qp] * _grad_test[_i][_qp];
 }

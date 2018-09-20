@@ -28,6 +28,11 @@ public:
 
 protected:
   virtual typename ResidualReturnType<compute_stage>::type computeQpResidual() override;
+
+  using ADKernel<compute_stage>::_grad_u;
+  using ADKernel<compute_stage>::_qp;
+  using ADKernel<compute_stage>::_grad_test;
+  using ADKernel<compute_stage>::_i;
 };
 
 #endif /* ADDIFFUSION_H */
