@@ -218,3 +218,6 @@ ADKernel<compute_stage>::computeOffDiagJacobianScalar(unsigned int /*jvar*/)
         ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
   */
 }
+
+template class ADKernel<RESIDUAL>;
+template class ADKernel<JACOBIAN>;
