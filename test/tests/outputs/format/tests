@@ -8,6 +8,9 @@
     # run it on one processor.
     max_parallel = 1
     min_parallel = 1
+    issues = '#920'
+    design = 'Nemesis.md'
+    requirement = 'Nemesis output shall work'
   [../]
 
   [./gmv_out_test]
@@ -15,6 +18,9 @@
     input = 'output_test_gmv.i'
     check_files = 'output_test_gmv_out_0000.gmv'
     recover = false
+    issues = '#920'
+    design = 'GMVOutput.md'
+    requirement = 'GMV output shall work'
   [../]
 
   [./yaml_dump_test]
@@ -24,6 +30,9 @@
     cli_args = '--yaml'
     # suppress error checking, the word 'ERROR' shows up in the yaml dump
     errors = 'zzzzzzzzzz'
+    issues = '#920'
+    design = 'YAMLFormatter.md'
+    requirement = 'We shall be able to dump YAML data'
   [../]
 
   [./no_double_executioner_output]
@@ -33,12 +42,18 @@
     # suppress error checking, the word 'ERROR' shows up in the yaml dump
     errors = 'zzzzz zzzzz'
     cli_args = '--yaml /Executioner'
+    issues = '#2855'
+    design = 'YAMLFormatter.md'
+    requirement = 'Executioner output shall only be given once'
   [../]
 
   [./tecplot_out_test]
     type = 'CheckFiles'
     input = 'output_test_tecplot.i'
     check_files = 'output_test_tecplot_out_0000.dat'
+    design = 'Tecplot.md'
+    requirement = 'Tecplot output shall work'
+    issues = '#920'
   [../]
 
   [./tecplot_bin_test]
@@ -46,6 +61,9 @@
     input = 'output_test_tecplot_binary.i'
     check_files = 'output_test_tecplot_binary_out_0000.plt'
     tecplot = true
+    issues = '#3403'
+    design = 'Tecplot.md'
+    requirement = 'If tecplot api is available, tecplot output will be given in tecplot binary format'
   [../]
 
   [./tecplot_bin_test_override]
@@ -54,6 +72,9 @@
     check_files = 'output_test_tecplot_binary_out_0000.dat'
     tecplot = false
     allow_warnings = true
+    design = 'Tecplot.md'
+    issues = '#3403'
+    requirement = 'If tecplot api is not available, tecplot output will be given in ASCII format'
   [../]
 
   [./dump_test]
@@ -61,24 +82,36 @@
     input = 'IGNORED'
     expect_out = 'block\s*=\s*ANY_BLOCK_ID'
     cli_args = '--dump'
+    issues = '#1404 #1131'
+    design = 'command_line_usage.md'
+    requirement = 'We shall be able to dump the possible input file syntax for a given MOOSE application'
   [../]
 
   [./gnuplot_ps_out_test]
     type = 'CheckFiles'
     input = 'output_test_gnuplot_ps.i'
     check_files = 'output_test_gnuplot_ps_out.gp output_test_gnuplot_ps_out.dat'
+    issues = '#920'
+    design = 'Gnuplot.md'
+    requirement = 'We shall be able to generate gnuplot postscript output'
   [../]
 
   [./gnuplot_png_out_test]
     type = 'CheckFiles'
     input = 'output_test_gnuplot.i'
     check_files = 'output_test_gnuplot_out.gp output_test_gnuplot_out.dat'
+    issues = '#920'
+    design = 'Gnuplot.md'
+    requirement = 'We shall be able to generate gnuplot png output'
   [../]
 
   [./gnuplot_gif_out_test]
     type = 'CheckFiles'
     input = 'output_test_gnuplot_gif.i'
     check_files = 'output_test_gnuplot_gif_out.gp output_test_gnuplot_gif_out.dat'
+    issues = '#920'
+    design = 'Gnuplot.md'
+    requirement = 'We shall be able to generate gnuplot gif output'
   [../]
 
   [./pps_screen_out_warn_test]
@@ -87,6 +120,9 @@
     expect_out = "A Postprocessor utilizes the 'outputs' parameter; however, postprocessor output is disabled for the 'console' output object."
     allow_warnings = true
     max_parallel = 1 # warning can mix on multiple processes
+    issues = '#1426'
+    design = 'Outputs/index.md'
+    requirement = 'If a postprocessor utilizes the "outputs" parameter, but postprocessor output is disable for the console object, we shall warn the user'
   [../]
 
   [./show_input_test]
@@ -101,6 +137,9 @@
     type = 'CheckFiles'
     input = 'output_test_sln.i'
     check_files = 'output_test_sln_out.slh'
+    design = 'SolutionHistory.md'
+    requirement = 'Solution history output shall work'
+    issues = '#920'
   [../]
 
   [./xdr_output]
