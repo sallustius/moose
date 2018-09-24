@@ -8,7 +8,7 @@ domain. To implement your own physics in MOOSE, you create your own kernel by su
 
 In an `ADKernel` subclass the `computeQpResidual()` function +must+ be overridden.  This is where you
 implement your PDE weak form terms. By using an `ADKernel` as opposed to an
-ordinary [`Kernel`](/Kernels/index.md), you are automatically computing the
+ordinary [`Kernel`](syntax/Kernels/index.md), you are automatically computing the
 Jacobian, so you do not have to worry about hand-coding a Jacobian, which is
 prone to error.
 
