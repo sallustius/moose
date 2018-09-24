@@ -131,6 +131,9 @@
     expect_out = 'type\s*=\s*GeneratedMesh'
     cli_args = '--show-input'
     prereq = 'gmv_out_test'
+    issues = '#1404 #1131'
+    design = 'command_line_usage.md'
+    requirement = '--show-input shall print parameters'
   [../]
 
   [./sln_out_test]
@@ -146,12 +149,18 @@
     type = 'CheckFiles'
     input = 'output_test_xdr.i'
     check_files = 'output_test_xdr_out_0001.xdr output_test_xdr_out_0001_mesh.xdr'
+    design = 'XDA.md'
+    issues = '#2243'
+    requirement = 'MOOSE shall support XDR output'
   [../]
 
   [./json]
     type = 'PythonUnitTest'
     input = 'test_json.py'
     max_buffer_size = -1
+    issues = '#7855 #7661 #2881'
+    design = 'JsonInputFileFormatter.md command_line_usage.md'
+    requirement = 'We shall be able to convert input file syntax into JSON syntax'
   [../]
 
   [./definition_existsin_test]
@@ -162,6 +171,9 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check ExistsIn'
+    design = 'SONDefinitionFormatter.md'
   [../]
 
   [./definition_childatleastone_test]
@@ -172,6 +184,9 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check ChildAtLeastOne'
+    design = 'SONDefinitionFormatter.md'
   [../]
 
   [./definition_valenum_test]
@@ -182,6 +197,9 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check ValEnums'
+    design = 'SONDefinitionFormatter.md'
   [../]
 
   [./definition_active_parameter_test]
@@ -192,6 +210,9 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check active parameter'
+    design = 'SONDefinitionFormatter.md'
   [../]
 
   [./definition_normal_sub_test]
@@ -202,6 +223,9 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check normal_sub'
+    design = 'SONDefinitionFormatter.md'
   [../]
 
   [./definition_type_sub_test]
@@ -212,6 +236,9 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check type_sub'
+    design = 'SONDefinitionFormatter.md'
   [../]
 
   [./definition_default_type_test]
@@ -222,6 +249,9 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check default type'
+    design = 'SONDefinitionFormatter.md'
   [../]
 
   [./definition_minvalinc_inputdefault_test]
@@ -232,6 +262,9 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check MinValInc'
+    design = 'SONDefinitionFormatter.md'
   [../]
 
   [./definition_expressions_are_okay_test]
@@ -242,5 +275,8 @@
     # suppress error checking, the word 'ERROR' shows up in the definition dump
     errors = 'zzzzzzzzzz'
     max_buffer_size = -1
+    issues = '#9651'
+    requirement = 'MOOSE shall be able to convert a JsonSyntaxTree into Standard Object Notation (SON) for use by the NEAMS workbench. Check ExpressionsAreOkay'
+    design = 'SONDefinitionFormatter.md'
   [../]
 []
