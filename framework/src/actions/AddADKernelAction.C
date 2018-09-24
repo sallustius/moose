@@ -16,7 +16,10 @@ template <>
 InputParameters
 validParams<AddADKernelAction>()
 {
-  return validParams<MooseADObjectAction>();
+  InputParameters params = validParams<MooseADObjectAction>();
+  params.addClassDescription(
+      "This action is used to add ADKernel<RESIDUAL> and ADKernel<JACOBIAN> objects");
+  return params;
 }
 
 AddADKernelAction::AddADKernelAction(InputParameters params) : MooseADObjectAction(params) {}
