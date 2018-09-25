@@ -1022,7 +1022,7 @@ MooseVariableFE<OutputType>::computeValuesHelper(QBase *& qrule,
   }
 
   // Automatic differentiation
-  if (_need_ad_u)
+  if (_need_ad_u && _computing_jacobian)
     computeAD(num_dofs, nqp);
 }
 

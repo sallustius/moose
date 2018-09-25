@@ -36,15 +36,12 @@
   [../]
 []
 
-[Materials]
+[ADMaterials]
   [./ad_coupled_mat]
     type = ADCoupledMaterial
     coupled_var = u
     ad_mat_prop = ad_diffusivity
     regular_mat_prop = regular_diffusivity
-  [../]
-  [./ad_mat_types]
-    type = ADMatTypes
   [../]
 []
 

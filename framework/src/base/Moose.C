@@ -107,6 +107,7 @@ addActionTypes(Syntax & syntax)
   registerMooseObjectTask("add_nodal_kernel",             NodalKernel,            false);
 
   registerMooseObjectTask("add_material",                 Material,               false);
+  registerMooseObjectTask("add_ad_material",              ADMaterial,             false);
   registerMooseObjectTask("add_bc",                       BoundaryCondition,      false);
   registerMooseObjectTask("add_function",                 Function,               false);
   registerMooseObjectTask("add_distribution",             Distribution,           false);
@@ -269,7 +270,7 @@ addActionTypes(Syntax & syntax)
                            "(add_multi_app)"
                            "(add_transfer)"
                            "(copy_nodal_vars, copy_nodal_aux_vars)"
-                           "(add_material)"
+                           "(add_material, add_ad_material)"
                            "(setup_material_output)"
                            "(add_algebraic_rm)"
                            "(init_problem)"
@@ -418,6 +419,7 @@ associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
   registerSyntaxTask("AddInitialConditionAction", "ICs/*", "add_ic");
 
   registerSyntax("AddMaterialAction", "Materials/*");
+  registerSyntaxTask("AddADMaterialAction", "ADMaterials/*", "add_ad_material");
 
   registerSyntax("SetupPostprocessorDataAction", "Postprocessors/*");
   registerSyntax("AddPostprocessorAction", "Postprocessors/*");
