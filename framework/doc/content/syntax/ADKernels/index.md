@@ -62,6 +62,6 @@ where $u_h$ is known as the trial function that defines the finite element discr
 
 The diffusion kernel header and implementation files are:
 
-!listing framework/include/adkernels/ADDiffusion.h max-height=400px
+!listing framework/include/kernels/ADDiffusion.h max-height=400px
 
-!listing framework/src/adkernels/ADDiffusion.C max-height=400px
+!listing framework/src/kernels/ADDiffusion.C max-height=400px
