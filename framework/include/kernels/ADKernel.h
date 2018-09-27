@@ -19,7 +19,7 @@
   using ADKernel<compute_stage>::_u;                                                               \
   using ADKernel<compute_stage>::_var;                                                             \
   using ADKernel<compute_stage>::_grad_test;                                                       \
-  using ADKernel<compute_stage>::_grad_u;
+  using ADKernel<compute_stage>::_grad_u
 
 template <ComputeStage compute_stage>
 class ADKernel;
