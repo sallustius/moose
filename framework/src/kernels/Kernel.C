@@ -142,18 +142,21 @@ Kernel::computeOffDiagJacobian(MooseVariableFEBase & jvar)
   auto jvar_num = jvar.number();
   if (jvar_num == _var.number())
     computeJacobian();
-  else
+  else if (jvar_num == 0)
   {
     prepareMatrixTag(_assembly, _var.number(), jvar_num);
 
-    if (_local_ke.m() != _test.size() || _local_ke.n() != jvar.phiSize())
-      return;
-
     precalculateOffDiagJacobian(jvar_num);
     for (_i = 0; _i < _test.size(); _i++)
-      for (_j = 0; _j < jvar.phiSize(); _j++)
+      for (_j = 0; _j < 2; _j++)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+        {
           _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
+          if (_j == 0)
+            _local_ke(_i, _j) += 0.5 * _coord[_qp] * computeQpResidual();
+          else if (_j == 1)
+            _local_ke(_i, _j) += -0.5 * _coord[_qp] * computeQpResidual();
+        }
 
     accumulateTaggedLocalMatrix();
   }
