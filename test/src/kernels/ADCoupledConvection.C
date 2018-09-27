@@ -10,20 +10,10 @@
 
 registerADMooseObject("MooseTestApp", ADCoupledConvection);
 
-template <>
-InputParameters
-validParams<ADCoupledConvection<RESIDUAL>>()
-{
-  InputParameters params = validParams<ADKernel<RESIDUAL>>();
-  params.addRequiredCoupledVar("velocity_vector", "Velocity Vector for the Convection ADKernel");
-  return params;
-}
-template <>
-InputParameters
-validParams<ADCoupledConvection<JACOBIAN>>()
-{
-  return validParams<ADCoupledConvection<RESIDUAL>>();
-}
+defineADValidParams(ADCoupledConvection,
+                    ADKernel,
+                    params.addRequiredCoupledVar("velocity_vector",
+                                                 "Velocity Vector for the Convection ADKernel"););
 
 template <ComputeStage compute_stage>
 ADCoupledConvection<compute_stage>::ADCoupledConvection(const InputParameters & parameters)
@@ -33,7 +23,7 @@ ADCoupledConvection<compute_stage>::ADCoupledConvection(const InputParameters & 
 }
 
 template <ComputeStage compute_stage>
-typename ResidualReturnType<compute_stage>::type
+ADResidual
 ADCoupledConvection<compute_stage>::computeQpResidual()
 {
   return _test[_i][_qp] * _velocity_vector[_qp] * _grad_u[_qp];

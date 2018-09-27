@@ -16,10 +16,7 @@
 template <ComputeStage compute_stage>
 class ADMatDiffusion;
 
-template <>
-InputParameters validParams<ADMatDiffusion<RESIDUAL>>();
-template <>
-InputParameters validParams<ADMatDiffusion<JACOBIAN>>();
+declareADValidParams(ADMatDiffusion);
 
 template <ComputeStage compute_stage>
 class ADMatDiffusion : public ADKernel<compute_stage>
@@ -28,18 +25,15 @@ public:
   ADMatDiffusion(const InputParameters & parameters);
 
 protected:
-  virtual typename ResidualReturnType<compute_stage>::type computeQpResidual();
+  virtual ADResidual computeQpResidual();
 
-  const typename MaterialPropertyType<compute_stage, Real>::type & _ad_diff_from_ad_prop;
+  const ADMaterialPropertyType(Real) & _ad_diff_from_ad_prop;
   const MaterialProperty<Real> & _regular_diff_from_ad_prop;
-  const typename MaterialPropertyType<compute_stage, Real>::type & _ad_diff_from_regular_prop;
+  const ADMaterialPropertyType(Real) & _ad_diff_from_regular_prop;
   const MaterialProperty<Real> & _regular_diff_from_regular_prop;
   const MooseEnum _prop_to_use;
 
-  using ADKernel<compute_stage>::_grad_test;
-  using ADKernel<compute_stage>::_grad_u;
-  using ADKernel<compute_stage>::_i;
-  using ADKernel<compute_stage>::_qp;
+  usingKernelObjects;
 };
 
 #endif // ADMATDIFFUSION_H

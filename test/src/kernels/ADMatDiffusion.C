@@ -10,31 +10,23 @@
 
 registerADMooseObject("MooseTestApp", ADMatDiffusion);
 
-template <>
-InputParameters
-validParams<ADMatDiffusion<RESIDUAL>>()
-{
-  InputParameters params = validParams<ADKernel<RESIDUAL>>();
-  params.addParam<MaterialPropertyName>(
-      "ad_mat_prop", "ad_diffusivity", "the name of the AD material property we are going to use");
-  params.addParam<MaterialPropertyName>("regular_mat_prop",
-                                        "regular_diffusivity",
-                                        "the name of the AD material property we are going to use");
-  MooseEnum prop_to_use("AdAd AdReg RegAd RegReg", "AdAd");
-  params.addParam<MooseEnum>("prop_to_use",
-                             prop_to_use,
-                             "What type of property to use. The prefix indicates the getter type "
-                             "in the kernel; the suffix indicates the declaration type in the "
-                             "material.");
-  return params;
-}
-
-template <>
-InputParameters
-validParams<ADMatDiffusion<JACOBIAN>>()
-{
-  return validParams<ADMatDiffusion<RESIDUAL>>();
-}
+defineADValidParams(
+    ADMatDiffusion,
+    ADKernel,
+    params.addParam<MaterialPropertyName>(
+        "ad_mat_prop",
+        "ad_diffusivity",
+        "the name of the AD material property we are going to use");
+    params.addParam<MaterialPropertyName>(
+        "regular_mat_prop",
+        "regular_diffusivity",
+        "the name of the AD material property we are going to use");
+    MooseEnum prop_to_use("AdAd AdReg RegAd RegReg", "AdAd");
+    params.addParam<MooseEnum>("prop_to_use",
+                               prop_to_use,
+                               "What type of property to use. The prefix indicates the getter type "
+                               "in the kernel; the suffix indicates the declaration type in the "
+                               "material."););
 
 template <ComputeStage compute_stage>
 ADMatDiffusion<compute_stage>::ADMatDiffusion(const InputParameters & parameters)
@@ -48,7 +40,7 @@ ADMatDiffusion<compute_stage>::ADMatDiffusion(const InputParameters & parameters
 }
 
 template <ComputeStage compute_stage>
-typename ResidualReturnType<compute_stage>::type
+ADResidual
 ADMatDiffusion<compute_stage>::computeQpResidual()
 {
   if (_prop_to_use == "AdAd")

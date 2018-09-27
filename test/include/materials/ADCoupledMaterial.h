@@ -14,10 +14,7 @@
 template <ComputeStage>
 class ADCoupledMaterial;
 
-template <>
-InputParameters validParams<ADCoupledMaterial<RESIDUAL>>();
-template <>
-InputParameters validParams<ADCoupledMaterial<JACOBIAN>>();
+declareADValidParams(ADCoupledMaterial);
 
 /**
  * A material that couples a material property
@@ -31,12 +28,12 @@ public:
 protected:
   virtual void computeQpProperties();
 
-  typename MaterialPropertyType<compute_stage, Real>::type & _ad_mat_prop;
+  ADMaterialPropertyType(Real) & _ad_mat_prop;
   MaterialProperty<Real> & _regular_mat_prop;
 
-  const typename VariableValueType<compute_stage>::type & _coupled_var;
+  const ADVariableValue & _coupled_var;
 
-  using Material::_qp;
+  usingMaterialMembers;
 };
 
 #endif // ADCOUPLEDMATERIAL_H

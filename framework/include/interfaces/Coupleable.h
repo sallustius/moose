@@ -518,7 +518,7 @@ protected:
   std::map<std::string, std::vector<VariableValue *>> _default_value;
 
   /// Will hold the default value for optional coupled variables for automatic differentiation.
-  std::map<std::string, ADVariableValue *> _ad_default_value;
+  std::map<std::string, MooseArray<ADReal> *> _ad_default_value;
 
   /// Will hold the default value for optional vector coupled variables.
   std::map<std::string, VectorVariableValue *> _default_vector_value;
@@ -533,21 +533,21 @@ protected:
   VariableGradient _default_gradient;
 
   /// This will always be zero because the default values for optionally coupled variables is always constant
-  ADVariableGradient _ad_default_gradient;
+  MooseArray<ADRealGradient> _ad_default_gradient;
 
   /// This will always be zero because the default values for optionally coupled variables is always constant
   VariableSecond _default_second;
 
   /// This will always be zero because the default values for optionally coupled variables is always constant
-  ADVariableSecond _ad_default_second;
+  MooseArray<ADRealTensor> _ad_default_second;
 
   /// Zero value of a variable
   const VariableValue & _zero;
-  const ADVariableValue & _ad_zero;
+  const MooseArray<ADReal> & _ad_zero;
 
   /// Zero gradient of a variable
   const VariableGradient & _grad_zero;
-  const ADVariableGradient & _ad_grad_zero;
+  const MooseArray<ADRealGradient> & _ad_grad_zero;
 
   /// Zero second derivative of a variable
   const VariableSecond & _second_zero;
@@ -726,7 +726,7 @@ template <ComputeStage compute_stage>
 typename VariableValueType<compute_stage>::type *
 Coupleable::getADDefaultValue(const std::string & var_name)
 {
-  std::map<std::string, ADVariableValue *>::iterator default_value_it =
+  std::map<std::string, MooseArray<ADReal> *>::iterator default_value_it =
       _ad_default_value.find(var_name);
   if (default_value_it == _ad_default_value.end())
   {

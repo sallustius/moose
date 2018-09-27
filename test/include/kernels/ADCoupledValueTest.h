@@ -11,6 +11,11 @@
 
 #include "ADKernel.h"
 
+template <ComputeStage>
+class ADCoupledValueTest;
+
+declareADValidParams(ADCoupledValueTest);
+
 template <ComputeStage compute_stage>
 class ADCoupledValueTest : public ADKernel<compute_stage>
 {
@@ -18,18 +23,11 @@ public:
   ADCoupledValueTest(const InputParameters & parameters);
 
 protected:
-  virtual typename ResidualReturnType<compute_stage>::type computeQpResidual();
+  virtual ADResidual computeQpResidual();
 
-  const typename VariableValueType<compute_stage>::type & _v;
+  const ADVariableValue & _v;
 
-  using ADKernel<compute_stage>::_test;
-  using ADKernel<compute_stage>::_i;
-  using ADKernel<compute_stage>::_qp;
+  usingKernelObjects;
 };
-
-template <>
-InputParameters validParams<ADCoupledValueTest<RESIDUAL>>();
-template <>
-InputParameters validParams<ADCoupledValueTest<JACOBIAN>>();
 
 #endif /* ADCOUPLEDVALUETEST_H_ */

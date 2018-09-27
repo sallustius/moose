@@ -14,10 +14,7 @@
 template <ComputeStage compute_stage>
 class ADCoupledConvection;
 
-template <>
-InputParameters validParams<ADCoupledConvection<RESIDUAL>>();
-template <>
-InputParameters validParams<ADCoupledConvection<JACOBIAN>>();
+declareADValidParams(ADCoupledConvection);
 
 /**
  * Define the ADKernel for a convection operator that looks like:
@@ -32,15 +29,12 @@ public:
   ADCoupledConvection(const InputParameters & parameters);
 
 protected:
-  virtual typename ResidualReturnType<compute_stage>::type computeQpResidual() override;
+  virtual ADResidual computeQpResidual() override;
 
-  using ADKernel<compute_stage>::_test;
-  using ADKernel<compute_stage>::_i;
-  using ADKernel<compute_stage>::_qp;
-  using ADKernel<compute_stage>::_grad_u;
+  usingKernelObjects;
 
 private:
-  const typename VariableGradientType<compute_stage>::type & _velocity_vector;
+  const ADVariableGradient & _velocity_vector;
 };
 
 #endif // ADCOUPLEDCONVECTION_H

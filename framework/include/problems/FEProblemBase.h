@@ -1445,9 +1445,9 @@ public:
   std::vector<Real> _real_zero;
   std::vector<VariableValue> _scalar_zero;
   std::vector<VariableValue> _zero;
-  std::vector<ADVariableValue> _ad_zero;
+  std::vector<MooseArray<ADReal>> _ad_zero;
   std::vector<VariableGradient> _grad_zero;
-  std::vector<ADVariableGradient> _ad_grad_zero;
+  std::vector<MooseArray<ADRealGradient>> _ad_grad_zero;
   std::vector<VariableSecond> _second_zero;
   std::vector<VariablePhiSecond> _second_phi_zero;
   std::vector<Point> _point_zero;

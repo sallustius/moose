@@ -10,18 +10,7 @@
 
 registerADMooseObject("MooseTestApp", ADValueTest);
 
-template <>
-InputParameters
-validParams<ADValueTest<RESIDUAL>>()
-{
-  return validParams<ADKernel<RESIDUAL>>();
-}
-template <>
-InputParameters
-validParams<ADValueTest<JACOBIAN>>()
-{
-  return validParams<ADValueTest<RESIDUAL>>();
-}
+defineADValidParams(ADValueTest, ADKernel, );
 
 template <ComputeStage compute_stage>
 ADValueTest<compute_stage>::ADValueTest(const InputParameters & parameters)
@@ -30,7 +19,7 @@ ADValueTest<compute_stage>::ADValueTest(const InputParameters & parameters)
 }
 
 template <ComputeStage compute_stage>
-typename ResidualReturnType<compute_stage>::type
+ADResidual
 ADValueTest<compute_stage>::computeQpResidual()
 {
   return -_u[_qp] * _test[_i][_qp];

@@ -10,20 +10,9 @@
 
 registerADMooseObject("MooseTestApp", ADCoupledValueTest);
 
-template <>
-InputParameters
-validParams<ADCoupledValueTest<RESIDUAL>>()
-{
-  InputParameters params = validParams<ADKernel<RESIDUAL>>();
-  params.addCoupledVar("v", 2.0, "The coupled variable.");
-  return params;
-}
-template <>
-InputParameters
-validParams<ADCoupledValueTest<JACOBIAN>>()
-{
-  return validParams<ADCoupledValueTest<RESIDUAL>>();
-}
+defineADValidParams(ADCoupledValueTest,
+                    ADKernel,
+                    params.addCoupledVar("v", 2.0, "The coupled variable."););
 
 template <ComputeStage compute_stage>
 ADCoupledValueTest<compute_stage>::ADCoupledValueTest(const InputParameters & parameters)
@@ -32,7 +21,7 @@ ADCoupledValueTest<compute_stage>::ADCoupledValueTest(const InputParameters & pa
 }
 
 template <ComputeStage compute_stage>
-typename ResidualReturnType<compute_stage>::type
+ADResidual
 ADCoupledValueTest<compute_stage>::computeQpResidual()
 {
   return _test[_i][_qp] * -_v[_qp];

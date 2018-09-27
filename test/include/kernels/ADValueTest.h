@@ -14,10 +14,7 @@
 template <ComputeStage>
 class ADValueTest;
 
-template <>
-InputParameters validParams<ADValueTest<RESIDUAL>>();
-template <>
-InputParameters validParams<ADValueTest<JACOBIAN>>();
+declareADValidParams(ADValueTest);
 
 template <ComputeStage compute_stage>
 class ADValueTest : public ADKernel<compute_stage>
@@ -26,12 +23,9 @@ public:
   ADValueTest(const InputParameters & parameters);
 
 protected:
-  virtual typename ResidualReturnType<compute_stage>::type computeQpResidual();
+  virtual ADResidual computeQpResidual();
 
-  using ADKernel<compute_stage>::_u;
-  using ADKernel<compute_stage>::_test;
-  using ADKernel<compute_stage>::_i;
-  using ADKernel<compute_stage>::_qp;
+  usingKernelObjects;
 };
 
 #endif /* ADVALUETEST_H_ */

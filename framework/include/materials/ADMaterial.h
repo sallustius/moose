@@ -13,6 +13,8 @@
 #include "Material.h"
 #include "MooseTypes.h"
 
+#define usingMaterialMembers using ADMaterial<compute_stage>::_qp
+
 // forward declarations
 template <ComputeStage>
 class ADMaterial;

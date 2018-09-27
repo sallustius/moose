@@ -17,21 +17,7 @@
 // libmesh includes
 #include "libmesh/threads.h"
 
-template <>
-InputParameters
-validParams<ADKernel<RESIDUAL>>()
-{
-  InputParameters params = validParams<KernelBase>();
-  params.registerBase("ADKernel");
-  return params;
-}
-
-template <>
-InputParameters
-validParams<ADKernel<JACOBIAN>>()
-{
-  return validParams<ADKernel<RESIDUAL>>();
-}
+defineADBaseValidParams(ADKernel, KernelBase, params.registerBase("ADKernel"););
 
 template <ComputeStage compute_stage>
 ADKernel<compute_stage>::ADKernel(const InputParameters & parameters)
@@ -44,11 +30,8 @@ ADKernel<compute_stage>::ADKernel(const InputParameters & parameters)
     _var(*mooseVariable()),
     _test(_var.phi()),
     _grad_test(_var.gradPhi()),
-    _phi(_assembly.phi(_var)),
     _u(_var.adSln<compute_stage>()),
-    _grad_u(_var.adGradSln<compute_stage>()),
-    _u_dot(_var.uDot()),
-    _du_dot_du(_var.duDotDu())
+    _grad_u(_var.adGradSln<compute_stage>())
 {
   addMooseVariableDependency(mooseVariable());
   _save_in.resize(_save_in_strings.size());
@@ -144,7 +127,7 @@ ADKernel<compute_stage>::computeJacobian()
     {
       ADReal residual =
           computeQpResidual(); // This will also compute the derivative with respect to all dofs
-      for (_j = 0; _j < _phi.size(); _j++)
+      for (_j = 0; _j < _var.phiSize(); _j++)
         _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * residual.derivatives()[ad_offset + _j];
     }
   }
@@ -191,7 +174,7 @@ ADKernel<compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
         ADReal residual =
             computeQpResidual(); // This will also compute the derivative with respect to all dofs
 
-        for (_j = 0; _j < _phi.size(); _j++)
+        for (_j = 0; _j < jvar.phiSize(); _j++)
           ke(_i, _j) += _JxW[_qp] * _coord[_qp] * residual.derivatives()[ad_offset + _j];
       }
     }
