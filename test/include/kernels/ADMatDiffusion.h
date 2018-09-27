@@ -33,7 +33,7 @@ protected:
   const MaterialProperty<Real> & _regular_diff_from_regular_prop;
   const MooseEnum _prop_to_use;
 
-  usingKernelObjects;
+  usingKernelMembers;
 };
 
 #endif // ADMATDIFFUSION_H

@@ -25,7 +25,7 @@ public:
 protected:
   virtual ADResidual computeQpResidual();
 
-  usingKernelObjects;
+  usingKernelMembers;
 };
 
 #endif /* ADVALUETEST_H_ */

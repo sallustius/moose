@@ -31,7 +31,7 @@ public:
 protected:
   virtual ADResidual computeQpResidual() override;
 
-  usingKernelObjects;
+  usingKernelMembers;
 
 private:
   const ADVariableGradient & _velocity_vector;

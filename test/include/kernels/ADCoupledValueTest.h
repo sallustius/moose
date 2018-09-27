@@ -27,7 +27,7 @@ protected:
 
   const ADVariableValue & _v;
 
-  usingKernelObjects;
+  usingKernelMembers;
 };
 
 #endif /* ADCOUPLEDVALUETEST_H_ */

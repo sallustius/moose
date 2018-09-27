@@ -12,7 +12,7 @@
 
 #include "KernelBase.h"
 
-#define usingKernelObjects                                                                         \
+#define usingKernelMembers                                                                         \
   using ADKernel<compute_stage>::_test;                                                            \
   using ADKernel<compute_stage>::_qp;                                                              \
   using ADKernel<compute_stage>::_i;                                                               \
