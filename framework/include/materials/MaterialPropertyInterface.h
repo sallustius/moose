@@ -21,6 +21,11 @@ class InputParameters;
 class MaterialPropertyInterface;
 class MooseObject;
 
+#define ezGetADMaterialProperty(PropertyType, PropertyName)                                        \
+  this->template getADMaterialProperty<PropertyType>(PropertyName)
+#define ezGetMaterialProperty(PropertyType, PropertyName)                                          \
+  this->template getMaterialProperty<PropertyType>(PropertyName)
+
 template <typename T>
 InputParameters validParams();
 

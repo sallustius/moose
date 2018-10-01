@@ -20,6 +20,8 @@
 class MooseApp;
 class MooseObject;
 
+#define ezGetParam(ParamType, ParamName) this->template getParam<ParamType>(ParamName)
+
 template <>
 InputParameters validParams<MooseObject>();
 

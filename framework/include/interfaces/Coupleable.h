@@ -26,6 +26,10 @@ template <typename T>
 class DenseVector;
 }
 
+#define ezADCoupledValue(coupled_name) this->template adCoupledValue<compute_stage>(coupled_name)
+#define ezADCoupledGradient(coupled_name)                                                          \
+  this->template adCoupledGradient<compute_stage>(coupled_name)
+
 /**
  * Interface for objects that needs coupling capabilities
  *
