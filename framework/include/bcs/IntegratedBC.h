@@ -49,7 +49,7 @@ protected:
   MooseVariable & _var;
 
   /// normals at quadrature points
-  const MooseArray<Point> & _normals;
+  const MooseArray<TypeVector<ADPointReal>> & _normals;
 
   // shape functions
 

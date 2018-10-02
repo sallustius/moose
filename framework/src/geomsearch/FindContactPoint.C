@@ -58,13 +58,13 @@ findContactPoint(PenetrationInfo & p_info,
 
   const std::vector<Point> & phys_point = fe_side->get_xyz();
 
-  const std::vector<RealGradient> & dxyz_dxi = fe_side->get_dxyzdxi();
-  const std::vector<RealGradient> & d2xyz_dxi2 = fe_side->get_d2xyzdxi2();
-  const std::vector<RealGradient> & d2xyz_dxieta = fe_side->get_d2xyzdxideta();
+  const auto & dxyz_dxi = fe_side->get_dxyzdxi();
+  const auto & d2xyz_dxi2 = fe_side->get_d2xyzdxi2();
+  const auto & d2xyz_dxieta = fe_side->get_d2xyzdxideta();
 
-  const std::vector<RealGradient> & dxyz_deta = fe_side->get_dxyzdeta();
-  const std::vector<RealGradient> & d2xyz_deta2 = fe_side->get_d2xyzdeta2();
-  const std::vector<RealGradient> & d2xyz_detaxi = fe_side->get_d2xyzdxideta();
+  const auto & dxyz_deta = fe_side->get_dxyzdeta();
+  const auto & d2xyz_deta2 = fe_side->get_d2xyzdeta2();
+  const auto & d2xyz_detaxi = fe_side->get_d2xyzdxideta();
 
   if (dim == 1)
   {
@@ -75,7 +75,7 @@ findContactPoint(PenetrationInfo & p_info,
     std::vector<Point> elem_points = {p_info._closest_point_ref};
     fe_elem->reinit(master_elem, &elem_points);
 
-    const std::vector<RealGradient> & elem_dxyz_dxi = fe_elem->get_dxyzdxi();
+    const auto & elem_dxyz_dxi = fe_elem->get_dxyzdxi();
     p_info._normal = elem_dxyz_dxi[0];
     if (nearest_node->id() == master_elem->node_id(0))
       p_info._normal *= -1.0;
@@ -83,7 +83,7 @@ findContactPoint(PenetrationInfo & p_info,
 
     Point from_slave_to_closest = p_info._closest_point - slave_point;
     p_info._distance = from_slave_to_closest * p_info._normal;
-    Point tangential = from_slave_to_closest - p_info._distance * p_info._normal;
+    auto tangential = from_slave_to_closest - p_info._distance * p_info._normal;
     p_info._tangential_distance = tangential.norm();
     p_info._dxyzdxi = dxyz_dxi;
     p_info._dxyzdeta = dxyz_deta;
@@ -113,21 +113,21 @@ findContactPoint(PenetrationInfo & p_info,
   {
     DenseMatrix<Real> jac(dim - 1, dim - 1);
 
-    jac(0, 0) = -(dxyz_dxi[0] * dxyz_dxi[0]);
+    jac(0, 0) = -(dxyz_dxi[0] * dxyz_dxi[0]).value();
 
     if (dim - 1 == 2)
     {
-      jac(1, 0) = -(dxyz_dxi[0] * dxyz_deta[0]);
-      jac(0, 1) = -(dxyz_deta[0] * dxyz_dxi[0]);
-      jac(1, 1) = -(dxyz_deta[0] * dxyz_deta[0]);
+      jac(1, 0) = -(dxyz_dxi[0] * dxyz_deta[0]).value();
+      jac(0, 1) = -(dxyz_deta[0] * dxyz_dxi[0]).value();
+      jac(1, 1) = -(dxyz_deta[0] * dxyz_deta[0]).value();
     }
 
     DenseVector<Real> rhs(dim - 1);
 
-    rhs(0) = dxyz_dxi[0] * d;
+    rhs(0) = (dxyz_dxi[0] * d).value();
 
     if (dim - 1 == 2)
-      rhs(1) = dxyz_deta[0] * d;
+      rhs(1) = (dxyz_deta[0] * d).value();
 
     DenseVector<Real> update(dim - 1);
 
@@ -156,22 +156,22 @@ findContactPoint(PenetrationInfo & p_info,
 
     DenseMatrix<Real> jac(dim - 1, dim - 1);
 
-    jac(0, 0) = (d2xyz_dxi2[0] * d) - (dxyz_dxi[0] * dxyz_dxi[0]);
+    jac(0, 0) = ((d2xyz_dxi2[0] * d) - (dxyz_dxi[0] * dxyz_dxi[0])).value();
 
     if (dim - 1 == 2)
     {
-      jac(1, 0) = (d2xyz_dxieta[0] * d) - (dxyz_dxi[0] * dxyz_deta[0]);
+      jac(1, 0) = ((d2xyz_dxieta[0] * d) - (dxyz_dxi[0] * dxyz_deta[0])).value();
 
-      jac(0, 1) = (d2xyz_detaxi[0] * d) - (dxyz_deta[0] * dxyz_dxi[0]);
-      jac(1, 1) = (d2xyz_deta2[0] * d) - (dxyz_deta[0] * dxyz_deta[0]);
+      jac(0, 1) = ((d2xyz_detaxi[0] * d) - (dxyz_deta[0] * dxyz_dxi[0])).value();
+      jac(1, 1) = ((d2xyz_deta2[0] * d) - (dxyz_deta[0] * dxyz_deta[0])).value();
     }
 
     DenseVector<Real> rhs(dim - 1);
 
-    rhs(0) = -dxyz_dxi[0] * d;
+    rhs(0) = (-dxyz_dxi[0] * d).value();
 
     if (dim - 1 == 2)
-      rhs(1) = -dxyz_deta[0] * d;
+      rhs(1) = (-dxyz_deta[0] * d).value();
 
     DenseVector<Real> update(dim - 1);
 
@@ -205,13 +205,13 @@ findContactPoint(PenetrationInfo & p_info,
   }
   else
   {
-    p_info._normal = RealGradient(dxyz_dxi[0](1), -dxyz_dxi[0](0));
+    p_info._normal = VectorValue<ADPointReal>(dxyz_dxi[0](1), -dxyz_dxi[0](0));
     if (std::fabs(p_info._normal.norm()) > 1e-15)
       p_info._normal /= p_info._normal.norm();
   }
 
   // If the point has not penetrated the face, make the distance negative
-  const Real dot(d * p_info._normal);
+  const ADPointReal dot(d * p_info._normal);
   if (dot > 0.0)
     p_info._distance = -p_info._distance;
 

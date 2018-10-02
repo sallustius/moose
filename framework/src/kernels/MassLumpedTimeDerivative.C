@@ -53,5 +53,5 @@ MassLumpedTimeDerivative::computeJacobian()
 
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      ke(_i, _i) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+      ke(_i, _i) += _JxW[_qp].value() * _coord[_qp] * computeQpJacobian();
 }

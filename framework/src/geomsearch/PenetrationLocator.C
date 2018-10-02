@@ -168,7 +168,7 @@ PenetrationLocator::reinit()
   detectPenetration();
 }
 
-Real
+ADPointReal
 PenetrationLocator::penetrationDistance(dof_id_type node_id)
 {
   PenetrationInfo * info = _penetration_info[node_id];
@@ -179,7 +179,7 @@ PenetrationLocator::penetrationDistance(dof_id_type node_id)
     return 0;
 }
 
-RealVectorValue
+VectorValue<ADPointReal>
 PenetrationLocator::penetrationNormal(dof_id_type node_id)
 {
   std::map<dof_id_type, PenetrationInfo *>::const_iterator found_it =
@@ -188,7 +188,7 @@ PenetrationLocator::penetrationNormal(dof_id_type node_id)
   if (found_it != _penetration_info.end())
     return found_it->second->_normal;
   else
-    return RealVectorValue(0, 0, 0);
+    return VectorValue<ADPointReal>(0, 0, 0);
 }
 
 void

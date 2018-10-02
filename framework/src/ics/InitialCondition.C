@@ -154,7 +154,7 @@ InitialCondition::compute()
   }
 
   // The Jacobian * quadrature weight at the quadrature points
-  const std::vector<Real> & JxW = fe->get_JxW();
+  const auto & JxW = fe->get_JxW();
   // The XYZ locations of the quadrature points
   const std::vector<Point> & xyz_values = fe->get_xyz();
 
@@ -358,22 +358,22 @@ InitialCondition::compute()
           {
             unsigned int j = side_dofs[sidej];
             if (dof_is_fixed[j])
-              Fe(freei) -= phi[i][qp] * phi[j][qp] * JxW[qp] * Ue(j);
+              Fe(freei) -= phi[i][qp] * phi[j][qp] * JxW[qp].value() * Ue(j);
             else
-              Ke(freei, freej) += phi[i][qp] * phi[j][qp] * JxW[qp];
+              Ke(freei, freej) += phi[i][qp] * phi[j][qp] * JxW[qp].value();
             if (cont == C_ONE)
             {
               if (dof_is_fixed[j])
-                Fe(freei) -= ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp] * Ue(j);
+                Fe(freei) -= ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp].value() * Ue(j);
               else
-                Ke(freei, freej) += ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp];
+                Ke(freei, freej) += ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp].value();
             }
             if (!dof_is_fixed[j])
               freej++;
           }
-          Fe(freei) += phi[i][qp] * fineval * JxW[qp];
+          Fe(freei) += phi[i][qp] * fineval * JxW[qp].value();
           if (cont == C_ONE)
-            Fe(freei) += (finegrad * (*dphi)[i][qp]) * JxW[qp];
+            Fe(freei) += (finegrad * (*dphi)[i][qp]) * JxW[qp].value();
           freei++;
         }
       }
@@ -440,22 +440,22 @@ InitialCondition::compute()
           {
             unsigned int j = side_dofs[sidej];
             if (dof_is_fixed[j])
-              Fe(freei) -= phi[i][qp] * phi[j][qp] * JxW[qp] * Ue(j);
+              Fe(freei) -= phi[i][qp] * phi[j][qp] * JxW[qp].value() * Ue(j);
             else
-              Ke(freei, freej) += phi[i][qp] * phi[j][qp] * JxW[qp];
+              Ke(freei, freej) += phi[i][qp] * phi[j][qp] * JxW[qp].value();
             if (cont == C_ONE)
             {
               if (dof_is_fixed[j])
-                Fe(freei) -= ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp] * Ue(j);
+                Fe(freei) -= ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp].value() * Ue(j);
               else
-                Ke(freei, freej) += ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp];
+                Ke(freei, freej) += ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp].value();
             }
             if (!dof_is_fixed[j])
               freej++;
           }
-          Fe(freei) += (fineval * phi[i][qp]) * JxW[qp];
+          Fe(freei) += (fineval * phi[i][qp]) * JxW[qp].value();
           if (cont == C_ONE)
-            Fe(freei) += (finegrad * (*dphi)[i][qp]) * JxW[qp];
+            Fe(freei) += (finegrad * (*dphi)[i][qp]) * JxW[qp].value();
           freei++;
         }
       }
@@ -515,22 +515,22 @@ InitialCondition::compute()
         for (unsigned int j = 0, freej = 0; j != n_dofs; ++j)
         {
           if (dof_is_fixed[j])
-            Fe(freei) -= phi[i][qp] * phi[j][qp] * JxW[qp] * Ue(j);
+            Fe(freei) -= phi[i][qp] * phi[j][qp] * JxW[qp].value() * Ue(j);
           else
-            Ke(freei, freej) += phi[i][qp] * phi[j][qp] * JxW[qp];
+            Ke(freei, freej) += phi[i][qp] * phi[j][qp] * JxW[qp].value();
           if (cont == C_ONE)
           {
             if (dof_is_fixed[j])
-              Fe(freei) -= ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp] * Ue(j);
+              Fe(freei) -= ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp].value() * Ue(j);
             else
-              Ke(freei, freej) += ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp];
+              Ke(freei, freej) += ((*dphi)[i][qp] * (*dphi)[j][qp]) * JxW[qp].value();
           }
           if (!dof_is_fixed[j])
             freej++;
         }
-        Fe(freei) += phi[i][qp] * fineval * JxW[qp];
+        Fe(freei) += phi[i][qp] * fineval * JxW[qp].value();
         if (cont == C_ONE)
-          Fe(freei) += (finegrad * (*dphi)[i][qp]) * JxW[qp];
+          Fe(freei) += (finegrad * (*dphi)[i][qp]) * JxW[qp].value();
         freei++;
       }
     }

@@ -152,7 +152,7 @@ public:
    */
   const Elem *& neighbor() const { return _neighbor; }
 
-  const MooseArray<Point> & normals() const override { return _normals; }
+  const MooseArray<TypeVector<ADPointReal>> & normals() const override { return _normals; }
 
   const DenseVector<Number> & solutionDoFs() override
   {
@@ -665,7 +665,7 @@ protected:
   bool _need_matrix_tag_dof_u;
 
   /// Normals at QPs on faces
-  const MooseArray<Point> & _normals;
+  const MooseArray<TypeVector<ADPointReal>> & _normals;
 
   /// if variable is nodal
   bool _is_nodal;

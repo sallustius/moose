@@ -147,7 +147,7 @@ PenetrationThread::operator()(const NodeIdRange & range)
       }
       else
       {
-        Real old_tangential_distance(info->_tangential_distance);
+        auto old_tangential_distance(info->_tangential_distance);
         bool contact_point_on_side(false);
 
         Moose::findContactPoint(*info,
@@ -345,7 +345,7 @@ PenetrationThread::operator()(const NodeIdRange & range)
               {
                 normal /= len;
               }
-              const Real dot(normal * p_info[face_index]->_normal);
+              const auto dot(normal * p_info[face_index]->_normal);
               if (dot < 0)
               {
                 normal *= -1;
@@ -1179,8 +1179,8 @@ PenetrationThread::isFaceReasonableCandidate(const Elem * master_elem,
 
   const std::vector<Point> & phys_point = fe->get_xyz();
 
-  const std::vector<RealGradient> & dxyz_dxi = fe->get_dxyzdxi();
-  const std::vector<RealGradient> & dxyz_deta = fe->get_dxyzdeta();
+  const auto & dxyz_dxi = fe->get_dxyzdxi();
+  const auto & dxyz_deta = fe->get_dxyzdeta();
 
   Point ref_point;
 
@@ -1193,14 +1193,14 @@ PenetrationThread::isFaceReasonableCandidate(const Elem * master_elem,
   const Real twosqrt2 = 2.8284; // way more precision than we actually need here
   Real max_face_length = side->hmax() + twosqrt2 * tangential_tolerance;
 
-  RealVectorValue normal;
+  VectorValue<ADPointReal> normal;
   if (dim - 1 == 2)
   {
     normal = dxyz_dxi[0].cross(dxyz_deta[0]);
   }
   else if (dim - 1 == 1)
   {
-    normal = RealGradient(dxyz_dxi[0](1), -dxyz_dxi[0](0));
+    normal = {dxyz_dxi[0](1), -dxyz_dxi[0](0)};
   }
   else
   {
@@ -1208,16 +1208,16 @@ PenetrationThread::isFaceReasonableCandidate(const Elem * master_elem,
   }
   normal /= normal.norm();
 
-  const Real dot(d * normal);
+  const auto dot(d * normal);
 
-  const RealGradient normcomp = dot * normal;
-  const RealGradient tangcomp = d - normcomp;
+  const auto normcomp = dot * normal;
+  const auto tangcomp = d - normcomp;
 
-  const Real tangdist = tangcomp.norm();
+  const auto tangdist = tangcomp.norm();
 
   // Increase the size of the zone that we consider if the vector from the face
   // to the node has a larger normal component
-  const Real faceExpansionFactor = 2.0 * (1.0 + normcomp.norm() / d.norm());
+  const auto faceExpansionFactor = 2.0 * (1.0 + normcomp.norm() / d.norm());
 
   bool isReasonableCandidate = true;
   if (tangdist > faceExpansionFactor * max_face_length)
@@ -1267,7 +1267,7 @@ PenetrationThread::smoothNormal(PenetrationInfo * info, std::vector<PenetrationI
       if (edge_face_info.size() > 0)
       {
         // Smooth the normal using the weighting functions for all participating faces.
-        RealVectorValue new_normal;
+        TypeVector<ADPointReal> new_normal;
         Real this_face_weight = 1.0;
 
         for (unsigned int efwi = 0; efwi < edge_face_weights.size(); ++efwi)
@@ -1282,7 +1282,7 @@ PenetrationThread::smoothNormal(PenetrationInfo * info, std::vector<PenetrationI
                     "Sum of weights of other faces shouldn't exceed 0.75");
         new_normal += info->_normal * this_face_weight;
 
-        const Real len = new_normal.norm();
+        const auto len = new_normal.norm();
         if (len > 0)
           new_normal /= len;
 
@@ -1296,7 +1296,7 @@ PenetrationThread::smoothNormal(PenetrationInfo * info, std::vector<PenetrationI
       info->_normal(0) = _nodal_normal_x->getValue(info->_side, info->_side_phi);
       info->_normal(1) = _nodal_normal_y->getValue(info->_side, info->_side_phi);
       info->_normal(2) = _nodal_normal_z->getValue(info->_side, info->_side_phi);
-      const Real len(info->_normal.norm());
+      const auto len(info->_normal.norm());
       if (len > 0)
         info->_normal /= len;
     }
@@ -1718,9 +1718,9 @@ PenetrationThread::createInfoForElem(std::vector<PenetrationInfo *> & thisElemIn
     std::vector<const Node *> off_edge_nodes;
     std::vector<std::vector<Real>> side_phi;
     std::vector<std::vector<RealGradient>> side_grad_phi;
-    std::vector<RealGradient> dxyzdxi;
-    std::vector<RealGradient> dxyzdeta;
-    std::vector<RealGradient> d2xyzdxideta;
+    std::vector<VectorValue<ADPointReal>> dxyzdxi;
+    std::vector<VectorValue<ADPointReal>> dxyzdeta;
+    std::vector<VectorValue<ADPointReal>> d2xyzdxideta;
 
     PenetrationInfo * pen_info = new PenetrationInfo(slave_node,
                                                      elem,

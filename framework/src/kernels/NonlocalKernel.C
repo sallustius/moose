@@ -47,7 +47,7 @@ NonlocalKernel::computeJacobian()
     getUserObjectJacobian(_var.number(), _var.dofIndices()[_j]);
     for (_i = 0; _i < _test.size(); _i++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+        _local_ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpJacobian();
   }
 
   ke += _local_ke;
@@ -82,7 +82,7 @@ NonlocalKernel::computeOffDiagJacobian(MooseVariableFEBase & jvar)
       getUserObjectJacobian(jvar_num, jvar.dofIndices()[_j]);
       for (_i = 0; _i < _test.size(); _i++)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
+          ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
     }
   }
 }
@@ -112,7 +112,8 @@ NonlocalKernel::computeNonlocalJacobian()
 
       for (_i = 0; _i < _test.size(); _i++)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-          keg(_i, _k) += _JxW[_qp] * _coord[_qp] * computeQpNonlocalJacobian(var_alldofindices[_k]);
+          keg(_i, _k) +=
+              _JxW[_qp].value() * _coord[_qp] * computeQpNonlocalJacobian(var_alldofindices[_k]);
     }
   }
 }
@@ -147,7 +148,7 @@ NonlocalKernel::computeNonlocalOffDiagJacobian(unsigned int jvar)
 
         for (_i = 0; _i < _test.size(); _i++)
           for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-            keg(_i, _k) += _JxW[_qp] * _coord[_qp] *
+            keg(_i, _k) += _JxW[_qp].value() * _coord[_qp] *
                            computeQpNonlocalOffDiagJacobian(jvar, jv_alldofindices[_k]);
       }
     }

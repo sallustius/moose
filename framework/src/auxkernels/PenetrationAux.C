@@ -105,19 +105,19 @@ PenetrationAux::computeValue()
     switch (_quantity)
     {
       case PA_DISTANCE:
-        retVal = pinfo->_distance;
+        retVal = pinfo->_distance.value();
         break;
       case PA_TANG_DISTANCE:
-        retVal = pinfo->_tangential_distance;
+        retVal = pinfo->_tangential_distance.value();
         break;
       case PA_NORMAL_X:
-        retVal = pinfo->_normal(0);
+        retVal = pinfo->_normal(0).value();
         break;
       case PA_NORMAL_Y:
-        retVal = pinfo->_normal(1);
+        retVal = pinfo->_normal(1).value();
         break;
       case PA_NORMAL_Z:
-        retVal = pinfo->_normal(2);
+        retVal = pinfo->_normal(2).value();
         break;
       case PA_CLOSEST_POINT_X:
         retVal = pinfo->_closest_point(0);
@@ -159,36 +159,38 @@ PenetrationAux::computeValue()
         retVal = pinfo->_contact_force(2);
         break;
       case PA_NORMAL_FORCE_MAG:
-        retVal = -pinfo->_contact_force * pinfo->_normal;
+        retVal = (-pinfo->_contact_force * pinfo->_normal).value();
         break;
       case PA_NORMAL_FORCE_X:
-        retVal = (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(0);
+        retVal = (pinfo->_contact_force * pinfo->_normal).value() * pinfo->_normal(0).value();
         break;
       case PA_NORMAL_FORCE_Y:
-        retVal = (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(1);
+        retVal = (pinfo->_contact_force * pinfo->_normal).value() * pinfo->_normal(1).value();
         break;
       case PA_NORMAL_FORCE_Z:
-        retVal = (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(2);
+        retVal = (pinfo->_contact_force * pinfo->_normal).value() * pinfo->_normal(2).value();
         break;
       case PA_TANGENTIAL_FORCE_MAG:
       {
-        RealVectorValue contact_force_normal((pinfo->_contact_force * pinfo->_normal) *
-                                             pinfo->_normal);
-        RealVectorValue contact_force_tangential(pinfo->_contact_force - contact_force_normal);
-        retVal = contact_force_tangential.norm();
+        auto contact_force_normal((pinfo->_contact_force * pinfo->_normal) * pinfo->_normal);
+        auto contact_force_tangential(pinfo->_contact_force - contact_force_normal);
+        retVal = contact_force_tangential.norm().value();
         break;
       }
       case PA_TANGENTIAL_FORCE_X:
-        retVal =
-            pinfo->_contact_force(0) - (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(0);
+        retVal = (pinfo->_contact_force(0) -
+                  (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(0))
+                     .value();
         break;
       case PA_TANGENTIAL_FORCE_Y:
-        retVal =
-            pinfo->_contact_force(1) - (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(1);
+        retVal = (pinfo->_contact_force(1) -
+                  (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(1))
+                     .value();
         break;
       case PA_TANGENTIAL_FORCE_Z:
-        retVal =
-            pinfo->_contact_force(2) - (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(2);
+        retVal = (pinfo->_contact_force(2) -
+                  (pinfo->_contact_force * pinfo->_normal) * pinfo->_normal(2))
+                     .value();
         break;
       case PA_FRICTIONAL_ENERGY:
         retVal = pinfo->_frictional_energy;

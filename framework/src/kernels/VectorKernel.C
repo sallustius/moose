@@ -63,7 +63,7 @@ VectorKernel::computeResidual()
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     {
-      Real residual = _JxW[_qp] * _coord[_qp] * computeQpResidual();
+      Real residual = _JxW[_qp].value() * _coord[_qp] * computeQpResidual();
       _local_re(_i) += residual;
     }
 
@@ -88,7 +88,7 @@ VectorKernel::computeJacobian()
   for (_i = 0; _i < _test.size(); _i++)
     for (_j = 0; _j < _phi.size(); _j++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+        _local_ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpJacobian();
 
   ke += _local_ke;
 
@@ -119,7 +119,7 @@ VectorKernel::computeOffDiagJacobian(MooseVariableFEBase & jvar)
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < jvar.phiSize(); _j++)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
+          ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
   }
 }
 
@@ -132,5 +132,5 @@ VectorKernel::computeOffDiagJacobianScalar(unsigned int jvar)
   for (_i = 0; _i < _test.size(); _i++)
     for (_j = 0; _j < jv.order(); _j++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
+        ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar);
 }

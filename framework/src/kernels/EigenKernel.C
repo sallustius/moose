@@ -87,7 +87,7 @@ EigenKernel::computeResidual()
   Real one_over_eigen = 1.0 / *_eigenvalue;
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * one_over_eigen * computeQpResidual();
+      _local_re(_i) += _JxW[_qp].value() * _coord[_qp] * one_over_eigen * computeQpResidual();
 
   re += _local_re;
 
@@ -114,7 +114,7 @@ EigenKernel::computeJacobian()
   for (_i = 0; _i < _test.size(); _i++)
     for (_j = 0; _j < _phi.size(); _j++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * one_over_eigen * computeQpJacobian();
+        _local_ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * one_over_eigen * computeQpJacobian();
 
   ke += _local_ke;
 
@@ -152,7 +152,7 @@ EigenKernel::computeOffDiagJacobian(MooseVariableFEBase & jvar)
       for (_j = 0; _j < jvar.phiSize(); _j++)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
           _local_ke(_i, _j) +=
-              _JxW[_qp] * _coord[_qp] * one_over_eigen * computeQpOffDiagJacobian(jvar_num);
+              _JxW[_qp].value() * _coord[_qp] * one_over_eigen * computeQpOffDiagJacobian(jvar_num);
 
     ke += _local_ke;
   }

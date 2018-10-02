@@ -134,7 +134,7 @@ MultiAppProjectionTransfer::assembleL2(EquationSystems & es, const std::string &
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
   std::vector<dof_id_type> dof_indices;
-  const std::vector<Real> & JxW = fe->get_JxW();
+  const auto & JxW = fe->get_JxW();
   const std::vector<std::vector<Real>> & phi = fe->get_phi();
 
   for (const auto & elem : to_mesh.active_local_element_ptr_range())
@@ -158,13 +158,13 @@ MultiAppProjectionTransfer::assembleL2(EquationSystems & es, const std::string &
       for (unsigned int i = 0; i < phi.size(); i++)
       {
         // RHS
-        Fe(i) += JxW[qp] * (meshfun_eval * phi[i][qp]);
+        Fe(i) += JxW[qp].value() * (meshfun_eval * phi[i][qp]);
 
         if (_compute_matrix)
           for (unsigned int j = 0; j < phi.size(); j++)
           {
             // The matrix contribution
-            Ke(i, j) += JxW[qp] * (phi[i][qp] * phi[j][qp]);
+            Ke(i, j) += JxW[qp].value() * (phi[i][qp] * phi[j][qp]);
           }
       }
       dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);

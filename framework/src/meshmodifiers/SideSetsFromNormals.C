@@ -76,7 +76,7 @@ SideSetsFromNormals::modify()
         continue;
 
       _fe_face->reinit(elem, side);
-      const std::vector<Point> & normals = _fe_face->get_normals();
+      const auto & normals = _fe_face->get_normals();
 
       for (unsigned int i = 0; i < boundary_ids.size(); ++i)
       {

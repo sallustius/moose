@@ -365,10 +365,11 @@ public:
    * Sets the mapping between BoundaryID and normal vector
    * Is called by AddAllSideSetsByNormals
    */
-  void setBoundaryToNormalMap(std::unique_ptr<std::map<BoundaryID, RealVectorValue>> boundary_map);
+  void setBoundaryToNormalMap(
+      std::unique_ptr<std::map<BoundaryID, VectorValue<ADPointReal>>> boundary_map);
 
   // DEPRECATED METHOD
-  void setBoundaryToNormalMap(std::map<BoundaryID, RealVectorValue> * boundary_map);
+  void setBoundaryToNormalMap(std::map<BoundaryID, VectorValue<ADPointReal>> * boundary_map);
 
   /**
    * Sets the set of BoundaryIDs
@@ -380,7 +381,7 @@ public:
    * Returns the normal vector associated with a given BoundaryID.
    * It's only valid to call this when AddAllSideSetsByNormals is active.
    */
-  const RealVectorValue & getNormalByBoundaryID(BoundaryID id) const;
+  const VectorValue<ADPointReal> & getNormalByBoundaryID(BoundaryID id) const;
 
   /**
    * Calls prepare_for_use() if force=true on the underlying Mesh object, then communicates various
@@ -941,7 +942,7 @@ protected:
   ///@}
 
   /// The boundary to normal map - valid only when AddAllSideSetsByNormals is active
-  std::unique_ptr<std::map<BoundaryID, RealVectorValue>> _boundary_to_normal_map;
+  std::unique_ptr<std::map<BoundaryID, VectorValue<ADPointReal>>> _boundary_to_normal_map;
 
   /// array of boundary nodes
   std::vector<BndNode *> _bnd_nodes;

@@ -73,7 +73,7 @@ SideSetsAroundSubdomain::modify()
 
   // construct the FE object so we can compute normals of faces
   setup();
-  Point face_normal;
+  TypeVector<ADPointReal> face_normal;
   bool add_to_bdy = true;
 
   // Get a reference to our BoundaryInfo object for later use

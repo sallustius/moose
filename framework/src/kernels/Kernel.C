@@ -98,7 +98,7 @@ Kernel::computeResidual()
   precalculateResidual();
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
+      _local_re(_i) += _JxW[_qp].value() * _coord[_qp] * computeQpResidual();
 
   accumulateTaggedLocalResidual();
 
@@ -119,7 +119,7 @@ Kernel::computeJacobian()
   for (_i = 0; _i < _test.size(); _i++)
     for (_j = 0; _j < _phi.size(); _j++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+        _local_ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpJacobian();
 
   accumulateTaggedLocalMatrix();
 
@@ -151,7 +151,7 @@ Kernel::computeOffDiagJacobian(MooseVariableFEBase & jvar)
       for (_j = 0; _j < 2; _j++)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
         {
-          _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
+          _local_ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
           if (_j == 0)
             _local_ke(_i, _j) += 0.5 * _coord[_qp] * computeQpResidual();
           else if (_j == 1)
@@ -177,7 +177,7 @@ Kernel::computeOffDiagJacobian(unsigned int jvar)
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < _phi.size(); _j++)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-          _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
+          _local_ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar);
 
     accumulateTaggedLocalMatrix();
   }
@@ -192,7 +192,7 @@ Kernel::computeOffDiagJacobianScalar(unsigned int jvar)
   for (_i = 0; _i < _test.size(); _i++)
     for (_j = 0; _j < jv.order(); _j++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
+        _local_ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar);
 
   accumulateTaggedLocalMatrix();
 }

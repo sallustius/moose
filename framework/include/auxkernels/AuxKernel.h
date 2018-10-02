@@ -170,7 +170,7 @@ protected:
   /// Quadrature rule being used
   QBase *& _qrule;
   /// Transformed Jacobian weights
-  const MooseArray<Real> & _JxW;
+  const MooseArray<ADPointReal> & _JxW;
   const MooseArray<Real> & _coord;
 
   /// Holds the solution at current quadrature points

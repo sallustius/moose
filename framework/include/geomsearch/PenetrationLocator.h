@@ -44,8 +44,8 @@ public:
    */
   void reinit();
 
-  Real penetrationDistance(dof_id_type node_id);
-  RealVectorValue penetrationNormal(dof_id_type node_id);
+  ADPointReal penetrationDistance(dof_id_type node_id);
+  VectorValue<ADPointReal> penetrationNormal(dof_id_type node_id);
 
   enum NORMAL_SMOOTHING_METHOD
   {

@@ -135,7 +135,7 @@ protected:
   unsigned int _qp;
   const MooseArray<Point> & _q_point;
   QBase *& _qrule;
-  const MooseArray<Real> & _JxW;
+  const MooseArray<ADPointReal> & _JxW;
   const MooseArray<Real> & _coord;
 
   unsigned int _i, _j;
@@ -157,7 +157,7 @@ protected:
   /// Gradient of side shape function
   const VariableTestGradient & _grad_test;
   /// Normal vectors at the quadrature points
-  const MooseArray<Point> & _normals;
+  const MooseArray<TypeVector<ADPointReal>> & _normals;
 
   /// Side shape function.
   const VariablePhiValue & _phi_neighbor;
@@ -208,7 +208,7 @@ protected:
   virtual Real computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigned int jvar);
 
   /// The volume (or length) of the current neighbor
-  const Real & getNeighborElemVolume();
+  const ADPointReal & getNeighborElemVolume();
 
 public:
   // boundary id used for internal edges (all DG kernels lives on this boundary id -- a made-up

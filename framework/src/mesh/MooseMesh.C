@@ -1439,7 +1439,7 @@ MooseMesh::detectPairedSidesets()
   {
     // dimension of the current element and its normals
     unsigned int side_dim = elem->dim() - 1;
-    const std::vector<Point> & normals = fe_faces[side_dim]->get_normals();
+    const auto & normals = fe_faces[side_dim]->get_normals();
 
     // loop over element sides
     for (unsigned int s = 0; s < elem->n_sides(); s++)
@@ -1987,7 +1987,7 @@ MooseMesh::changeBoundaryId(const boundary_id_type old_id,
     boundary_info.remove_id(old_id);
 }
 
-const RealVectorValue &
+const VectorValue<ADPointReal> &
 MooseMesh::getNormalByBoundaryID(BoundaryID id) const
 {
   mooseAssert(_boundary_to_normal_map.get() != nullptr, "Boundary To Normal Map not built!");
@@ -2289,13 +2289,13 @@ MooseMesh::setMeshBoundaryIDs(std::set<BoundaryID> boundary_IDs)
 
 void
 MooseMesh::setBoundaryToNormalMap(
-    std::unique_ptr<std::map<BoundaryID, RealVectorValue>> boundary_map)
+    std::unique_ptr<std::map<BoundaryID, VectorValue<ADPointReal>>> boundary_map)
 {
   _boundary_to_normal_map = std::move(boundary_map);
 }
 
 void
-MooseMesh::setBoundaryToNormalMap(std::map<BoundaryID, RealVectorValue> * boundary_map)
+MooseMesh::setBoundaryToNormalMap(std::map<BoundaryID, VectorValue<ADPointReal>> * boundary_map)
 {
   mooseDeprecated("setBoundaryToNormalMap(std::map<BoundaryID, RealVectorValue> * boundary_map) is "
                   "deprecated, use the unique_ptr version instead");

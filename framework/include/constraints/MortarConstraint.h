@@ -87,10 +87,10 @@ protected:
 
   const MooseArray<Point> & _q_point;
   QBase *& _qrule;
-  const MooseArray<Real> & _JxW;
+  const MooseArray<ADPointReal> & _JxW;
   const MooseArray<Real> & _coord;
 
-  std::vector<Real> _JxW_lm;
+  std::vector<ADPointReal> _JxW_lm;
 
   /**
    * Current element on the interface (i.e in the mortar space)

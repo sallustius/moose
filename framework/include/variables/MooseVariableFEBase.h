@@ -56,7 +56,7 @@ public:
    */
   virtual const Elem *& currentElem() const = 0;
 
-  virtual const MooseArray<Point> & normals() const = 0;
+  virtual const MooseArray<TypeVector<ADPointReal>> & normals() const = 0;
 
   /**
    * The subdomains the variable is active on

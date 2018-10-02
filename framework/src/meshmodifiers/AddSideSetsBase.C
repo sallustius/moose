@@ -66,7 +66,7 @@ AddSideSetsBase::finalize()
 }
 
 void
-AddSideSetsBase::flood(const Elem * elem, Point normal, BoundaryID side_id)
+AddSideSetsBase::flood(const Elem * elem, TypeVector<ADPointReal> normal, BoundaryID side_id)
 {
   if (elem == nullptr || (_visited[side_id].find(elem) != _visited[side_id].end()))
     return;
@@ -78,7 +78,7 @@ AddSideSetsBase::flood(const Elem * elem, Point normal, BoundaryID side_id)
       continue;
 
     _fe_face->reinit(elem, side);
-    const std::vector<Point> normals = _fe_face->get_normals();
+    const auto normals = _fe_face->get_normals();
 
     // We'll just use the normal of the first qp
     if (std::abs(1.0 - normal * normals[0]) <= _variance)

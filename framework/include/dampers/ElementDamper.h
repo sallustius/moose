@@ -74,7 +74,7 @@ protected:
   /// Quadrature rule
   QBase *& _qrule;
   /// Transformed Jacobian weights
-  const MooseArray<Real> & _JxW;
+  const MooseArray<ADPointReal> & _JxW;
 
   /// The current Newton increment
   VariableValue & _u_increment;

@@ -152,7 +152,7 @@ protected:
   QBase *& _qrule;
 
   /// The current quadrature point weight value
-  const MooseArray<Real> & _JxW;
+  const MooseArray<ADPointReal> & _JxW;
 
   /// The scaling factor to convert from cartesian to another coordinate system (e.g rz, spherical, etc.)
   const MooseArray<Real> & _coord;

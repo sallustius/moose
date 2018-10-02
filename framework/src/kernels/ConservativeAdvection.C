@@ -108,7 +108,7 @@ ConservativeAdvection::fullUpwind(JacRes res_or_jac)
   for (_i = 0; _i < num_nodes; ++_i)
   {
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * negSpeedQp();
+      _local_re(_i) += _JxW[_qp].value() * _coord[_qp] * negSpeedQp();
     _upwind_node[_i] = (_local_re(_i) >= 0.0);
   }
 

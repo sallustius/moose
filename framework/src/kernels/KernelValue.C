@@ -37,7 +37,7 @@ KernelValue::computeResidual()
   const unsigned int n_test = _test.size();
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
   {
-    Real value = precomputeQpResidual() * _JxW[_qp] * _coord[_qp];
+    Real value = precomputeQpResidual() * _JxW[_qp].value() * _coord[_qp];
     for (_i = 0; _i < n_test; _i++) // target for auto vectorization
       _local_re(_i) += value * _test[_i][_qp];
   }
@@ -63,7 +63,7 @@ KernelValue::computeJacobian()
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_j = 0; _j < _phi.size(); _j++)
     {
-      Real value = precomputeQpJacobian() * _JxW[_qp] * _coord[_qp];
+      Real value = precomputeQpJacobian() * _JxW[_qp].value() * _coord[_qp];
       for (_i = 0; _i < n_test; _i++) // target for auto vectorization
         _local_ke(_i, _j) += value * _test[_i][_qp];
     }
@@ -96,7 +96,7 @@ KernelValue::computeOffDiagJacobian(MooseVariableFEBase & jvar)
     for (_j = 0; _j < jvar.phiSize(); _j++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
         for (_i = 0; _i < _test.size(); _i++)
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
+          ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
   }
 }
 

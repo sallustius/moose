@@ -152,7 +152,7 @@ MortarConstraint::computeResidual()
   DenseVector<Number> & re = _assembly.residualBlock(_var.number());
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
-      re(_i) += _JxW_lm[_qp] * _coord[_qp] * computeQpResidual();
+      re(_i) += _JxW_lm[_qp].value() * _coord[_qp] * computeQpResidual();
 }
 
 void
@@ -166,7 +166,7 @@ MortarConstraint::computeResidualSide(Moose::ConstraintType side)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
       {
         for (_i = 0; _i < _test_master.size(); _i++)
-          re_master(_i) += _JxW_lm[_qp] * computeQpResidualSide(Moose::Master);
+          re_master(_i) += _JxW_lm[_qp].value() * computeQpResidualSide(Moose::Master);
       }
     }
     break;
@@ -177,7 +177,7 @@ MortarConstraint::computeResidualSide(Moose::ConstraintType side)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
       {
         for (_i = 0; _i < _test_slave.size(); _i++)
-          re_slave(_i) += _JxW_lm[_qp] * _coord[_qp] * computeQpResidualSide(Moose::Slave);
+          re_slave(_i) += _JxW_lm[_qp].value() * _coord[_qp] * computeQpResidualSide(Moose::Slave);
       }
     }
     break;
@@ -196,7 +196,7 @@ MortarConstraint::computeJacobian()
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < _phi.size(); _j++)
-        Kee(_i, _j) += _JxW_lm[_qp] * _coord[_qp] * computeQpJacobian();
+        Kee(_i, _j) += _JxW_lm[_qp].value() * _coord[_qp] * computeQpJacobian();
 }
 
 void
@@ -217,9 +217,9 @@ MortarConstraint::computeJacobianSide(Moose::ConstraintType side)
           for (_j = 0; _j < _phi.size(); _j++)
           {
             Ken_master(_j, _i) +=
-                _JxW_lm[_qp] * _coord[_qp] * computeQpJacobianSide(Moose::MasterMaster);
+                _JxW_lm[_qp].value() * _coord[_qp] * computeQpJacobianSide(Moose::MasterMaster);
             Kne_master(_i, _j) +=
-                _JxW_lm[_qp] * _coord[_qp] * computeQpJacobianSide(Moose::SlaveMaster);
+                _JxW_lm[_qp].value() * _coord[_qp] * computeQpJacobianSide(Moose::SlaveMaster);
           }
         }
     }
@@ -235,9 +235,9 @@ MortarConstraint::computeJacobianSide(Moose::ConstraintType side)
           for (_j = 0; _j < _phi.size(); _j++)
           {
             Ken_slave(_j, _i) +=
-                _JxW_lm[_qp] * _coord[_qp] * computeQpJacobianSide(Moose::MasterSlave);
+                _JxW_lm[_qp].value() * _coord[_qp] * computeQpJacobianSide(Moose::MasterSlave);
             Kne_slave(_i, _j) +=
-                _JxW_lm[_qp] * _coord[_qp] * computeQpJacobianSide(Moose::SlaveSlave);
+                _JxW_lm[_qp].value() * _coord[_qp] * computeQpJacobianSide(Moose::SlaveSlave);
           }
         }
     }

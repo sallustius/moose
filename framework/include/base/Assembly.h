@@ -225,7 +225,7 @@ public:
    * Returns the reference to the transformed jacobian weights
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Real> & JxW() { return _current_JxW; }
+  const MooseArray<ADPointReal> & JxW() { return _current_JxW; }
 
   /**
    * Returns the reference to the coordinate transformation coefficients
@@ -255,13 +255,13 @@ public:
    * Returns the reference to the transformed jacobian weights on a current face
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Real> & JxWFace() { return _current_JxW_face; }
+  const MooseArray<ADPointReal> & JxWFace() { return _current_JxW_face; }
 
   /**
    * Returns the array of normals for quadrature points on a current side
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Point> & normals() { return _current_normals; }
+  const MooseArray<TypeVector<ADPointReal>> & normals() { return _current_normals; }
 
   /**
    * Return the current element
@@ -283,7 +283,7 @@ public:
    * Returns the reference to the current element volume
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const Real & elemVolume() { return _current_elem_volume; }
+  const ADPointReal & elemVolume() { return _current_elem_volume; }
 
   /**
    * Returns the current side
@@ -329,7 +329,7 @@ public:
    * Returns the reference to the current neighbor volume
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const Real & neighborVolume();
+  const ADPointReal & neighborVolume();
 
   /**
    * Returns the reference to the current quadrature being used on a current neighbor
@@ -341,7 +341,7 @@ public:
    * Returns the reference to the transformed jacobian weights on a current face
    * @return A _reference_.  Make sure to store this as a reference!
    */
-  const MooseArray<Real> & JxWNeighbor() { return _current_JxW_neighbor; }
+  const MooseArray<ADPointReal> & JxWNeighbor() { return _current_JxW_neighbor; }
 
   /**
    * Returns the reference to the node
@@ -1089,7 +1089,7 @@ protected:
   /// The current list of quadrature points
   MooseArray<Point> _current_q_points;
   /// The current list of transformed jacobian weights
-  MooseArray<Real> _current_JxW;
+  MooseArray<ADPointReal> _current_JxW;
   /// The coordinate system
   Moose::CoordinateSystemType _coord_type;
   /// The current coordinate transformation coefficients
@@ -1120,9 +1120,9 @@ protected:
   /// The current quadrature points on a face
   MooseArray<Point> _current_q_points_face;
   /// The current transformed jacobian weights on a face
-  MooseArray<Real> _current_JxW_face;
+  MooseArray<ADPointReal> _current_JxW_face;
   /// The current Normal vectors at the quadrature points.
-  MooseArray<Point> _current_normals;
+  MooseArray<TypeVector<ADPointReal>> _current_normals;
   /// Holds face qrules for each dimension
   std::map<unsigned int, QBase *> _holder_qrule_face;
   /// Holds arbitrary face qrules for each dimension
@@ -1150,7 +1150,7 @@ protected:
   /// Holds arbitrary qrules for each dimension
   std::map<unsigned int, ArbitraryQuadrature *> _holder_qrule_neighbor;
   /// The current transformed jacobian weights on a neighbor's face
-  MooseArray<Real> _current_JxW_neighbor;
+  MooseArray<ADPointReal> _current_JxW_neighbor;
   /// The current coordinate transformation coefficients
   MooseArray<Real> _coord_neighbor;
 
@@ -1159,7 +1159,7 @@ protected:
   /// The current subdomain ID
   SubdomainID _current_subdomain_id;
   /// Volume of the current element
-  Real _current_elem_volume;
+  ADPointReal _current_elem_volume;
   /// The current side of the selected element (valid only when working with sides)
   unsigned int _current_side;
   /// The current "element" making up the side we are currently on.
@@ -1177,7 +1177,7 @@ protected:
   /// true is apps need to compute neighbor element volume
   bool _need_neighbor_elem_volume;
   /// Volume of the current neighbor
-  Real _current_neighbor_volume;
+  ADPointReal _current_neighbor_volume;
   /// The current node we are working with
   const Node * _current_node;
   /// The current neighboring node we are working with

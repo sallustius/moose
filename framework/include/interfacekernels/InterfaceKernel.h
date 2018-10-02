@@ -151,7 +151,7 @@ protected:
   QBase *& _qrule;
 
   /// Elemtn Jacobian/quadrature weight
-  const MooseArray<Real> & _JxW;
+  const MooseArray<ADPointReal> & _JxW;
 
   /// Coordinate transformation value; relevant in axisymmetric simulations for example
   const MooseArray<Real> & _coord;
@@ -176,7 +176,7 @@ protected:
   /// Gradient of side shape function
   const VariableTestGradient & _grad_test;
   /// Normal vectors at the quadrature points
-  const MooseArray<Point> & _normals;
+  const MooseArray<TypeVector<ADPointReal>> & _normals;
 
   /// Coupled neighbor variable
   MooseVariable & _neighbor_var;

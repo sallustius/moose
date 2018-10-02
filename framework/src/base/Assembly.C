@@ -376,7 +376,7 @@ Assembly::buildVectorFaceNeighborFE(FEType type)
   }
 }
 
-const Real &
+const ADPointReal &
 Assembly::neighborVolume()
 {
   _need_neighbor_elem_volume = true;
@@ -489,7 +489,8 @@ Assembly::reinitFE(const Elem * elem)
   // We need to dig out the q_points and JxW from it.
   _current_q_points.shallowCopy(
       const_cast<std::vector<Point> &>((*_holder_fe_helper[dim])->get_xyz()));
-  _current_JxW.shallowCopy(const_cast<std::vector<Real> &>((*_holder_fe_helper[dim])->get_JxW()));
+  _current_JxW.shallowCopy(
+      const_cast<std::vector<ADPointReal> &>((*_holder_fe_helper[dim])->get_JxW()));
 
   if (_xfem != nullptr)
     modifyWeightsDueToXFEM(elem);
@@ -543,9 +544,9 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
   _current_q_points_face.shallowCopy(
       const_cast<std::vector<Point> &>((*_holder_fe_face_helper[dim])->get_xyz()));
   _current_JxW_face.shallowCopy(
-      const_cast<std::vector<Real> &>((*_holder_fe_face_helper[dim])->get_JxW()));
-  _current_normals.shallowCopy(
-      const_cast<std::vector<Point> &>((*_holder_fe_face_helper[dim])->get_normals()));
+      const_cast<std::vector<ADPointReal> &>((*_holder_fe_face_helper[dim])->get_JxW()));
+  _current_normals.shallowCopy(const_cast<std::vector<TypeVector<ADPointReal>> &>(
+      (*_holder_fe_face_helper[dim])->get_normals()));
 
   if (_xfem != nullptr)
     modifyFaceWeightsDueToXFEM(elem, side);
@@ -674,7 +675,7 @@ Assembly::reinitNeighbor(const Elem * neighbor, const std::vector<Point> & refer
     Moose::CoordinateSystemType coord_type =
         _sys.subproblem().getCoordSystem(_current_neighbor_subdomain_id);
     unsigned int rz_radial_coord = _sys.subproblem().getAxisymmetricRadialCoord();
-    const std::vector<Real> & JxW = fe->get_JxW();
+    const auto & JxW = fe->get_JxW();
     const std::vector<Point> & q_points = fe->get_xyz();
 
     switch (coord_type)
@@ -905,7 +906,7 @@ Assembly::reinitNeighborAtPhysical(const Elem * neighbor,
   reinitNeighbor(_current_neighbor_side_elem, reference_points);
   // compute JxW on the neighbor's face
   unsigned int neighbor_side_dim = _current_neighbor_side_elem->dim();
-  _current_JxW_neighbor.shallowCopy(const_cast<std::vector<Real> &>(
+  _current_JxW_neighbor.shallowCopy(const_cast<std::vector<ADPointReal> &>(
       (*_holder_fe_face_neighbor_helper[neighbor_side_dim])->get_JxW()));
 
   reinitFEFaceNeighbor(neighbor, reference_points);

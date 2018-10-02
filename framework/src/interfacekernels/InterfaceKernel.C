@@ -233,7 +233,7 @@ InterfaceKernel::computeElemNeighResidual(Moose::DGResidualType type)
 
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < test_space.size(); _i++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual(type);
+      _local_re(_i) += _JxW[_qp].value() * _coord[_qp] * computeQpResidual(type);
 
   re += _local_re;
 
@@ -289,7 +289,7 @@ InterfaceKernel::computeElemNeighJacobian(Moose::DGJacobianType type)
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < test_space.size(); _i++)
       for (_j = 0; _j < loc_phi.size(); _j++)
-        _local_kxx(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian(type);
+        _local_kxx(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpJacobian(type);
 
   Kxx += _local_kxx;
 
@@ -347,7 +347,7 @@ InterfaceKernel::computeOffDiagElemNeighJacobian(Moose::DGJacobianType type, uns
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
       for (_i = 0; _i < test_space.size(); _i++)
         for (_j = 0; _j < loc_phi.size(); _j++)
-          Kxx(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(type, jvar);
+          Kxx(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(type, jvar);
 }
 
 void

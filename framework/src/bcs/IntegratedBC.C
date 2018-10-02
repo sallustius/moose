@@ -90,7 +90,7 @@ IntegratedBC::computeResidual()
 
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
+      _local_re(_i) += _JxW[_qp].value() * _coord[_qp] * computeQpResidual();
 
   re += _local_re;
 
@@ -112,7 +112,7 @@ IntegratedBC::computeJacobian()
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < _phi.size(); _j++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+        _local_ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpJacobian();
 
   ke += _local_ke;
 
@@ -140,9 +140,9 @@ IntegratedBC::computeJacobianBlock(MooseVariableFEBase & jvar)
       for (_j = 0; _j < jvar.phiFaceSize(); _j++)
       {
         if (_var.number() == jvar_num)
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+          ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpJacobian();
         else
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
+          ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
       }
 }
 
@@ -158,9 +158,9 @@ IntegratedBC::computeJacobianBlock(unsigned int jvar)
       for (_j = 0; _j < _phi.size(); _j++)
       {
         if (_var.number() == jvar)
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpJacobian();
+          ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpJacobian();
         else
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
+          ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar);
       }
 }
 
@@ -173,5 +173,5 @@ IntegratedBC::computeJacobianBlockScalar(unsigned int jvar)
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < jv.order(); _j++)
-        ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
+        ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar);
 }

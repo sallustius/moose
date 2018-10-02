@@ -93,7 +93,7 @@ ADKernel<compute_stage>::computeResidual()
 
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
+      _local_re(_i) += _JxW[_qp].value() * _coord[_qp] * computeQpResidual();
 
   re += _local_re;
 
@@ -128,7 +128,8 @@ ADKernel<compute_stage>::computeJacobian()
       ADReal residual =
           computeQpResidual(); // This will also compute the derivative with respect to all dofs
       for (_j = 0; _j < _var.phiSize(); _j++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * residual.derivatives()[ad_offset + _j];
+        _local_ke(_i, _j) +=
+            _JxW[_qp].value() * _coord[_qp] * residual.derivatives()[ad_offset + _j];
     }
   }
 
@@ -175,7 +176,7 @@ ADKernel<compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
             computeQpResidual(); // This will also compute the derivative with respect to all dofs
 
         for (_j = 0; _j < jvar.phiSize(); _j++)
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * residual.derivatives()[ad_offset + _j];
+          ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * residual.derivatives()[ad_offset + _j];
       }
     }
   }
@@ -198,7 +199,7 @@ ADKernel<compute_stage>::computeOffDiagJacobianScalar(unsigned int /*jvar*/)
   for (_i = 0; _i < _test.size(); _i++)
     for (_j = 0; _j < jv.order(); _j++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
+        ke(_i, _j) += _JxW[_qp].value() * _coord[_qp] * computeQpOffDiagJacobian(jvar);
   */
 }
 

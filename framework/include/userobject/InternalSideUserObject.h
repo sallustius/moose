@@ -44,9 +44,9 @@ protected:
 
   const MooseArray<Point> & _q_point;
   QBase *& _qrule;
-  const MooseArray<Real> & _JxW;
+  const MooseArray<ADPointReal> & _JxW;
   const MooseArray<Real> & _coord;
-  const MooseArray<Point> & _normals;
+  const MooseArray<TypeVector<ADPointReal>> & _normals;
 
   const Elem *& _current_elem;
   /// current side of the current element

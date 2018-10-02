@@ -314,16 +314,34 @@ dataStore(std::ostream & stream, HashMap<T, U> & m, void * context)
   }
 }
 
-template <typename T>
+template <typename T, size_t N>
 inline void
 dataStore(std::ostream & stream,
-          MetaPhysicL::NDDualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
+          MetaPhysicL::NDDualNumber<T, NumberArray<N, T>> & dn,
           void * context)
 {
   dataStore(stream, dn.value(), context);
 
   for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
     dataStore(stream, dn.derivatives()[i], context);
+}
+
+template <typename T, size_t N>
+inline void
+dataStore(std::ostream & stream, MetaPhysicL::DualNumber<T, NumberArray<N, T>> & dn, void * context)
+{
+  dataStore(stream, dn.value(), context);
+
+  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
+    dataStore(stream, dn.derivatives()[i], context);
+}
+
+template <typename T, typename std::enable_if<!std::is_same<T, Real>::value, int>::type = 0>
+inline void
+dataStore(std::ostream & stream, VectorValue<T> & vector, void * context)
+{
+  for (unsigned int i = 0; i < LIBMESH_DIM; ++i)
+    dataStore(stream, vector(i), context);
 }
 
 // Specializations (defined in .C)
@@ -508,16 +526,34 @@ dataLoad(std::istream & stream, HashMap<T, U> & m, void * context)
   }
 }
 
-template <typename T>
+template <typename T, size_t N>
 inline void
 dataLoad(std::istream & stream,
-         MetaPhysicL::NDDualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>> & dn,
+         MetaPhysicL::NDDualNumber<T, NumberArray<N, T>> & dn,
          void * context)
 {
   dataLoad(stream, dn.value(), context);
 
   for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
     dataLoad(stream, dn.derivatives()[i], context);
+}
+
+template <typename T, size_t N>
+inline void
+dataLoad(std::istream & stream, MetaPhysicL::DualNumber<T, NumberArray<N, T>> & dn, void * context)
+{
+  dataLoad(stream, dn.value(), context);
+
+  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
+    dataLoad(stream, dn.derivatives()[i], context);
+}
+
+template <typename T, typename std::enable_if<!std::is_same<T, Real>::value, int>::type = 0>
+inline void
+dataLoad(std::istream & stream, VectorValue<T> & vector, void * context)
+{
+  for (unsigned int i = 0; i < LIBMESH_DIM; ++i)
+    dataLoad(stream, vector(i), context);
 }
 
 // Specializations (defined in .C)

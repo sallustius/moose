@@ -48,7 +48,7 @@ AddAllSideSetsByNormals::modify()
   _mesh_boundary_ids = _mesh_ptr->meshBoundaryIds();
 
   // Create the map object that will be owned by MooseMesh
-  using map_type = std::map<BoundaryID, RealVectorValue>;
+  using map_type = std::map<BoundaryID, VectorValue<ADPointReal>>;
   std::unique_ptr<map_type> boundary_map = libmesh_make_unique<map_type>();
 
   _visited.clear();
@@ -62,7 +62,7 @@ AddAllSideSetsByNormals::modify()
         continue;
 
       _fe_face->reinit(elem, side);
-      const std::vector<Point> & normals = _fe_face->get_normals();
+      const auto & normals = _fe_face->get_normals();
 
       {
         // See if we've seen this normal before (linear search)

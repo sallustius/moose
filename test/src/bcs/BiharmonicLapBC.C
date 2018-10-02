@@ -30,5 +30,5 @@ BiharmonicLapBC::BiharmonicLapBC(const InputParameters & parameters)
 Real
 BiharmonicLapBC::computeQpResidual()
 {
-  return -_lap_u.value(_t, _q_point[_qp]) * (_grad_test[_i][_qp] * _normals[_qp]);
+  return -_lap_u.value(_t, _q_point[_qp]) * (_grad_test[_i][_qp] * _normals[_qp]).value();
 }

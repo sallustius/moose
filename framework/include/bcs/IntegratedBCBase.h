@@ -86,7 +86,7 @@ protected:
   /// active quadrature points
   const MooseArray<Point> & _q_point;
   /// transformed Jacobian weights
-  const MooseArray<Real> & _JxW;
+  const MooseArray<ADPointReal> & _JxW;
   /// coordinate transformation
   const MooseArray<Real> & _coord;
   /// i-th, j-th index for enumerating test and shape functions
