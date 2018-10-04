@@ -24,9 +24,6 @@ InputParameters
 validParams<Kernel>()
 {
   InputParameters params = validParams<KernelBase>();
-  params.addCoupledVar("disp_x", "The displacement");
-  params.addCoupledVar("disp_y", "The displacement");
-  params.addCoupledVar("disp_z", "The displacement");
   params.registerBase("Kernel");
   return params;
 }
@@ -46,12 +43,7 @@ Kernel::Kernel(const InputParameters & parameters)
     _u(_is_implicit ? _var.sln() : _var.slnOld()),
     _grad_u(_is_implicit ? _var.gradSln() : _var.gradSlnOld()),
     _u_dot(_var.uDot()),
-    _du_dot_du(_var.duDotDu()),
-    _disp_x_id(coupled("disp_x")),
-    _disp_y_id(coupled("disp_y")),
-    _disp_z_id(coupled("disp_z")),
-    _dim(_mesh.dimension()),
-    _dphidx_derivatives(_assembly.dphidxDerivatives())
+    _du_dot_du(_var.duDotDu())
 {
   addMooseVariableDependency(mooseVariable());
   _save_in.resize(_save_in_strings.size());
@@ -161,22 +153,7 @@ Kernel::computeOffDiagJacobian(MooseVariableFEBase & jvar)
     for (_i = 0; _i < _test.size(); _i++)
       for (_j = 0; _j < jvar.phiSize(); _j++)
         for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        {
           _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar_num);
-          if (jvar_num == _disp_x_id)
-          {
-            _local_ke(_i, _j) +=
-                _JxW_derivatives[_qp][_dim * _j] * _coord[_qp] * computeQpResidual();
-            _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * _grad_u[_qp] *
-                                 RealVectorValue(_dphidx_derivatives[_i][_qp][_dim * _j], 0, 0);
-          }
-          else if (jvar_num == _disp_y_id)
-            _local_ke(_i, _j) +=
-                _JxW_derivatives[_qp][_dim * _j + 1] * _coord[_qp] * computeQpResidual();
-          else if (jvar_num == _disp_y_id)
-            _local_ke(_i, _j) +=
-                _JxW_derivatives[_qp][_dim * _j + 2] * _coord[_qp] * computeQpResidual();
-        }
 
     accumulateTaggedLocalMatrix();
   }

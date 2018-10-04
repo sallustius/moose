@@ -15,7 +15,7 @@
 // libmesh includes
 #include "libmesh/threads.h"
 
-MaxVarNDofsPerElem::MaxVarNDofsPerElem(FEProblemBase & feproblem, NonlinearSystemBase & sys)
+MaxVarNDofsPerElem::MaxVarNDofsPerElem(FEProblemBase & feproblem, SystemBase & sys)
   : ThreadedElementLoop<ConstElemRange>(feproblem),
     _system(sys),
     _max(0),

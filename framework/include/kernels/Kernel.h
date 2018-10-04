@@ -77,12 +77,6 @@ protected:
 
   /// Derivative of u_dot with respect to u
   const VariableValue & _du_dot_du;
-
-  const unsigned int _disp_x_id;
-  const unsigned int _disp_y_id;
-  const unsigned int _disp_z_id;
-  const unsigned int _dim;
-  const MooseArray<std::vector<NumberArray<AD_MAX_DOFS_PER_ELEM, Real>>> & _dphidx_derivatives;
 };
 
 #endif /* KERNEL_H */

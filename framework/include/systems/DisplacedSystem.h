@@ -163,6 +163,7 @@ public:
   virtual const System & system() const override { return _sys; }
 
 protected:
+  FEProblemBase & _fe_problem;
   SystemBase & _undisplaced_system;
   TransientExplicitSystem & _sys;
 };

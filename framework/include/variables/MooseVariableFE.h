@@ -719,6 +719,7 @@ protected:
   // Shape function values, gradients, second derivatives
   const FieldVariablePhiValue & _phi;
   const FieldVariablePhiGradient & _grad_phi;
+  const MooseArray<std::vector<NumberArray<AD_MAX_DOFS_PER_ELEM, Real>>> & _dphidx_derivatives;
   const FieldVariablePhiSecond * _second_phi;
   const FieldVariablePhiCurl * _curl_phi;
 

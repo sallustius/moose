@@ -273,6 +273,8 @@ public:
    */
   void undisplaceMesh();
 
+  FEProblemBase & feProblem() { return _mproblem; }
+
 protected:
   FEProblemBase & _mproblem;
   MooseMesh & _mesh;

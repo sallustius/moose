@@ -4,7 +4,7 @@
 
 [Mesh]
   type = GeneratedMesh
-  nx = 2
+  nx = 10
   dim = 1
 []
 
@@ -21,7 +21,7 @@
     variable = disp_x
   [../]
   [./u]
-    type = Diffusion
+    type = WeirdTestKernel
     variable = u
     use_displaced_mesh = true
     disp_x = disp_x
@@ -67,8 +67,22 @@
   type = Transient
   num_steps = 5
   petsc_options = '-snes_test_jacobian -snes_test_jacobian_view'
-  petsc_options_iname = '-pc_type -mat_fd_coloring_err'
-  petsc_options_value = 'lu       1e-5'
+  petsc_options_iname = '-pc_type'
+  petsc_options_value = 'lu'
+  dtmin = 1
+[]
+
+[ICs]
+  [./disp_x]
+    type = FunctionIC
+    variable = disp_x
+    function = '1 + x'
+  [../]
+  [./u]
+    type = FunctionIC
+    variable = u
+    function = '2 + 2 * x'
+  [../]
 []
 
 [Outputs]

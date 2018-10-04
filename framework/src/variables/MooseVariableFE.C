@@ -88,6 +88,7 @@ MooseVariableFE<OutputType>::MooseVariableFE(unsigned int var_num,
     _node_neighbor(_assembly.nodeNeighbor()),
     _phi(_assembly.fePhi<OutputType>(_fe_type)),
     _grad_phi(_assembly.feGradPhi<OutputType>(_fe_type)),
+    _dphidx_derivatives(_assembly.dphidxDerivatives()),
     _phi_face(_assembly.fePhiFace<OutputType>(_fe_type)),
     _grad_phi_face(_assembly.feGradPhiFace<OutputType>(_fe_type)),
     _phi_neighbor(_assembly.fePhiNeighbor<OutputType>(_fe_type)),
@@ -1022,7 +1023,7 @@ MooseVariableFE<OutputType>::computeValuesHelper(QBase *& qrule,
   }
 
   // Automatic differentiation
-  if (_need_ad_u && _computing_jacobian)
+  if ((_need_ad_u || _need_ad_grad_u) && _computing_jacobian)
     computeAD(num_dofs, nqp);
 }
 
@@ -1081,7 +1082,20 @@ MooseVariableFE<Real>::computeAD(const unsigned int & num_dofs, const unsigned i
       _ad_u[qp] += _ad_dofs[i] * _phi[i][qp];
 
       if (_need_ad_grad_u)
-        _ad_grad_u[qp] += _ad_dofs[i] * _grad_phi[i][qp];
+      {
+        if (_var_num != 0)
+        {
+          MetaPhysicL::NotADuckDualNumber<
+              VectorValue<Real>,
+              MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, VectorValue<Real>>>
+              ad_grad_phi = _grad_phi[i][qp];
+          for (decltype(AD_MAX_DOFS_PER_ELEM) index = 0; index < AD_MAX_DOFS_PER_ELEM; ++index)
+            ad_grad_phi.derivatives()[index](0) = _dphidx_derivatives[i][qp][index];
+          _ad_grad_u[qp] += _ad_dofs[i] * ad_grad_phi;
+        }
+        else
+          _ad_grad_u[qp] += _ad_dofs[i] * _grad_phi[i][qp];
+      }
 
       if (_need_ad_second_u)
         _ad_second_u[qp] += _ad_dofs[i] * (*_second_phi)[i][qp];
