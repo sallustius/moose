@@ -153,6 +153,7 @@ protected:
 
   /// The current quadrature point weight value
   const MooseArray<Real> & _JxW;
+  const MooseArray<NumberArray<AD_MAX_DOFS_PER_ELEM, Real>> & _JxW_derivatives;
 
   /// The scaling factor to convert from cartesian to another coordinate system (e.g rz, spherical, etc.)
   const MooseArray<Real> & _coord;

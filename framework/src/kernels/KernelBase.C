@@ -85,6 +85,7 @@ KernelBase::KernelBase(const InputParameters & parameters)
     _q_point(_assembly.qPoints()),
     _qrule(_assembly.qRule()),
     _JxW(_assembly.JxW()),
+    _JxW_derivatives(_assembly.JxWDerivatives()),
     _coord(_assembly.coordTransformation()),
     _has_save_in(false),
     _save_in_strings(parameters.get<std::vector<AuxVariableName>>("save_in")),

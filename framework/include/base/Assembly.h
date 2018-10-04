@@ -226,6 +226,14 @@ public:
    * @return A _reference_.  Make sure to store this as a reference!
    */
   const MooseArray<Real> & JxW() { return _current_JxW; }
+  const MooseArray<NumberArray<AD_MAX_DOFS_PER_ELEM, Real>> & JxWDerivatives()
+  {
+    return _current_JxW_derivatives;
+  }
+  const MooseArray<std::vector<NumberArray<AD_MAX_DOFS_PER_ELEM, Real>>> & dphidxDerivatives()
+  {
+    return _dphidx_derivatives;
+  }
 
   /**
    * Returns the reference to the coordinate transformation coefficients
@@ -1090,6 +1098,8 @@ protected:
   MooseArray<Point> _current_q_points;
   /// The current list of transformed jacobian weights
   MooseArray<Real> _current_JxW;
+  MooseArray<NumberArray<AD_MAX_DOFS_PER_ELEM, Real>> _current_JxW_derivatives;
+  MooseArray<std::vector<NumberArray<AD_MAX_DOFS_PER_ELEM, Real>>> _dphidx_derivatives;
   /// The coordinate system
   Moose::CoordinateSystemType _coord_type;
   /// The current coordinate transformation coefficients

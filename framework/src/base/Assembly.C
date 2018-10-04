@@ -490,6 +490,11 @@ Assembly::reinitFE(const Elem * elem)
   _current_q_points.shallowCopy(
       const_cast<std::vector<Point> &>((*_holder_fe_helper[dim])->get_xyz()));
   _current_JxW.shallowCopy(const_cast<std::vector<Real> &>((*_holder_fe_helper[dim])->get_JxW()));
+  _current_JxW_derivatives.shallowCopy(
+      const_cast<std::vector<NumberArray<AD_MAX_DOFS_PER_ELEM, Real>> &>(
+          (*_holder_fe_helper[dim])->get_JxW_derivatives()));
+  _dphidx_derivatives.shallowCopy(const_cast<std::vector<std::vector<NumberArray<100, Real>>> &>(
+      (*_holder_fe_helper[dim])->get_dphidx_derivatives()));
 
   if (_xfem != nullptr)
     modifyWeightsDueToXFEM(elem);
