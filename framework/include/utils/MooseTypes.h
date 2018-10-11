@@ -172,7 +172,7 @@ using MetaPhysicL::NDDualNumber;
 using MetaPhysicL::NumberArray;
 
 template <typename T>
-using ScalarDN = NDDualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>>;
+using GeneralDN = NDDualNumber<T, NumberArray<AD_MAX_DOFS_PER_ELEM, T>>;
 template <typename T, template <class> class W>
 using TemplateDN = NDDualNumber<W<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, W<T>>>;
 template <typename T>
@@ -183,7 +183,7 @@ using TensorDN = NDDualNumber<TensorValue<T>, NumberArray<AD_MAX_DOFS_PER_ELEM, 
 /*
  * Some helpful typedefs for AD
  */
-typedef ScalarDN<Real> ADReal;
+typedef GeneralDN<Real> ADReal;
 typedef VectorDN<Real> ADRealVectorValue;
 typedef TensorDN<Real> ADRealTensorValue;
 

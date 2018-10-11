@@ -65,6 +65,53 @@ public:
                   Moose::VarKindType var_kind);
   virtual ~MooseVariableFE();
 
+  template <typename T>
+  class MooseArrayContainer
+  {
+  public:
+    MooseArrayContainer(
+        MooseArray<
+            MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
+            data)
+      : _data(data)
+    {
+    }
+
+    const T & operator[](unsigned int i) const { return _data[i].value(); }
+    T & operator[](unsigned int i) { return _data[i].value(); }
+
+    void resize(unsigned int n) { _data.resize(n); }
+
+  protected:
+    MooseArray<
+        MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
+        _data;
+  };
+
+  template <typename T>
+  class ADMooseArrayContainer : public MooseArrayContainer<T>
+  {
+  public:
+    ADMooseArrayContainer(
+        MooseArray<
+            MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
+            data)
+      : MooseArrayContainer<T>(data)
+    {
+    }
+
+    const MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
+    operator[](unsigned int i) const
+    {
+      return this->_data[i];
+    }
+    MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
+    operator[](unsigned int i)
+    {
+      return this->_data[i];
+    }
+  };
+
   void clearDofIndices() override;
 
   void prepare() override;
@@ -242,7 +289,7 @@ public:
   // damping
   FieldVariableValue & increment() { return _increment; }
 
-  const FieldVariableValue & sln() { return _u; }
+  const FieldVariableValue & sln() { return _ad_u.value(); }
   const FieldVariableValue & slnOld()
   {
     _need_u_old = true;
@@ -258,7 +305,7 @@ public:
     _need_u_previous_nl = true;
     return _u_previous_nl;
   }
-  const FieldVariableGradient & gradSln() { return _grad_u; }
+  const FieldVariableGradient & gradSln() { return _ad_grad_u.value(); }
   const FieldVariableGradient & gradSlnOld()
   {
     _need_grad_old = true;
@@ -284,7 +331,7 @@ public:
     _need_second = true;
     secondPhi();
     secondPhiFace();
-    return _second_u;
+    return _ad_second_u.value();
   }
   const FieldVariableSecond & secondSlnOld()
   {
@@ -371,7 +418,7 @@ public:
   const FieldVariableValue & uDot() { return _u_dot; }
   const VariableValue & duDotDu() { return _du_dot_du; }
 
-  const FieldVariableValue & slnNeighbor() { return _u_neighbor; }
+  const FieldVariableValue & slnNeighbor() { return _neighbor_ad_u.value(); }
   const FieldVariableValue & slnOldNeighbor()
   {
     _need_u_old_neighbor = true;
@@ -387,7 +434,7 @@ public:
     _need_u_previous_nl_neighbor = true;
     return _u_previous_nl_neighbor;
   }
-  const FieldVariableGradient & gradSlnNeighbor() { return _grad_u_neighbor; }
+  const FieldVariableGradient & gradSlnNeighbor() { return _neighbor_ad_grad_u.value(); }
   const FieldVariableGradient & gradSlnOldNeighbor()
   {
     _need_grad_old_neighbor = true;
@@ -412,7 +459,7 @@ public:
   {
     _need_second_neighbor = true;
     secondPhiFaceNeighbor();
-    return _second_u_neighbor;
+    return _neighbor_ad_second_u.value();
   }
   const FieldVariableSecond & secondSlnOldNeighbor()
   {
@@ -686,7 +733,6 @@ protected:
 
   // dof solution stuff (which for nodal variables corresponds to values at the nodes)
 
-  MooseArray<Real> _dof_values;
   MooseArray<Real> _dof_values_old;
   MooseArray<Real> _dof_values_older;
   MooseArray<Real> _dof_values_previous_nl;
@@ -701,7 +747,6 @@ protected:
   /// nodal values of derivative of u_dot wrt u
   MooseArray<Real> _dof_du_dot_du;
 
-  MooseArray<Real> _dof_values_neighbor;
   MooseArray<Real> _dof_values_old_neighbor;
   MooseArray<Real> _dof_values_older_neighbor;
   MooseArray<Real> _dof_values_previous_nl_neighbor;
@@ -740,49 +785,52 @@ protected:
   const FieldVariablePhiSecond * _second_phi_face_neighbor;
   const FieldVariablePhiCurl * _curl_phi_face_neighbor;
 
-  FieldVariableValue _u, _u_bak;
-  FieldVariableValue _u_old, _u_old_bak;
-  FieldVariableValue _u_older, _u_older_bak;
+  FieldVariableValue _u_old;
+  FieldVariableValue _u_older;
   FieldVariableValue _u_previous_nl;
-  FieldVariableGradient _grad_u, _grad_u_bak;
-  FieldVariableGradient _grad_u_old, _grad_u_old_bak;
-  FieldVariableGradient _grad_u_older, _grad_u_older_bak;
+  FieldVariableGradient _grad_u_old;
+  FieldVariableGradient _grad_u_older;
   FieldVariableGradient _grad_u_previous_nl;
   FieldVariableGradient _grad_u_dot;
-  FieldVariableSecond _second_u, _second_u_bak;
-  FieldVariableSecond _second_u_old, _second_u_old_bak;
-  FieldVariableSecond _second_u_older, _second_u_older_bak;
+  FieldVariableSecond _second_u_old;
+  FieldVariableSecond _second_u_older;
   FieldVariableSecond _second_u_previous_nl;
-  FieldVariableCurl _curl_u, _curl_u_bak;
-  FieldVariableCurl _curl_u_old, _curl_u_old_bak;
+  FieldVariableCurl _curl_u;
+  FieldVariableCurl _curl_u_old;
   FieldVariableCurl _curl_u_older;
 
-  MooseArray<ADReal> _ad_u;
-  MooseArray<ADRealGradient> _ad_grad_u;
-  MooseArray<ADRealTensor> _ad_second_u;
-  std::vector<ADReal> _ad_dofs;
+  MooseArray<GeneralDN<OutputValue>> _ad_u;
+  MooseArray<GeneralDN<OutputGradient>> _ad_grad_u;
+  MooseArray<GeneralDN<OutputSecond>> _ad_second_u;
+  MooseArray<ADReal> _ad_dofs;
 
-  MooseArray<ADReal> _neighbor_ad_u;
-  MooseArray<ADRealGradient> _neighbor_ad_grad_u;
-  MooseArray<ADRealTensor> _neighbor_ad_second_u;
-  std::vector<ADReal> _neighbor_ad_dofs;
+  MooseArray<GeneralDN<OutputValue>> _neighbor_ad_u;
+  MooseArray<GeneralDN<OutputGradient>> _neighbor_ad_grad_u;
+  MooseArray<GeneralDN<OutputSecond>> _neighbor_ad_second_u;
+  MooseArray<ADReal> _neighbor_ad_dofs;
 
-  FieldVariableValue _u_neighbor;
   FieldVariableValue _u_old_neighbor;
   FieldVariableValue _u_older_neighbor;
   FieldVariableValue _u_previous_nl_neighbor;
-  FieldVariableGradient _grad_u_neighbor;
   FieldVariableGradient _grad_u_old_neighbor;
   FieldVariableGradient _grad_u_older_neighbor;
   FieldVariableGradient _grad_u_previous_nl_neighbor;
   FieldVariableGradient _grad_u_neighbor_dot;
-  FieldVariableSecond _second_u_neighbor;
   FieldVariableSecond _second_u_old_neighbor;
   FieldVariableSecond _second_u_older_neighbor;
   FieldVariableSecond _second_u_previous_nl_neighbor;
   FieldVariableCurl _curl_u_neighbor;
   FieldVariableCurl _curl_u_old_neighbor;
   FieldVariableCurl _curl_u_older_neighbor;
+
+  ADMooseArrayContainer<OutputValue> _ad_u_container;
+  ADMooseArrayContainer<OutputGradient> _ad_grad_u_container;
+  ADMooseArrayContainer<OutputSecond> _ad_second_u_container;
+  ADMooseArrayContainer<OutputValue> _ad_dofs_container;
+  ADMooseArrayContainer<OutputValue> _neighbor_ad_u_container;
+  ADMooseArrayContainer<OutputGradient> _neighbor_ad_grad_u_container;
+  ADMooseArrayContainer<OutputSecond> _neighbor_ad_second_u_container;
+  ADMooseArrayContainer<OutputValue> _neighbor_ad_dofs_container;
 
   // time derivatives
 

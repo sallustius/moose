@@ -93,7 +93,23 @@ MooseVariableFE<OutputType>::MooseVariableFE(unsigned int var_num,
     _phi_neighbor(_assembly.fePhiNeighbor<OutputType>(_fe_type)),
     _grad_phi_neighbor(_assembly.feGradPhiNeighbor<OutputType>(_fe_type)),
     _phi_face_neighbor(_assembly.fePhiFaceNeighbor<OutputType>(_fe_type)),
-    _grad_phi_face_neighbor(_assembly.feGradPhiFaceNeighbor<OutputType>(_fe_type))
+    _grad_phi_face_neighbor(_assembly.feGradPhiFaceNeighbor<OutputType>(_fe_type)),
+    _ad_u(),
+    _ad_grad_u(),
+    _ad_second_u(),
+    _ad_dofs(),
+    _neighbor_ad_u(),
+    _neighbor_ad_grad_u(),
+    _neighbor_ad_second_u(),
+    _neighbor_ad_dofs(),
+    _ad_u_container(_ad_u),
+    _ad_grad_u_container(_ad_grad_u),
+    _ad_second_u_container(_ad_second_u),
+    _ad_dofs_container(_ad_dofs),
+    _neighbor_ad_u_container(_neighbor_ad_u),
+    _neighbor_ad_grad_u_container(_neighbor_ad_grad_u),
+    _neighbor_ad_second_u_container(_neighbor_ad_second_u),
+    _neighbor_ad_dofs_container(_neighbor_ad_dofs)
 {
   // FIXME: continuity of FE type seems equivalent with the definition of nodal variables.
   //        Continuity does not depend on the FE dimension, so we just pass in a valid dimension.
