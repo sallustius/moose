@@ -1125,16 +1125,12 @@ MooseVariableFE<Real>::computeADNeighbor(const unsigned int & num_dofs, const un
       _neighbor_ad_grad_u[qp] = 0;
 
     if (_need_neighbor_ad_second_u)
-    {
-      TensorValue<Real> value{};
-      NumberArray<AD_MAX_DOFS_PER_ELEM, TensorValue<Real>> derivatives{};
-      _neighbor_ad_second_u[qp] = TensorDN<Real>(value, derivatives);
-    }
+      _neighbor_ad_second_u[qp] = 0;
   }
 
   for (unsigned int i = 0; i < num_dofs; i++)
   {
-    _neighbor_ad_dofs[i] = (*_sys.currentSolution())(_dof_indices[i]);
+    _neighbor_ad_dofs[i] = (*_sys.currentSolution())(_dof_indices_neighbor[i]);
 
     // NOTE!  You have to do this AFTER setting the value!
     _neighbor_ad_dofs[i].derivatives()[ad_offset + i] = 1.0;
@@ -1508,6 +1504,7 @@ MooseVariableFE<OutputType>::computeNodalValues()
     const size_t n = _dof_indices.size();
     mooseAssert(n, "There must be a non-zero number of degrees of freedom");
     _dof_values.resize(n);
+
     _sys.currentSolution()->get(_dof_indices, &_dof_values[0]);
     _nodal_value = _dof_values[0];
 
