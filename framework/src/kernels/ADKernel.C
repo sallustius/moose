@@ -18,22 +18,19 @@
 #include "libmesh/threads.h"
 
 defineADBaseValidParams(ADKernel, KernelBase, params.registerBase("ADKernel"););
+defineADBaseValidParams(ADVectorKernel, KernelBase, params.registerBase("ADVectorKernel"););
 
-template <ComputeStage compute_stage>
-ADKernel<compute_stage>::ADKernel(const InputParameters & parameters)
+template <typename T, ComputeStage compute_stage>
+ADKernelTempl<T, compute_stage>::ADKernelTempl(const InputParameters & parameters)
   : KernelBase(parameters),
-    MooseVariableInterface<Real>(this,
-                                 false,
-                                 "variable",
-                                 Moose::VarKindType::VAR_NONLINEAR,
-                                 Moose::VarFieldType::VAR_FIELD_STANDARD),
-    _var(*mooseVariable()),
+    MooseVariableInterface<T>(this, false, "variable", Moose::VarKindType::VAR_NONLINEAR),
+    _var(*this->mooseVariable()),
     _test(_var.phi()),
     _grad_test(_var.gradPhi()),
-    _u(_var.adSln<compute_stage>()),
-    _grad_u(_var.adGradSln<compute_stage>())
+    _u(_var.template adSln<compute_stage>()),
+    _grad_u(_var.template adGradSln<compute_stage>())
 {
-  addMooseVariableDependency(mooseVariable());
+  addMooseVariableDependency(this->mooseVariable());
   _save_in.resize(_save_in_strings.size());
   _diag_save_in.resize(_diag_save_in_strings.size());
 
@@ -78,14 +75,14 @@ ADKernel<compute_stage>::ADKernel(const InputParameters & parameters)
   _has_diag_save_in = _diag_save_in.size() > 0;
 }
 
-template <ComputeStage compute_stage>
-ADKernel<compute_stage>::~ADKernel()
+template <typename T, ComputeStage compute_stage>
+ADKernelTempl<T, compute_stage>::~ADKernelTempl()
 {
 }
 
-template <ComputeStage compute_stage>
+template <typename T, ComputeStage compute_stage>
 void
-ADKernel<compute_stage>::computeResidual()
+ADKernelTempl<T, compute_stage>::computeResidual()
 {
   DenseVector<Number> & re = _assembly.residualBlock(_var.number());
   _local_re.resize(re.size());
@@ -107,13 +104,18 @@ ADKernel<compute_stage>::computeResidual()
 
 template <>
 void
-ADKernel<JACOBIAN>::computeResidual()
+ADKernelTempl<Real, JACOBIAN>::computeResidual()
+{
+}
+template <>
+void
+ADKernelTempl<RealVectorValue, JACOBIAN>::computeResidual()
 {
 }
 
-template <ComputeStage compute_stage>
+template <typename T, ComputeStage compute_stage>
 void
-ADKernel<compute_stage>::computeJacobian()
+ADKernelTempl<T, compute_stage>::computeJacobian()
 {
   DenseMatrix<Number> & ke = _assembly.jacobianBlock(_var.number(), _var.number());
   _local_ke.resize(ke.m(), ke.n());
@@ -149,13 +151,18 @@ ADKernel<compute_stage>::computeJacobian()
 
 template <>
 void
-ADKernel<RESIDUAL>::computeJacobian()
+ADKernelTempl<Real, RESIDUAL>::computeJacobian()
+{
+}
+template <>
+void
+ADKernelTempl<RealVectorValue, RESIDUAL>::computeJacobian()
 {
 }
 
-template <ComputeStage compute_stage>
+template <typename T, ComputeStage compute_stage>
 void
-ADKernel<compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
+ADKernelTempl<T, compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
 {
   auto jvar_num = jvar.number();
 
@@ -183,24 +190,22 @@ ADKernel<compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
 
 template <>
 void
-ADKernel<RESIDUAL>::computeOffDiagJacobian(MooseVariableFEBase &)
+ADKernelTempl<Real, RESIDUAL>::computeOffDiagJacobian(MooseVariableFEBase &)
 {
 }
-
-template <ComputeStage compute_stage>
+template <>
 void
-ADKernel<compute_stage>::computeOffDiagJacobianScalar(unsigned int /*jvar*/)
+ADKernelTempl<RealVectorValue, RESIDUAL>::computeOffDiagJacobian(MooseVariableFEBase &)
 {
-  /*
-  DenseMatrix<Number> & ke = _assembly.jacobianBlock(_var.number(), jvar);
-  MooseVariableScalar & jv = _sys.getScalarVariable(_tid, jvar);
-
-  for (_i = 0; _i < _test.size(); _i++)
-    for (_j = 0; _j < jv.order(); _j++)
-      for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-        ke(_i, _j) += _JxW[_qp] * _coord[_qp] * computeQpOffDiagJacobian(jvar);
-  */
 }
 
-template class ADKernel<RESIDUAL>;
-template class ADKernel<JACOBIAN>;
+template <typename T, ComputeStage compute_stage>
+void
+ADKernelTempl<T, compute_stage>::computeOffDiagJacobianScalar(unsigned int /*jvar*/)
+{
+}
+
+template class ADKernelTempl<Real, RESIDUAL>;
+template class ADKernelTempl<Real, JACOBIAN>;
+template class ADKernelTempl<RealVectorValue, RESIDUAL>;
+template class ADKernelTempl<RealVectorValue, JACOBIAN>;

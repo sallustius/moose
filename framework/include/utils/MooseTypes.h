@@ -174,7 +174,7 @@ typedef TemplateDN<VectorValue> ADRealVectorValue;
 typedef TemplateDN<TensorValue> ADRealTensorValue;
 
 typedef ADRealVectorValue ADRealGradient;
-typedef ADRealTensorValue ADRealTensor;
+typedef ADRealTensorValue ADRealSecond;
 
 namespace libMesh
 {
@@ -218,45 +218,51 @@ enum ComputeStage
 };
 
 template <ComputeStage compute_stage>
-struct VariableValueType
-{
-  typedef VariableValue type;
-};
-template <>
-struct VariableValueType<JACOBIAN>
-{
-  typedef MooseArray<ADReal> type;
-};
-template <ComputeStage compute_stage>
-struct VariableGradientType
-{
-  typedef VariableGradient type;
-};
-template <>
-struct VariableGradientType<JACOBIAN>
-{
-  typedef MooseArray<ADRealGradient> type;
-};
-template <ComputeStage compute_stage>
-struct VariableSecondType
-{
-  typedef VariableSecond type;
-};
-template <>
-struct VariableSecondType<JACOBIAN>
-{
-  typedef MooseArray<ADRealTensor> type;
-};
-template <ComputeStage compute_stage>
-struct ResidualReturnType
+struct RealType
 {
   typedef Real type;
 };
 template <>
-struct ResidualReturnType<JACOBIAN>
+struct RealType<JACOBIAN>
 {
   typedef ADReal type;
 };
+
+template <ComputeStage compute_stage, typename T>
+struct ValueType;
+template <ComputeStage compute_stage>
+struct ValueType<compute_stage, Real>
+{
+  typedef typename RealType<compute_stage>::type type;
+};
+template <ComputeStage compute_stage, template <typename> class W>
+struct ValueType<compute_stage, W<Real>>
+{
+  typedef W<typename RealType<compute_stage>::type> type;
+};
+
+template <ComputeStage compute_stage, typename T>
+struct VariableValueType
+{
+  typedef typename OutputTools<typename ValueType<compute_stage, T>::type>::VariableValue type;
+};
+template <ComputeStage compute_stage, typename T>
+struct VariableGradientType
+{
+  typedef typename OutputTools<typename ValueType<compute_stage, T>::type>::VariableGradient type;
+};
+template <ComputeStage compute_stage, typename T>
+struct VariableSecondType
+{
+  typedef typename OutputTools<typename ValueType<compute_stage, T>::type>::VariableSecond type;
+};
+
+template <ComputeStage compute_stage>
+struct ResidualReturnType
+{
+  typedef typename RealType<compute_stage>::type type;
+};
+
 template <ComputeStage compute_stage, typename mat_prop_type>
 struct MaterialPropertyType
 {
@@ -269,14 +275,30 @@ struct MaterialPropertyType<JACOBIAN, mat_prop_type>
 };
 
 #define ADResidual typename ResidualReturnType<compute_stage>::type
-#define ADVariableValue typename VariableValueType<compute_stage>::type
-#define ADVariableGradient typename VariableGradientType<compute_stage>::type
-#define ADVariableSecond typename VariableSecondType<compute_stage>::type
+
+#define ADVariableValue typename VariableValueType<compute_stage, Real>::type
+#define ADVariableGradient typename VariableGradientType<compute_stage, Real>::type
+#define ADVariableSecond typename VariableSecondType<compute_stage, Real>::type
+
+#define ADVectorVariableValue typename VariableValueType<compute_stage, RealVectorValue>::type
+#define ADVectorVariableGradient typename VariableGradientType<compute_stage, RealVectorValue>::type
+#define ADVectorVariableSecond typename VariableSecondType<compute_stage, RealVectorValue>::type
+
+#define ADTemplateVariableValue typename VariableValueType<compute_stage, T>::type
+#define ADTemplateVariableGradient typename VariableGradientType<compute_stage, T>::type
+#define ADTemplateVariableSecond typename VariableSecondType<compute_stage, T>::type
+
 #define ADMaterialProperty(Type) typename MaterialPropertyType<compute_stage, Type>::type
 
 typedef VariableTestValue ADVariableTestValue;
 typedef VariableTestGradient ADVariableTestGradient;
 typedef VariableTestSecond ADVariableTestSecond;
+typedef VectorVariableTestValue ADVectorVariableTestValue;
+typedef VectorVariableTestGradient ADVectorVariableTestGradient;
+typedef VectorVariableTestSecond ADVectorVariableTestSecond;
+#define ADTemplateVariableTestValue typename OutputTools<T>::VariableTestValue
+#define ADTemplateVariableTestGradient typename OutputTools<T>::VariableTestGradient
+#define ADTemplateVariableTestSecond typename OutputTools<T>::VariableTestSecond
 
 #define declareADValidParams(ADObjectType)                                                         \
   template <>                                                                                      \

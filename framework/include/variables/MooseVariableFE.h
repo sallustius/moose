@@ -65,6 +65,53 @@ public:
                   Moose::VarKindType var_kind);
   virtual ~MooseVariableFE();
 
+  template <typename T>
+  class MooseArrayContainer
+  {
+  public:
+    MooseArrayContainer(
+        MooseArray<
+            MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
+            data)
+      : _data(data)
+    {
+    }
+
+    const T & operator[](unsigned int i) const { return _data[i].value(); }
+    T & operator[](unsigned int i) { return _data[i].value(); }
+
+    void resize(unsigned int n) { _data.resize(n); }
+
+  protected:
+    MooseArray<
+        MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
+        _data;
+  };
+
+  template <typename T>
+  class ADMooseArrayContainer : public MooseArrayContainer<T>
+  {
+  public:
+    ADMooseArrayContainer(
+        MooseArray<
+            MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
+            data)
+      : MooseArrayContainer<T>(data)
+    {
+    }
+
+    const MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
+    operator[](unsigned int i) const
+    {
+      return this->_data[i];
+    }
+    MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
+    operator[](unsigned int i)
+    {
+      return this->_data[i];
+    }
+  };
+
   void clearDofIndices() override;
 
   void prepare() override;
@@ -324,21 +371,21 @@ public:
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableValueType<compute_stage>::type & adSln()
+  const typename VariableValueType<compute_stage, OutputType>::type & adSln()
   {
     _need_ad_u = true;
     return _ad_u;
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableGradientType<compute_stage>::type & adGradSln()
+  const typename VariableGradientType<compute_stage, OutputType>::type & adGradSln()
   {
     _need_ad_grad_u = true;
     return _ad_grad_u;
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableSecondType<compute_stage>::type & adSecondSln()
+  const typename VariableSecondType<compute_stage, OutputType>::type & adSecondSln()
   {
     _need_ad_second_u = true;
     secondPhi();
@@ -347,21 +394,21 @@ public:
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableValueType<compute_stage>::type & adSlnNeighbor()
+  const typename VariableValueType<compute_stage, OutputType>::type & adSlnNeighbor()
   {
     _need_neighbor_ad_u = true;
     return _neighbor_ad_u;
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableGradientType<compute_stage>::type & adGradSlnNeighbor()
+  const typename VariableGradientType<compute_stage, OutputType>::type & adGradSlnNeighbor()
   {
     _need_neighbor_ad_grad_u = true;
     return _neighbor_ad_grad_u;
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableSecondType<compute_stage>::type & adSecondSlnNeighbor()
+  const typename VariableSecondType<compute_stage, OutputType>::type & adSecondSlnNeighbor()
   {
     _need_neighbor_ad_second_u = true;
     secondPhiFaceNeighbor();
@@ -740,32 +787,32 @@ protected:
   const FieldVariablePhiSecond * _second_phi_face_neighbor;
   const FieldVariablePhiCurl * _curl_phi_face_neighbor;
 
-  FieldVariableValue _u, _u_bak;
-  FieldVariableValue _u_old, _u_old_bak;
-  FieldVariableValue _u_older, _u_older_bak;
+  FieldVariableValue _u;
+  FieldVariableValue _u_old;
+  FieldVariableValue _u_older;
   FieldVariableValue _u_previous_nl;
-  FieldVariableGradient _grad_u, _grad_u_bak;
-  FieldVariableGradient _grad_u_old, _grad_u_old_bak;
-  FieldVariableGradient _grad_u_older, _grad_u_older_bak;
+  FieldVariableGradient _grad_u;
+  FieldVariableGradient _grad_u_old;
+  FieldVariableGradient _grad_u_older;
   FieldVariableGradient _grad_u_previous_nl;
   FieldVariableGradient _grad_u_dot;
-  FieldVariableSecond _second_u, _second_u_bak;
-  FieldVariableSecond _second_u_old, _second_u_old_bak;
-  FieldVariableSecond _second_u_older, _second_u_older_bak;
+  FieldVariableSecond _second_u;
+  FieldVariableSecond _second_u_old;
+  FieldVariableSecond _second_u_older;
   FieldVariableSecond _second_u_previous_nl;
-  FieldVariableCurl _curl_u, _curl_u_bak;
-  FieldVariableCurl _curl_u_old, _curl_u_old_bak;
+  FieldVariableCurl _curl_u;
+  FieldVariableCurl _curl_u_old;
   FieldVariableCurl _curl_u_older;
 
-  MooseArray<ADReal> _ad_u;
-  MooseArray<ADRealGradient> _ad_grad_u;
-  MooseArray<ADRealTensor> _ad_second_u;
-  std::vector<ADReal> _ad_dofs;
+  typename VariableValueType<JACOBIAN, OutputShape>::type _ad_u;
+  typename VariableGradientType<JACOBIAN, OutputShape>::type _ad_grad_u;
+  typename VariableSecondType<JACOBIAN, OutputShape>::type _ad_second_u;
+  MooseArray<ADReal> _ad_dof_values;
 
-  MooseArray<ADReal> _neighbor_ad_u;
-  MooseArray<ADRealGradient> _neighbor_ad_grad_u;
-  MooseArray<ADRealTensor> _neighbor_ad_second_u;
-  std::vector<ADReal> _neighbor_ad_dofs;
+  typename VariableValueType<JACOBIAN, OutputShape>::type _neighbor_ad_u;
+  typename VariableGradientType<JACOBIAN, OutputShape>::type _neighbor_ad_grad_u;
+  typename VariableSecondType<JACOBIAN, OutputShape>::type _neighbor_ad_second_u;
+  MooseArray<ADReal> _neighbor_ad_dof_values;
 
   FieldVariableValue _u_neighbor;
   FieldVariableValue _u_old_neighbor;
@@ -787,12 +834,12 @@ protected:
   // time derivatives
 
   /// u_dot (time derivative)
-  FieldVariableValue _u_dot, _u_dot_bak;
-  FieldVariableValue _u_dot_neighbor, _u_dot_bak_neighbor;
+  FieldVariableValue _u_dot;
+  FieldVariableValue _u_dot_neighbor;
 
   /// derivative of u_dot wrt u
-  VariableValue _du_dot_du, _du_dot_du_bak;
-  VariableValue _du_dot_du_neighbor, _du_dot_du_bak_neighbor;
+  VariableValue _du_dot_du;
+  VariableValue _du_dot_du_neighbor;
 
   /// Continuity type of the variable
   FEContinuity _continuity;
@@ -808,6 +855,9 @@ protected:
 
   /// nodal values of u_dot
   OutputType _nodal_value_dot;
+
+  /// A zero AD variable
+  const ADReal _ad_zero;
 
   friend class NodeFaceConstraint;
   friend class NodeElemConstraint;
@@ -838,5 +888,29 @@ const VariableGradient & MooseVariableFE<Real>::adGradSlnNeighbor<RESIDUAL>();
 template <>
 template <>
 const VariableSecond & MooseVariableFE<Real>::adSecondSlnNeighbor<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableValue & MooseVariableFE<RealVectorValue>::adSln<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableGradient & MooseVariableFE<RealVectorValue>::adGradSln<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableSecond & MooseVariableFE<RealVectorValue>::adSecondSln<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableValue & MooseVariableFE<RealVectorValue>::adSlnNeighbor<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableGradient & MooseVariableFE<RealVectorValue>::adGradSlnNeighbor<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableSecond & MooseVariableFE<RealVectorValue>::adSecondSlnNeighbor<RESIDUAL>();
 
 #endif /* MOOSEVARIABLEFE_H */
