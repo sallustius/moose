@@ -128,7 +128,7 @@ protected:
    * @see Kernel::value
    */
   template <ComputeStage compute_stage>
-  const typename VariableValueType<compute_stage>::type &
+  const typename VariableValueType<compute_stage, Real>::type &
   adCoupledValueTemplate(const std::string & var_name, unsigned int comp = 0);
 
   /**
@@ -242,7 +242,7 @@ protected:
    * @see Kernel::gradient
    */
   template <ComputeStage compute_stage>
-  const typename VariableGradientType<compute_stage>::type &
+  const typename VariableGradientType<compute_stage, Real>::type &
   adCoupledGradientTemplate(const std::string & var_name, unsigned int comp = 0);
 
   /**
@@ -631,7 +631,8 @@ private:
    * @return VariableValue * a pointer to the associated VarirableValue.
    */
   template <ComputeStage compare_stage>
-  typename VariableValueType<compare_stage>::type * getADDefaultValue(const std::string & var_name);
+  typename VariableValueType<compare_stage, Real>::type *
+  getADDefaultValue(const std::string & var_name);
 
   /**
    * Helper method to return (and insert if necessary) the default gradient for Automatic
@@ -640,7 +641,7 @@ private:
    * @return VariableGradient * a pointer to the associated VariableGradient.
    */
   template <ComputeStage compare_stage>
-  typename VariableGradientType<compare_stage>::type & getADDefaultGradient();
+  typename VariableGradientType<compare_stage, Real>::type & getADDefaultGradient();
 
   /**
    * Helper method to return (and insert if necessary) the default value
@@ -661,7 +662,7 @@ private:
 };
 
 template <ComputeStage compute_stage>
-const typename VariableValueType<compute_stage>::type &
+const typename VariableValueType<compute_stage, Real>::type &
 Coupleable::adCoupledValueTemplate(const std::string & var_name, unsigned int comp)
 {
   if (!isCoupled(var_name))
@@ -697,7 +698,7 @@ Coupleable::adCoupledValueTemplate(const std::string & var_name, unsigned int co
 }
 
 template <ComputeStage compute_stage>
-const typename VariableGradientType<compute_stage>::type &
+const typename VariableGradientType<compute_stage, Real>::type &
 Coupleable::adCoupledGradientTemplate(const std::string & var_name, unsigned int comp)
 {
   if (!isCoupled(var_name)) // Return default 0
@@ -726,7 +727,7 @@ Coupleable::adCoupledGradientTemplate(const std::string & var_name, unsigned int
 }
 
 template <ComputeStage compute_stage>
-typename VariableValueType<compute_stage>::type *
+typename VariableValueType<compute_stage, Real>::type *
 Coupleable::getADDefaultValue(const std::string & var_name)
 {
   std::map<std::string, MooseArray<ADReal> *>::iterator default_value_it =
@@ -745,7 +746,7 @@ template <>
 VariableValue * Coupleable::getADDefaultValue<RESIDUAL>(const std::string & var_name);
 
 template <ComputeStage compute_stage>
-typename VariableGradientType<compute_stage>::type &
+typename VariableGradientType<compute_stage, Real>::type &
 Coupleable::getADDefaultGradient()
 {
   return _ad_default_gradient;

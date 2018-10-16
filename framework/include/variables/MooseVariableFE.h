@@ -289,7 +289,7 @@ public:
   // damping
   FieldVariableValue & increment() { return _increment; }
 
-  const FieldVariableValue & sln() { return _ad_u.value(); }
+  const FieldVariableValue & sln() { return _u; }
   const FieldVariableValue & slnOld()
   {
     _need_u_old = true;
@@ -305,7 +305,7 @@ public:
     _need_u_previous_nl = true;
     return _u_previous_nl;
   }
-  const FieldVariableGradient & gradSln() { return _ad_grad_u.value(); }
+  const FieldVariableGradient & gradSln() { return _grad_u; }
   const FieldVariableGradient & gradSlnOld()
   {
     _need_grad_old = true;
@@ -331,7 +331,7 @@ public:
     _need_second = true;
     secondPhi();
     secondPhiFace();
-    return _ad_second_u.value();
+    return _second_u;
   }
   const FieldVariableSecond & secondSlnOld()
   {
@@ -371,21 +371,21 @@ public:
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableValueType<compute_stage>::type & adSln()
+  const typename VariableValueType<compute_stage, OutputType>::type & adSln()
   {
     _need_ad_u = true;
     return _ad_u;
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableGradientType<compute_stage>::type & adGradSln()
+  const typename VariableGradientType<compute_stage, OutputType>::type & adGradSln()
   {
     _need_ad_grad_u = true;
     return _ad_grad_u;
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableSecondType<compute_stage>::type & adSecondSln()
+  const typename VariableSecondType<compute_stage, OutputType>::type & adSecondSln()
   {
     _need_ad_second_u = true;
     secondPhi();
@@ -394,21 +394,21 @@ public:
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableValueType<compute_stage>::type & adSlnNeighbor()
+  const typename VariableValueType<compute_stage, OutputType>::type & adSlnNeighbor()
   {
     _need_neighbor_ad_u = true;
     return _neighbor_ad_u;
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableGradientType<compute_stage>::type & adGradSlnNeighbor()
+  const typename VariableGradientType<compute_stage, OutputType>::type & adGradSlnNeighbor()
   {
     _need_neighbor_ad_grad_u = true;
     return _neighbor_ad_grad_u;
   }
 
   template <ComputeStage compute_stage>
-  const typename VariableSecondType<compute_stage>::type & adSecondSlnNeighbor()
+  const typename VariableSecondType<compute_stage, OutputType>::type & adSecondSlnNeighbor()
   {
     _need_neighbor_ad_second_u = true;
     secondPhiFaceNeighbor();
@@ -418,7 +418,7 @@ public:
   const FieldVariableValue & uDot() { return _u_dot; }
   const VariableValue & duDotDu() { return _du_dot_du; }
 
-  const FieldVariableValue & slnNeighbor() { return _neighbor_ad_u.value(); }
+  const FieldVariableValue & slnNeighbor() { return _u_neighbor; }
   const FieldVariableValue & slnOldNeighbor()
   {
     _need_u_old_neighbor = true;
@@ -434,7 +434,7 @@ public:
     _need_u_previous_nl_neighbor = true;
     return _u_previous_nl_neighbor;
   }
-  const FieldVariableGradient & gradSlnNeighbor() { return _neighbor_ad_grad_u.value(); }
+  const FieldVariableGradient & gradSlnNeighbor() { return _grad_u_neighbor; }
   const FieldVariableGradient & gradSlnOldNeighbor()
   {
     _need_grad_old_neighbor = true;
@@ -459,7 +459,7 @@ public:
   {
     _need_second_neighbor = true;
     secondPhiFaceNeighbor();
-    return _neighbor_ad_second_u.value();
+    return _second_u_neighbor;
   }
   const FieldVariableSecond & secondSlnOldNeighbor()
   {
@@ -733,6 +733,7 @@ protected:
 
   // dof solution stuff (which for nodal variables corresponds to values at the nodes)
 
+  MooseArray<Real> _dof_values;
   MooseArray<Real> _dof_values_old;
   MooseArray<Real> _dof_values_older;
   MooseArray<Real> _dof_values_previous_nl;
@@ -747,6 +748,7 @@ protected:
   /// nodal values of derivative of u_dot wrt u
   MooseArray<Real> _dof_du_dot_du;
 
+  MooseArray<Real> _dof_values_neighbor;
   MooseArray<Real> _dof_values_old_neighbor;
   MooseArray<Real> _dof_values_older_neighbor;
   MooseArray<Real> _dof_values_previous_nl_neighbor;
@@ -785,13 +787,16 @@ protected:
   const FieldVariablePhiSecond * _second_phi_face_neighbor;
   const FieldVariablePhiCurl * _curl_phi_face_neighbor;
 
+  FieldVariableValue _u;
   FieldVariableValue _u_old;
   FieldVariableValue _u_older;
   FieldVariableValue _u_previous_nl;
+  FieldVariableGradient _grad_u;
   FieldVariableGradient _grad_u_old;
   FieldVariableGradient _grad_u_older;
   FieldVariableGradient _grad_u_previous_nl;
   FieldVariableGradient _grad_u_dot;
+  FieldVariableSecond _second_u;
   FieldVariableSecond _second_u_old;
   FieldVariableSecond _second_u_older;
   FieldVariableSecond _second_u_previous_nl;
@@ -802,20 +807,23 @@ protected:
   MooseArray<GeneralDN<OutputValue>> _ad_u;
   MooseArray<GeneralDN<OutputGradient>> _ad_grad_u;
   MooseArray<GeneralDN<OutputSecond>> _ad_second_u;
-  MooseArray<ADReal> _ad_dofs;
+  MooseArray<ADReal> _ad_dof_values;
 
   MooseArray<GeneralDN<OutputValue>> _neighbor_ad_u;
   MooseArray<GeneralDN<OutputGradient>> _neighbor_ad_grad_u;
   MooseArray<GeneralDN<OutputSecond>> _neighbor_ad_second_u;
-  MooseArray<ADReal> _neighbor_ad_dofs;
+  MooseArray<ADReal> _neighbor_ad_dof_values;
 
+  FieldVariableValue _u_neighbor;
   FieldVariableValue _u_old_neighbor;
   FieldVariableValue _u_older_neighbor;
   FieldVariableValue _u_previous_nl_neighbor;
+  FieldVariableGradient _grad_u_neighbor;
   FieldVariableGradient _grad_u_old_neighbor;
   FieldVariableGradient _grad_u_older_neighbor;
   FieldVariableGradient _grad_u_previous_nl_neighbor;
   FieldVariableGradient _grad_u_neighbor_dot;
+  FieldVariableSecond _second_u_neighbor;
   FieldVariableSecond _second_u_old_neighbor;
   FieldVariableSecond _second_u_older_neighbor;
   FieldVariableSecond _second_u_previous_nl_neighbor;
@@ -826,21 +834,21 @@ protected:
   ADMooseArrayContainer<OutputValue> _ad_u_container;
   ADMooseArrayContainer<OutputGradient> _ad_grad_u_container;
   ADMooseArrayContainer<OutputSecond> _ad_second_u_container;
-  ADMooseArrayContainer<OutputValue> _ad_dofs_container;
+  ADMooseArrayContainer<Real> _ad_dof_values_container;
   ADMooseArrayContainer<OutputValue> _neighbor_ad_u_container;
   ADMooseArrayContainer<OutputGradient> _neighbor_ad_grad_u_container;
   ADMooseArrayContainer<OutputSecond> _neighbor_ad_second_u_container;
-  ADMooseArrayContainer<OutputValue> _neighbor_ad_dofs_container;
+  ADMooseArrayContainer<Real> _neighbor_ad_dof_values_container;
 
   // time derivatives
 
   /// u_dot (time derivative)
-  FieldVariableValue _u_dot, _u_dot_bak;
-  FieldVariableValue _u_dot_neighbor, _u_dot_bak_neighbor;
+  FieldVariableValue _u_dot;
+  FieldVariableValue _u_dot_neighbor;
 
   /// derivative of u_dot wrt u
-  VariableValue _du_dot_du, _du_dot_du_bak;
-  VariableValue _du_dot_du_neighbor, _du_dot_du_bak_neighbor;
+  VariableValue _du_dot_du;
+  VariableValue _du_dot_du_neighbor;
 
   /// Continuity type of the variable
   FEContinuity _continuity;
@@ -886,5 +894,29 @@ const VariableGradient & MooseVariableFE<Real>::adGradSlnNeighbor<RESIDUAL>();
 template <>
 template <>
 const VariableSecond & MooseVariableFE<Real>::adSecondSlnNeighbor<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableValue & MooseVariableFE<RealVectorValue>::adSln<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableGradient & MooseVariableFE<RealVectorValue>::adGradSln<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableSecond & MooseVariableFE<RealVectorValue>::adSecondSln<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableValue & MooseVariableFE<RealVectorValue>::adSlnNeighbor<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableGradient & MooseVariableFE<RealVectorValue>::adGradSlnNeighbor<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableSecond & MooseVariableFE<RealVectorValue>::adSecondSlnNeighbor<RESIDUAL>();
 
 #endif /* MOOSEVARIABLEFE_H */

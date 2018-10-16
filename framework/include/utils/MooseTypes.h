@@ -200,35 +200,35 @@ enum ComputeStage
   JACOBIAN
 };
 
-template <ComputeStage compute_stage>
+template <ComputeStage compute_stage, typename T>
 struct VariableValueType
 {
-  typedef VariableValue type;
+  typedef MooseArray<T> type;
 };
-template <>
-struct VariableValueType<JACOBIAN>
+template <typename T>
+struct VariableValueType<JACOBIAN, T>
 {
-  typedef MooseArray<ADReal> type;
+  typedef MooseArray<GeneralDN<T>> type;
 };
-template <ComputeStage compute_stage>
+template <ComputeStage compute_stage, typename T>
 struct VariableGradientType
 {
-  typedef VariableGradient type;
+  typedef MooseArray<typename OutputTools<T>::OutputGradient> type;
 };
-template <>
-struct VariableGradientType<JACOBIAN>
+template <typename T>
+struct VariableGradientType<JACOBIAN, T>
 {
-  typedef MooseArray<ADRealGradient> type;
+  typedef MooseArray<GeneralDN<typename OutputTools<T>::OutputGradient>> type;
 };
-template <ComputeStage compute_stage>
+template <ComputeStage compute_stage, typename T>
 struct VariableSecondType
 {
-  typedef VariableSecond type;
+  typedef MooseArray<typename OutputTools<T>::OutputSecond> type;
 };
-template <>
-struct VariableSecondType<JACOBIAN>
+template <typename T>
+struct VariableSecondType<JACOBIAN, T>
 {
-  typedef MooseArray<ADRealTensor> type;
+  typedef MooseArray<GeneralDN<typename OutputTools<T>::OutputSecond>> type;
 };
 template <ComputeStage compute_stage>
 struct ResidualReturnType
@@ -252,9 +252,9 @@ struct MaterialPropertyType<JACOBIAN, mat_prop_type>
 };
 
 #define ADResidual typename ResidualReturnType<compute_stage>::type
-#define ADVariableValue typename VariableValueType<compute_stage>::type
-#define ADVariableGradient typename VariableGradientType<compute_stage>::type
-#define ADVariableSecond typename VariableSecondType<compute_stage>::type
+#define ADVariableValue typename VariableValueType<compute_stage, Real>::type
+#define ADVariableGradient typename VariableGradientType<compute_stage, Real>::type
+#define ADVariableSecond typename VariableSecondType<compute_stage, Real>::type
 #define ADMaterialProperty(Type) typename MaterialPropertyType<compute_stage, Type>::type
 
 typedef VariableTestValue ADVariableTestValue;
