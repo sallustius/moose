@@ -65,13 +65,6 @@ declareADValidParams(ADVectorKernel);
   using ADKernel<compute_stage>::_grad_test;                                                       \
   using ADKernel<compute_stage>::_grad_u
 
-#define usingVectorKernelMembers                                                                   \
-  using ADVectorKernel<compute_stage>::_test;                                                      \
-  using ADVectorKernel<compute_stage>::_qp;                                                        \
-  using ADVectorKernel<compute_stage>::_i;                                                         \
-  using ADVectorKernel<compute_stage>::_u;                                                         \
-  using ADVectorKernel<compute_stage>::_var;                                                       \
-  using ADVectorKernel<compute_stage>::_grad_test;                                                 \
-  using ADVectorKernel<compute_stage>::_grad_u
+#define usingVectorKernelMembers usingKernelMembers
 
 #endif /* ADKERNEL_H */

@@ -217,6 +217,8 @@ enum ComputeStage
   JACOBIAN
 };
 
+namespace Moose
+{
 template <ComputeStage compute_stage>
 struct RealType
 {
@@ -240,27 +242,31 @@ struct ValueType<compute_stage, W<Real>>
 {
   typedef W<typename RealType<compute_stage>::type> type;
 };
+}
 
 template <ComputeStage compute_stage, typename T>
 struct VariableValueType
 {
-  typedef typename OutputTools<typename ValueType<compute_stage, T>::type>::VariableValue type;
+  typedef
+      typename OutputTools<typename Moose::ValueType<compute_stage, T>::type>::VariableValue type;
 };
 template <ComputeStage compute_stage, typename T>
 struct VariableGradientType
 {
-  typedef typename OutputTools<typename ValueType<compute_stage, T>::type>::VariableGradient type;
+  typedef typename OutputTools<typename Moose::ValueType<compute_stage, T>::type>::VariableGradient
+      type;
 };
 template <ComputeStage compute_stage, typename T>
 struct VariableSecondType
 {
-  typedef typename OutputTools<typename ValueType<compute_stage, T>::type>::VariableSecond type;
+  typedef
+      typename OutputTools<typename Moose::ValueType<compute_stage, T>::type>::VariableSecond type;
 };
 
 template <ComputeStage compute_stage>
 struct ResidualReturnType
 {
-  typedef typename RealType<compute_stage>::type type;
+  typedef typename Moose::RealType<compute_stage>::type type;
 };
 
 template <ComputeStage compute_stage, typename mat_prop_type>

@@ -105,6 +105,7 @@ addActionTypes(Syntax & syntax)
   appendMooseObjectTask  ("add_kernel",                   VectorKernel);
 
   registerMooseObjectTask("add_ad_kernel",                ADKernel,               false);
+  appendMooseObjectTask  ("add_ad_kernel",                ADVectorKernel);
 
   registerMooseObjectTask("add_nodal_kernel",             NodalKernel,            false);
 
