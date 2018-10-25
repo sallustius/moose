@@ -46,6 +46,13 @@ ImplicitMidpoint::computeTimeDerivatives()
 }
 
 void
+ImplicitMidpoint::computeADTimeDerivatives(ADReal & ad_u_dot, const dof_id_type & dof)
+{
+  ad_u_dot -= _solution_old(dof);
+  ad_u_dot *= 1. / _dt;
+}
+
+void
 ImplicitMidpoint::solve()
 {
   Real time_new = _fe_problem.time();
