@@ -28,6 +28,7 @@ class DenseVector;
 
 #define adCoupledValue(Name) this->template adCoupledValueTemplate<compute_stage>(Name)
 #define adCoupledGradient(Name) this->template adCoupledGradientTemplate<compute_stage>(Name)
+#define adCoupledDot(Name) this->template adCoupledDotTemplate<compute_stage>(Name)
 
 /**
  * Interface for objects that needs coupling capabilities
@@ -402,6 +403,17 @@ protected:
   virtual const VariableValue & coupledDot(const std::string & var_name, unsigned int comp = 0);
 
   /**
+   * Time derivative of a coupled variable for ad simulations
+   * @param var_name Name of coupled variable
+   * @param comp Component number for vector of coupled variables
+   * @return Reference to a VariableValue containing the time derivative of the coupled variable
+   * @see Kernel::dot
+   */
+  template <ComputeStage compute_stage>
+  virtual const typename VariableValueType<compute_stage, Real>::type &
+  adCoupledDotTempl(const std::string & var_name, unsigned int comp = 0);
+
+  /**
    * Time derivative of a coupled vector variable
    * @param var_name Name of coupled vector variable
    * @param comp Component number for vector of coupled vector variables
@@ -632,6 +644,7 @@ private:
    */
   VariableValue * getDefaultValue(const std::string & var_name, unsigned int comp);
 
+public:
   /**
    * Helper method to return (and insert if necessary) the default value for Automatic
    * Differentiation for an uncoupled variable.
@@ -651,6 +664,7 @@ private:
   template <ComputeStage compare_stage>
   typename VariableGradientType<compare_stage, Real>::type & getADDefaultGradient();
 
+private:
   /**
    * Helper method to return (and insert if necessary) the default value
    * for an uncoupled vector variable.
@@ -735,6 +749,34 @@ Coupleable::adCoupledGradientTemplate(const std::string & var_name, unsigned int
       return var->adGradSlnNeighbor<compute_stage>();
     else
       mooseError("Not implemented");
+  }
+}
+
+template <ComputeStage compute_stage>
+const typename VariableValueType<compute_stage, Real> &
+Coupleable::adCoupledDotTempl(const std::string & var_name, unsigned int comp)
+{
+  checkVar(var_name);
+  if (!isCoupled(var_name)) // Return default 0
+    return *getADDefaultValue<compute_stage>(var_name);
+
+  MooseVariable * var = getVar(var_name, comp);
+  if (var == nullptr)
+    mooseError("Call corresponding vector variable method");
+
+  if (!_coupleable_neighbor)
+  {
+    if (_c_nodal)
+      mooseError("Not implemented");
+    else
+      return var->adUDot<compute_stage>();
+  }
+  else
+  {
+    if (_c_nodal)
+      mooseError("Not implemented");
+    else
+      return var->adUDotNeighbor<compute_stage>();
   }
 }
 

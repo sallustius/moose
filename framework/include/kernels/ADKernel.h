@@ -56,15 +56,20 @@ using ADVectorKernel = ADKernelTempl<RealVectorValue, compute_stage>;
 declareADValidParams(ADKernel);
 declareADValidParams(ADVectorKernel);
 
-#define usingKernelMembers                                                                         \
-  using ADKernel<compute_stage>::_test;                                                            \
-  using ADKernel<compute_stage>::_qp;                                                              \
-  using ADKernel<compute_stage>::_i;                                                               \
-  using ADKernel<compute_stage>::_u;                                                               \
-  using ADKernel<compute_stage>::_var;                                                             \
-  using ADKernel<compute_stage>::_grad_test;                                                       \
-  using ADKernel<compute_stage>::_grad_u
+#define usingTemplKernelMembers(type)                                                              \
+  using ADKernelTempl<type, compute_stage>::_test;                                                 \
+  using ADKernelTempl<type, compute_stage>::_qp;                                                   \
+  using ADKernelTempl<type, compute_stage>::_i;                                                    \
+  using ADKernelTempl<type, compute_stage>::_u;                                                    \
+  using ADKernelTempl<type, compute_stage>::_var;                                                  \
+  using ADKernelTempl<type, compute_stage>::_grad_test;                                            \
+  using ADKernelTempl<type, compute_stage>::_grad_u;                                               \
+  using ADKernelTempl<type, compute_stage>::_dt;                                                   \
+  using ADKernelTempl<type, compute_stage>::_current_elem;                                         \
+  using ADKernelTempl<type, compute_stage>::_t;                                                    \
+  using ADKernelTempl<type, compute_stage>::_q_point
 
-#define usingVectorKernelMembers usingKernelMembers
+#define usingKernelMembers usingTemplKernelMembers(Real)
+#define usingVectorKernelMembers usingTemplKernelMembers(RealVectorValue)
 
 #endif /* ADKERNEL_H */

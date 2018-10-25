@@ -384,13 +384,14 @@ public:
   template <ComputeStage compute_stage>
   const typename VariableValueType<compute_stage, OutputType>::type & adSln()
   {
-    _need_ad_u = true;
+    _need_ad = true;
     return _ad_u;
   }
 
   template <ComputeStage compute_stage>
   const typename VariableGradientType<compute_stage, OutputType>::type & adGradSln()
   {
+    _need_ad = true;
     _need_ad_grad_u = true;
     return _ad_grad_u;
   }
@@ -398,6 +399,7 @@ public:
   template <ComputeStage compute_stage>
   const typename VariableSecondType<compute_stage, OutputType>::type & adSecondSln()
   {
+    _need_ad = true;
     _need_ad_second_u = true;
     secondPhi();
     secondPhiFace();
@@ -405,15 +407,23 @@ public:
   }
 
   template <ComputeStage compute_stage>
+  const typename VariableValueType<compute_stage, OutputType>::type & adUDot()
+  {
+    _need_ad = true;
+    return _ad_u_dot;
+  }
+
+  template <ComputeStage compute_stage>
   const typename VariableValueType<compute_stage, OutputType>::type & adSlnNeighbor()
   {
-    _need_neighbor_ad_u = true;
+    _need_neighbor_ad = true;
     return _neighbor_ad_u;
   }
 
   template <ComputeStage compute_stage>
   const typename VariableGradientType<compute_stage, OutputType>::type & adGradSlnNeighbor()
   {
+    _need_neighbor_ad = true;
     _need_neighbor_ad_grad_u = true;
     return _neighbor_ad_grad_u;
   }
@@ -421,9 +431,17 @@ public:
   template <ComputeStage compute_stage>
   const typename VariableSecondType<compute_stage, OutputType>::type & adSecondSlnNeighbor()
   {
+    _need_neighbor_ad = true;
     _need_neighbor_ad_second_u = true;
     secondPhiFaceNeighbor();
     return _neighbor_ad_second_u;
+  }
+
+  template <ComputeStage compute_stage>
+  const typename VariableValueType<compute_stage, OutputType>::type & adUDotNeighbor()
+  {
+    _need_neighbor_ad = true;
+    return _neighbor_ad_u_dot;
   }
 
   const FieldVariableValue & uDot() { return _u_dot; }
@@ -821,11 +839,15 @@ protected:
   typename VariableGradientType<JACOBIAN, OutputShape>::type _ad_grad_u;
   typename VariableSecondType<JACOBIAN, OutputShape>::type _ad_second_u;
   MooseArray<ADReal> _ad_dof_values;
+  MooseArray<ADReal> _ad_dofs_dot;
+  typename VariableValueType<JACOBIAN, OutputShape>::type _ad_u_dot;
 
   typename VariableValueType<JACOBIAN, OutputShape>::type _neighbor_ad_u;
   typename VariableGradientType<JACOBIAN, OutputShape>::type _neighbor_ad_grad_u;
   typename VariableSecondType<JACOBIAN, OutputShape>::type _neighbor_ad_second_u;
   MooseArray<ADReal> _neighbor_ad_dof_values;
+  MooseArray<ADReal> _neighbor_ad_dofs_dot;
+  typename VariableValueType<JACOBIAN, OutputShape>::type _neighbor_ad_u_dot;
 
   FieldVariableValue _u_neighbor;
   FieldVariableValue _u_old_neighbor;
@@ -872,6 +894,9 @@ protected:
   /// A zero AD variable
   const ADReal _ad_zero;
 
+  /// A pointer to TimeIntegrator. nullptr if _sys is not a NonlinearSystemBase
+  TimeIntegrator * _time_integrator;
+
   friend class NodeFaceConstraint;
   friend class NodeElemConstraint;
   friend class ValueThresholdMarker;
@@ -892,6 +917,10 @@ const VariableSecond & MooseVariableFE<Real>::adSecondSln<RESIDUAL>();
 
 template <>
 template <>
+const VariableValue & MooseVariableFE<Real>::adUDot<RESIDUAL>();
+
+template <>
+template <>
 const VariableValue & MooseVariableFE<Real>::adSlnNeighbor<RESIDUAL>();
 
 template <>
@@ -901,6 +930,10 @@ const VariableGradient & MooseVariableFE<Real>::adGradSlnNeighbor<RESIDUAL>();
 template <>
 template <>
 const VariableSecond & MooseVariableFE<Real>::adSecondSlnNeighbor<RESIDUAL>();
+
+template <>
+template <>
+const VariableValue & MooseVariableFE<Real>::adUDotNeighbor<RESIDUAL>();
 
 template <>
 template <>
@@ -916,6 +949,10 @@ const VectorVariableSecond & MooseVariableFE<RealVectorValue>::adSecondSln<RESID
 
 template <>
 template <>
+const VectorVariableValue & MooseVariableFE<RealVectorValue>::adUDot<RESIDUAL>();
+
+template <>
+template <>
 const VectorVariableValue & MooseVariableFE<RealVectorValue>::adSlnNeighbor<RESIDUAL>();
 
 template <>
@@ -925,5 +962,9 @@ const VectorVariableGradient & MooseVariableFE<RealVectorValue>::adGradSlnNeighb
 template <>
 template <>
 const VectorVariableSecond & MooseVariableFE<RealVectorValue>::adSecondSlnNeighbor<RESIDUAL>();
+
+template <>
+template <>
+const VectorVariableValue & MooseVariableFE<RealVectorValue>::adUDotNeighbor<RESIDUAL>();
 
 #endif /* MOOSEVARIABLEFE_H */
