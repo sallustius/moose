@@ -25,6 +25,8 @@
 #include "libmesh/dense_vector.h"
 #include "libmesh/tensor_tools.h"
 
+class TimeIntegrator;
+
 /**
  * Class for stuff related to variables
  *
@@ -646,8 +648,11 @@ public:
   virtual void computeNodalValues() override;
   virtual void computeNodalNeighborValues() override;
 
-  void computeAD(const unsigned int & num_dofs, const unsigned int & nqp);
-  void computeADNeighbor(const unsigned int & num_dofs, const unsigned int & nqp);
+  void
+  computeAD(const unsigned int & num_dofs, const unsigned int & nqp, const bool & is_transient);
+  void computeADNeighbor(const unsigned int & num_dofs,
+                         const unsigned int & nqp,
+                         const bool & is_transient);
 
 protected:
   /// Our assembly
@@ -689,7 +694,8 @@ protected:
   bool _need_curl_old;
   bool _need_curl_older;
 
-  bool _need_ad_u;
+  bool _need_ad;
+  bool _need_neighbor_ad;
   bool _need_ad_grad_u;
   bool _need_ad_second_u;
   bool _need_neighbor_ad_u;
