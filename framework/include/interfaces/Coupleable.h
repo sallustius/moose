@@ -28,7 +28,11 @@ class DenseVector;
 
 #define adCoupledValue(Name) this->template adCoupledValueTemplate<compute_stage>(Name)
 #define adCoupledGradient(Name) this->template adCoupledGradientTemplate<compute_stage>(Name)
+#define adCoupledSecond(Name) this->template adCoupledSecondTemplate<compute_stage>(Name)
 #define adCoupledDot(Name) this->template adCoupledDotTemplate<compute_stage>(Name)
+#define adZeroValue() this->template adZeroValueTemplate<compute_stage>()
+#define adZeroGradient() this->template adZeroGradientTemplate<compute_stage>()
+#define adZeroSecond() this->template adZeroSecondTemplate<compute_stage>()
 
 /**
  * Interface for objects that needs coupling capabilities
@@ -255,6 +259,16 @@ protected:
   adCoupledGradientTemplate(const std::string & var_name, unsigned int comp = 0);
 
   /**
+   * Returns second derivatives of a coupled variable for use in Automatic Differentation
+   * @param var_name Name of coupled variable
+   * @param comp Component number for vector of coupled variables
+   * @return Reference to a VariableSecond containing the second derivatives of the coupled variable
+   */
+  template <ComputeStage compute_stage>
+  const typename VariableSecondType<compute_stage, Real>::type &
+  adCoupledSecondTemplate(const std::string & var_name, unsigned int comp = 0);
+
+  /**
    * Returns an old gradient from previous time step of a coupled variable
    * @param var_name Name of coupled variable
    * @param comp Component number for vector of coupled variables
@@ -410,8 +424,8 @@ protected:
    * @see Kernel::dot
    */
   template <ComputeStage compute_stage>
-  virtual const typename VariableValueType<compute_stage, Real>::type &
-  adCoupledDotTempl(const std::string & var_name, unsigned int comp = 0);
+  const typename VariableValueType<compute_stage, Real>::type &
+  adCoupledDotTemplate(const std::string & var_name, unsigned int comp = 0);
 
   /**
    * Time derivative of a coupled vector variable
@@ -506,6 +520,24 @@ protected:
   virtual const DenseVector<Number> & coupledSolutionDoFsOlder(const std::string & var_name,
                                                                unsigned int comp = 0);
 
+  /**
+   * Retrieve a zero value for automatic differentiation
+   */
+  template <ComputeStage compute_stage>
+  const typename VariableValueType<compute_stage, Real>::type & adZeroValueTemplate();
+
+  /**
+   * Retrieve a zero gradient for automatic differentiation
+   */
+  template <ComputeStage compute_stage>
+  const typename VariableGradientType<compute_stage, Real>::type & adZeroGradientTemplate();
+
+  /**
+   * Retrieve a zero second for automatic differentiation
+   */
+  template <ComputeStage compute_stage>
+  const typename VariableSecondType<compute_stage, Real>::type & adZeroSecondTemplate();
+
 protected:
   // Reference to the interface's input parameters
   const InputParameters & _c_parameters;
@@ -574,6 +606,7 @@ protected:
 
   /// Zero second derivative of a variable
   const VariableSecond & _second_zero;
+  const MooseArray<ADRealSecond> & _ad_second_zero;
   /// Zero second derivative of a test function
   const VariablePhiSecond & _second_phi_zero;
   /// Zero value of a vector variable
@@ -664,6 +697,15 @@ public:
   template <ComputeStage compare_stage>
   typename VariableGradientType<compare_stage, Real>::type & getADDefaultGradient();
 
+  /**
+   * Helper method to return (and insert if necessary) the default second derivatives for Automatic
+   * Differentiation for an uncoupled variable.
+   * @param var_name the name of the variable for which to retrieve a default second derivative
+   * @return VariableSecond * a pointer to the associated VariableSecond.
+   */
+  template <ComputeStage compare_stage>
+  typename VariableSecondType<compare_stage, Real>::type & getADDefaultSecond();
+
 private:
   /**
    * Helper method to return (and insert if necessary) the default value
@@ -753,8 +795,37 @@ Coupleable::adCoupledGradientTemplate(const std::string & var_name, unsigned int
 }
 
 template <ComputeStage compute_stage>
-const typename VariableValueType<compute_stage, Real> &
-Coupleable::adCoupledDotTempl(const std::string & var_name, unsigned int comp)
+const typename VariableSecondType<compute_stage, Real>::type &
+Coupleable::adCoupledSecondTemplate(const std::string & var_name, unsigned int comp)
+{
+  if (!isCoupled(var_name)) // Return default 0
+    return getADDefaultSecond<compute_stage>();
+
+  coupledCallback(var_name, false);
+  if (_c_nodal)
+    mooseError("Nodal variables do not have second derivatives");
+
+  MooseVariable * var = getVar(var_name, comp);
+
+  if (!_coupleable_neighbor)
+  {
+    if (_c_is_implicit)
+      return var->adSecondSln<compute_stage>();
+    else
+      mooseError("Not implemented");
+  }
+  else
+  {
+    if (_c_is_implicit)
+      return var->adSecondSlnNeighbor<compute_stage>();
+    else
+      mooseError("Not implemented");
+  }
+}
+
+template <ComputeStage compute_stage>
+const typename VariableValueType<compute_stage, Real>::type &
+Coupleable::adCoupledDotTemplate(const std::string & var_name, unsigned int comp)
 {
   checkVar(var_name);
   if (!isCoupled(var_name)) // Return default 0
@@ -808,5 +879,43 @@ Coupleable::getADDefaultGradient()
 
 template <>
 VariableGradient & Coupleable::getADDefaultGradient<RESIDUAL>();
+
+template <ComputeStage compute_stage>
+typename VariableSecondType<compute_stage, Real>::type &
+Coupleable::getADDefaultSecond()
+{
+  return _ad_default_second;
+}
+
+template <>
+VariableSecond & Coupleable::getADDefaultSecond<RESIDUAL>();
+
+template <ComputeStage compute_stage>
+const typename VariableValueType<compute_stage, Real>::type &
+Coupleable::adZeroValueTemplate()
+{
+  return _ad_zero;
+}
+
+template <ComputeStage compute_stage>
+const typename VariableGradientType<compute_stage, Real>::type &
+Coupleable::adZeroGradientTemplate()
+{
+  return _ad_grad_zero;
+}
+
+template <ComputeStage compute_stage>
+const typename VariableSecondType<compute_stage, Real>::type &
+Coupleable::adZeroSecondTemplate()
+{
+  return _ad_second_zero;
+}
+
+template <>
+const VariableValue & Coupleable::adZeroValueTemplate<RESIDUAL>();
+template <>
+const VariableGradient & Coupleable::adZeroGradientTemplate<RESIDUAL>();
+template <>
+const VariableSecond & Coupleable::adZeroSecondTemplate<RESIDUAL>();
 
 #endif /* COUPLEABLE_H */

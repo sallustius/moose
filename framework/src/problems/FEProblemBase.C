@@ -331,6 +331,7 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
   _grad_zero.resize(n_threads);
   _ad_grad_zero.resize(n_threads);
   _second_zero.resize(n_threads);
+  _ad_second_zero.resize(n_threads);
   _second_phi_zero.resize(n_threads);
   _point_zero.resize(n_threads);
   _vector_zero.resize(n_threads);
@@ -455,6 +456,7 @@ FEProblemBase::~FEProblemBase()
     _vector_curl_zero[i].release();
     _ad_zero[i].release();
     _ad_grad_zero[i].release();
+    _ad_second_zero[i].release();
   }
 }
 
@@ -3953,6 +3955,7 @@ FEProblemBase::createQRules(QuadratureType type, Order order, Order volume_order
     _grad_zero[tid].resize(max_qpts, RealGradient(0.));
     _ad_grad_zero[tid].resize(max_qpts, ADRealGradient(0));
     _second_zero[tid].resize(max_qpts, RealTensor(0.));
+    _ad_second_zero[tid].resize(max_qpts, ADRealSecond(0));
     _second_phi_zero[tid].resize(max_qpts,
                                  std::vector<RealTensor>(getMaxShapeFunctions(), RealTensor(0.)));
     _vector_zero[tid].resize(max_qpts, RealGradient(0.));

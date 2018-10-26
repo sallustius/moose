@@ -30,6 +30,7 @@ Coupleable::Coupleable(const MooseObject * moose_object, bool nodal)
     _grad_zero(_c_fe_problem._grad_zero[_c_tid]),
     _ad_grad_zero(_c_fe_problem._ad_grad_zero[_c_tid]),
     _second_zero(_c_fe_problem._second_zero[_c_tid]),
+    _ad_second_zero(_c_fe_problem._ad_second_zero[_c_tid]),
     _second_phi_zero(_c_fe_problem._second_phi_zero[_c_tid]),
     _vector_zero(_c_fe_problem._vector_zero[_c_tid]),
     _vector_curl_zero(_c_fe_problem._vector_curl_zero[_c_tid]),
@@ -1210,4 +1211,32 @@ VariableGradient &
 Coupleable::getADDefaultGradient<RESIDUAL>()
 {
   return _default_gradient;
+}
+
+template <>
+VariableSecond &
+Coupleable::getADDefaultSecond<RESIDUAL>()
+{
+  return _default_second;
+}
+
+template <>
+const VariableValue &
+Coupleable::adZeroValueTemplate<RESIDUAL>()
+{
+  return _zero;
+}
+
+template <>
+const VariableGradient &
+Coupleable::adZeroGradientTemplate<RESIDUAL>()
+{
+  return _grad_zero;
+}
+
+template <>
+const VariableSecond &
+Coupleable::adZeroSecondTemplate<RESIDUAL>()
+{
+  return _second_zero;
 }
