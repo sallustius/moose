@@ -23,13 +23,6 @@
 class PropertyValue;
 
 /**
- * Scalar Init helper routine so that specialization isn't needed for basic scalar MaterialProperty
- * types
- */
-template <typename P>
-PropertyValue * _init_helper(int size, PropertyValue * prop, const P * the_type);
-
-/**
  * Abstract definition of a property value.
  */
 class PropertyValue
@@ -115,12 +108,12 @@ public:
   /**
    * @returns a read-only reference to the parameter value.
    */
-  const MooseArray<MooseADWrapper<T>> & get() const { return _value; }
+  const MooseArray<T> & get() const { return _value; }
 
   /**
    * @returns a writable reference to the parameter value.
    */
-  MooseArray<MooseADWrapper<T>> & set() { return _value; }
+  MooseArray<T> & set() { return _value; }
 
   /**
    * String identifying the type of parameter stored.
@@ -142,12 +135,12 @@ public:
   /**
    * Get element i out of the array as a writeable reference.
    */
-  T & operator[](const unsigned int i) { return _value[i].value(); }
+  T & operator[](const unsigned int i) { return _value[i]; }
 
   /**
    * Get element i out of the array as a ready-only reference.
    */
-  const T & operator[](const unsigned int i) const { return _value[i].value(); }
+  const T & operator[](const unsigned int i) const { return _value[i]; }
 
   /**
    *
@@ -174,27 +167,9 @@ public:
    */
   virtual void load(std::istream & stream) override;
 
-  /**
-   * Friend helper function to handle scalar material property initializations
-   * @param size - the size corresponding to the quadrature rule
-   * @param prop - The Material property that we will resize since this is not a member
-   * @param the_type - This is just a template parameter used to identify the
-   *                   difference between the scalar and vector template functions
-   */
-  template <typename P>
-  friend PropertyValue * _init_helper(int size, PropertyValue * prop, const P * the_type);
+  void copyValueToDualNumber(const unsigned int i) override {}
 
-  /**
-   * copy the Real version to the DualNumber<Real> version of the material property for the
-   * specified quadrature point
-   */
-  void copyValueToDualNumber(const unsigned int i) override { _value[i].copyValueToDualNumber(); }
-
-  /**
-   * copy the value portion (not the derivatives) of the DualNumber<Real> version of the material
-   * property to the Real version for the specified quadrature point
-   */
-  void copyDualNumberToValue(const unsigned int i) override { _value[i].copyDualNumberToValue(); }
+  void copyDualNumberToValue(const unsigned int i) override {}
 
 private:
   /// private copy constructor to avoid shallow copying of material properties
@@ -211,7 +186,7 @@ private:
 
 protected:
   /// Stored parameter value.
-  MooseArray<MooseADWrapper<T>> _value;
+  MooseArray<T> _value;
 };
 
 // ------------------------------------------------------------
@@ -227,7 +202,9 @@ template <typename T>
 inline PropertyValue *
 MaterialProperty<T>::init(int size)
 {
-  return _init_helper(size, this, static_cast<T *>(0));
+  MaterialProperty<T> * copy = new MaterialProperty<T>;
+  copy->_value.resize(size, T{});
+  return copy;
 }
 
 template <typename T>
@@ -271,27 +248,132 @@ MaterialProperty<T>::load(std::istream & stream)
     loadHelper(stream, _value[i], NULL);
 }
 
-template <typename T>
+template <typename T, bool declared_ad = false>
 class ADMaterialPropertyObject : public MaterialProperty<T>
 {
 public:
   ADMaterialPropertyObject() : MaterialProperty<T>() {}
+
+  virtual ~ADMaterialPropertyObject() { _dual_number.release(); }
+
+  /**
+   * @returns a read-only reference to the parameter dual number.
+   */
+  const MooseArray<MooseADWrapper<T, declared_ad>> & get() const { return _dual_number; }
+
+  /**
+   * @returns a writable reference to the parameter dual number.
+   */
+  MooseArray<MooseADWrapper<T, declared_ad>> & set() { return _dual_number; }
+
+  virtual PropertyValue * init(int size) override;
+  virtual void resize(int n) override;
+  virtual void swap(PropertyValue * rhs) override;
+
+  virtual void
+  qpCopy(const unsigned int to_qp, PropertyValue * rhs, const unsigned int from_qp) override;
+  virtual void store(std::ostream & stream) override;
+  virtual void load(std::istream & stream) override;
 
   /**
    * Get element i out of the array as a writeable reference.
    */
   typename MooseADWrapper<T>::DNType & operator[](const unsigned int i)
   {
-    return this->_value[i].dn();
+    return _dual_number[i]();
   }
   /**
    * Get element i out of the array as a read-only reference.
    */
   const typename MooseADWrapper<T>::DNType & operator[](const unsigned int i) const
   {
-    return this->_value[i].dn();
+    return _dual_number[i]();
   }
+
+  /**
+   * copy the Real version to the DualNumber<Real> version of the material property for the
+   * specified quadrature point
+   */
+  void copyValueToDualNumber(const unsigned int i) override
+  {
+    _dual_number[i].copyValueToDualNumber(this->_value[i]);
+  }
+
+  /**
+   * copy the value portion (not the derivatives) of the DualNumber<Real> version of the material
+   * property to the Real version for the specified quadrature point
+   */
+  void copyDualNumberToValue(const unsigned int i) override
+  {
+    _dual_number[i].copyDualNumberToValue(this->_value[i]);
+  }
+
+protected:
+  /// Stored dual number
+  MooseArray<MooseADWrapper<T, declared_ad>> _dual_number;
 };
+
+template <typename T, bool declared_ad>
+inline PropertyValue *
+ADMaterialPropertyObject<T, declared_ad>::init(int size)
+{
+  ADMaterialPropertyObject<T, declared_ad> * copy = new ADMaterialPropertyObject<T, declared_ad>;
+  copy->_value.resize(size, T{});
+  copy->_dual_number.resize(size, MooseADWrapper<T, declared_ad>{});
+  return copy;
+}
+
+template <typename T, bool declared_ad>
+inline void
+ADMaterialPropertyObject<T, declared_ad>::resize(int n)
+{
+  _dual_number.resize(n);
+  this->_value.resize(n);
+}
+
+template <typename T, bool declared_ad>
+inline void
+ADMaterialPropertyObject<T, declared_ad>::swap(PropertyValue * rhs)
+{
+  mooseAssert(rhs != NULL, "Assigning NULL?");
+  this->_value.swap(cast_ptr<ADMaterialPropertyObject<T, reverse_order> *>(rhs)->_value);
+  _dual_number.swap(cast_ptr<ADMaterialPropertyObject<T, reverse_order> *>(rhs)->_dual_number);
+}
+
+template <typename T, bool declared_ad>
+inline void
+ADMaterialPropertyObject<T, declared_ad>::qpCopy(const unsigned int to_qp,
+                                                 PropertyValue * rhs,
+                                                 const unsigned int from_qp)
+{
+  mooseAssert(rhs != NULL, "Assigning NULL?");
+  this->_value[to_qp] =
+      cast_ptr<const ADMaterialPropertyObject<T, declared_ad> *>(rhs)->_value[from_qp];
+  _dual_number[to_qp] =
+      cast_ptr<const ADMaterialPropertyObject<T, declared_ad> *>(rhs)->_dual_number[from_qp];
+}
+
+template <typename T, bool declared_ad>
+inline void
+ADMaterialPropertyObject<T, declared_ad>::store(std::ostream & stream)
+{
+  for (unsigned int i = 0; i < size(); i++)
+  {
+    storeHelper(stream, this->_value[i], nullptr);
+    storeHelper(stream, _dual_number[i], nullptr);
+  }
+}
+
+template <typename T, bool declared_ad>
+inline void
+ADMaterialPropertyObject<T, declared_ad>::load(std::istream & stream)
+{
+  for (unsigned int i = 0; i < size(); i++)
+  {
+    loadHelper(stream, this->_value[i], nullptr);
+    loadHelper(stream, _dual_number[i], nullptr);
+  }
+}
 
 /**
  * Container for storing material properties
@@ -353,16 +435,6 @@ dataLoad(std::istream & stream, MaterialProperties & v, void * context)
   std::vector<PropertyValue *> & mat_props = static_cast<std::vector<PropertyValue *> &>(v);
 
   loadHelper(stream, mat_props, context);
-}
-
-// Scalar Init Helper Function
-template <typename P>
-PropertyValue *
-_init_helper(int size, PropertyValue * /*prop*/, const P *)
-{
-  MaterialProperty<P> * copy = new MaterialProperty<P>;
-  copy->_value.resize(size, MooseADWrapper<P>{});
-  return copy;
 }
 
 #endif

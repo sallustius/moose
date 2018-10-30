@@ -10,7 +10,7 @@
 
 #include <typeinfo>
 
-template <typename T>
+template <typename T, bool declared_ad = false>
 class MooseADWrapper
 {
 public:
@@ -18,125 +18,106 @@ public:
 
   typedef T DNType;
 
-  const T & value() const { return _val; }
-
-  T & value() { return _val; }
-
-  const T & dn(bool requested_by_user = true) const
+  const T & operator()(bool requested_by_user = true) const
   {
     if (requested_by_user)
-      mooseError("Type ",
-                 typeid(T).name(),
-                 " does not currently support automatic differentiation. Consider using a regular "
-                 "material property (declareProperty, getMaterialProperty) instead.");
+      mooseWarning("Either type ",
+                   typeid(T).name(),
+                   " does not currently support automatic differentiation or the material property "
+                   "was not declared as an AD property. Your Jacobian may be inaccurate");
     return _val;
   }
 
-  T & dn(bool requested_by_user = true)
+  T & operator()(bool requested_by_user = true)
   {
     if (requested_by_user)
-      mooseError("Type ",
-                 typeid(T).name(),
-                 " does not currently support automatic differentiation. Consider using a regular "
-                 "material property (declareProperty, getMaterialProperty) instead.");
+      mooseWarning("Either type ",
+                   typeid(T).name(),
+                   " does not currently support automatic differentiation or the material property "
+                   "was not declared as an AD property. Your Jacobian may be inaccurate");
     return _val;
   }
 
-  void copyValueToDualNumber() {}
-  void copyDualNumberToValue() {}
+  void copyValueToDualNumber(const T & in) { _val = in; }
+  void copyDualNumberToValue(T & in) { in = _val; }
 
 private:
   T _val;
 };
 
 template <>
-class MooseADWrapper<Real>
+class MooseADWrapper<Real, true>
 {
 public:
-  MooseADWrapper() : _val(), _dual_number() {}
+  MooseADWrapper() : _val() {}
 
   typedef ADReal DNType;
 
-  const Real & value() const { return _val; }
+  const ADReal & operator()(bool = true) const { return _val; }
 
-  Real & value() { return _val; }
+  ADReal & operator()(bool = true) { return _val; }
 
-  const ADReal & dn(bool = true) const { return _dual_number; }
-
-  ADReal & dn(bool = true) { return _dual_number; }
-
-  void copyValueToDualNumber() { _dual_number.value() = _val; }
-  void copyDualNumberToValue() { _val = _dual_number.value(); }
+  void copyValueToDualNumber(const Real & in) { _val.value() = in; }
+  void copyDualNumberToValue(Real & in) { in = _val.value(); }
 
 private:
-  Real _val;
-  ADReal _dual_number;
+  ADReal _val;
 };
 
 template <>
-class MooseADWrapper<libMesh::VectorValue<Real>>
+class MooseADWrapper<libMesh::VectorValue<Real>, true>
 {
 public:
-  MooseADWrapper() : _val(), _dual_number() {}
+  MooseADWrapper() : _val() {}
 
   typedef libMesh::VectorValue<ADReal> DNType;
 
-  const libMesh::VectorValue<Real> & value() const { return _val; }
+  const libMesh::VectorValue<ADReal> & operator()(bool = true) const { return _val; }
 
-  libMesh::VectorValue<Real> & value() { return _val; }
+  libMesh::VectorValue<ADReal> & operator()(bool = true) { return _val; }
 
-  const libMesh::VectorValue<ADReal> & dn(bool = true) const { return _dual_number; }
-
-  libMesh::VectorValue<ADReal> & dn(bool = true) { return _dual_number; }
-
-  void copyValueToDualNumber()
+  void copyValueToDualNumber(const VectorValue<Real> & in)
   {
     for (decltype(LIBMESH_DIM) i = 0; i < LIBMESH_DIM; ++i)
-      _dual_number(i).value() = _val(i);
+      _val(i).value() = in(i);
   }
-  void copyDualNumberToValue()
+  void copyDualNumberToValue(VectorValue<Real> & in)
   {
     for (decltype(LIBMESH_DIM) i = 0; i < LIBMESH_DIM; ++i)
-      _val(i) = _dual_number(i).value();
+      in(i) = _val(i).value();
   }
 
 private:
-  libMesh::VectorValue<Real> _val;
-  libMesh::VectorValue<ADReal> _dual_number;
+  libMesh::VectorValue<ADReal> _val;
 };
 
 template <>
-class MooseADWrapper<libMesh::TensorValue<Real>>
+class MooseADWrapper<libMesh::TensorValue<Real>, true>
 {
 public:
-  MooseADWrapper() : _val(), _dual_number() {}
+  MooseADWrapper() : _val() {}
 
   typedef libMesh::TensorValue<ADReal> DNType;
 
-  const libMesh::TensorValue<Real> & value() const { return _val; }
+  const libMesh::TensorValue<ADReal> & operator()(bool = true) const { return _val; }
 
-  libMesh::TensorValue<Real> & value() { return _val; }
+  libMesh::TensorValue<ADReal> & operator()(bool = true) { return _val; }
 
-  const libMesh::TensorValue<ADReal> & dn(bool = true) const { return _dual_number; }
-
-  libMesh::TensorValue<ADReal> & dn(bool = true) { return _dual_number; }
-
-  void copyValueToDualNumber()
+  void copyValueToDualNumber(const TensorValue<Real> & in)
   {
     for (decltype(LIBMESH_DIM) i = 0; i < LIBMESH_DIM; ++i)
       for (decltype(LIBMESH_DIM) j = 0; j < LIBMESH_DIM; ++j)
-        _dual_number(i, j).value() = _val(i, j);
+        _val(i, j).value() = in(i, j);
   }
-  void copyDualNumberToValue()
+  void copyDualNumberToValue(TensorValue<Real> & in)
   {
     for (decltype(LIBMESH_DIM) i = 0; i < LIBMESH_DIM; ++i)
       for (decltype(LIBMESH_DIM) j = 0; j < LIBMESH_DIM; ++j)
-        _val(i, j) = _dual_number(i, j).value();
+        in(i, j) = _val(i, j).value();
   }
 
 private:
-  libMesh::TensorValue<Real> _val;
-  libMesh::TensorValue<ADReal> _dual_number;
+  libMesh::TensorValue<ADReal> _val;
 };
 
 #endif // MOOSEADWRAPPER_H
