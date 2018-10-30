@@ -42,7 +42,7 @@ public:
 
 template <ComputeStage compute_stage>
 template <typename T>
-ADMaterialPropertyObject<T> &
+ADMaterialPropertyObject<T, true> &
 ADMaterial<compute_stage>::declareADProperty(const std::string & prop_name)
 {
   _fe_problem.setUsingADFlag(true);

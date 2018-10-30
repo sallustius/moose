@@ -26,7 +26,7 @@ class PropertyValue;
  * Scalar Init helper routine so that specialization isn't needed for basic scalar MaterialProperty
  * types
  */
-template <typename P>
+template <bool declared_ad, typename P>
 PropertyValue * _init_helper(int size, PropertyValue * prop, const P * the_type);
 
 /**
@@ -101,7 +101,7 @@ dataLoad(std::istream & stream, PropertyValue *& p, void * /*context*/)
  * Concrete definition of a parameter value
  * for a specified type.
  */
-template <typename T>
+template <typename T, bool declared_ad = false>
 class MaterialProperty : public PropertyValue
 {
 public:
@@ -115,12 +115,12 @@ public:
   /**
    * @returns a read-only reference to the parameter value.
    */
-  const MooseArray<MooseADWrapper<T>> & get() const { return _value; }
+  const MooseArray<MooseADWrapper<T, declared_ad>> & get() const { return _value; }
 
   /**
    * @returns a writable reference to the parameter value.
    */
-  MooseArray<MooseADWrapper<T>> & set() { return _value; }
+  MooseArray<MooseADWrapper<T, declared_ad>> & set() { return _value; }
 
   /**
    * String identifying the type of parameter stored.
@@ -181,7 +181,7 @@ public:
    * @param the_type - This is just a template parameter used to identify the
    *                   difference between the scalar and vector template functions
    */
-  template <typename P>
+  template <bool /*declared_ad*/, typename P>
   friend PropertyValue * _init_helper(int size, PropertyValue * prop, const P * the_type);
 
   /**
@@ -211,83 +211,83 @@ private:
 
 protected:
   /// Stored parameter value.
-  MooseArray<MooseADWrapper<T>> _value;
+  MooseArray<MooseADWrapper<T, declared_ad>> _value;
 };
 
 // ------------------------------------------------------------
 // Material::Property<> class inline methods
-template <typename T>
+template <typename T, bool declared_ad>
 inline std::string
-MaterialProperty<T>::type()
+MaterialProperty<T, declared_ad>::type()
 {
   return typeid(T).name();
 }
 
-template <typename T>
+template <typename T, bool declared_ad>
 inline PropertyValue *
-MaterialProperty<T>::init(int size)
+MaterialProperty<T, declared_ad>::init(int size)
 {
-  return _init_helper(size, this, static_cast<T *>(0));
+  return _init_helper<declared_ad>(size, this, static_cast<T *>(0));
 }
 
-template <typename T>
+template <typename T, bool declared_ad>
 inline void
-MaterialProperty<T>::resize(int n)
+MaterialProperty<T, declared_ad>::resize(int n)
 {
   _value.resize(n);
 }
 
-template <typename T>
+template <typename T, bool declared_ad>
 inline void
-MaterialProperty<T>::swap(PropertyValue * rhs)
+MaterialProperty<T, declared_ad>::swap(PropertyValue * rhs)
 {
   mooseAssert(rhs != NULL, "Assigning NULL?");
   _value.swap(cast_ptr<MaterialProperty<T> *>(rhs)->_value);
 }
 
-template <typename T>
+template <typename T, bool declared_ad>
 inline void
-MaterialProperty<T>::qpCopy(const unsigned int to_qp,
-                            PropertyValue * rhs,
-                            const unsigned int from_qp)
+MaterialProperty<T, declared_ad>::qpCopy(const unsigned int to_qp,
+                                         PropertyValue * rhs,
+                                         const unsigned int from_qp)
 {
   mooseAssert(rhs != NULL, "Assigning NULL?");
   _value[to_qp] = cast_ptr<const MaterialProperty<T> *>(rhs)->_value[from_qp];
 }
 
-template <typename T>
+template <typename T, bool declared_ad>
 inline void
-MaterialProperty<T>::store(std::ostream & stream)
+MaterialProperty<T, declared_ad>::store(std::ostream & stream)
 {
   for (unsigned int i = 0; i < size(); i++)
     storeHelper(stream, _value[i], NULL);
 }
 
-template <typename T>
+template <typename T, bool declared_ad>
 inline void
-MaterialProperty<T>::load(std::istream & stream)
+MaterialProperty<T, declared_ad>::load(std::istream & stream)
 {
   for (unsigned int i = 0; i < size(); i++)
     loadHelper(stream, _value[i], NULL);
 }
 
-template <typename T>
-class ADMaterialPropertyObject : public MaterialProperty<T>
+template <typename T, bool declared_ad = false>
+class ADMaterialPropertyObject : public MaterialProperty<T, declared_ad>
 {
 public:
-  ADMaterialPropertyObject() : MaterialProperty<T>() {}
+  ADMaterialPropertyObject() : MaterialProperty<T, declared_ad>() {}
 
   /**
    * Get element i out of the array as a writeable reference.
    */
-  typename MooseADWrapper<T>::DNType & operator[](const unsigned int i)
+  typename MooseADWrapper<T, declared_ad>::DNType & operator[](const unsigned int i)
   {
     return this->_value[i].dn();
   }
   /**
    * Get element i out of the array as a read-only reference.
    */
-  const typename MooseADWrapper<T>::DNType & operator[](const unsigned int i) const
+  const typename MooseADWrapper<T, declared_ad>::DNType & operator[](const unsigned int i) const
   {
     return this->_value[i].dn();
   }
@@ -356,12 +356,12 @@ dataLoad(std::istream & stream, MaterialProperties & v, void * context)
 }
 
 // Scalar Init Helper Function
-template <typename P>
+template <bool declared_ad, typename P>
 PropertyValue *
 _init_helper(int size, PropertyValue * /*prop*/, const P *)
 {
-  MaterialProperty<P> * copy = new MaterialProperty<P>;
-  copy->_value.resize(size, MooseADWrapper<P>{});
+  MaterialProperty<P, declared_ad> * copy = new MaterialProperty<P, declared_ad>;
+  copy->_value.resize(size, MooseADWrapper<P, declared_ad>{});
   return copy;
 }
 

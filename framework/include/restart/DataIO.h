@@ -403,9 +403,9 @@ dataStore(std::ostream & stream, VectorValue<T> & v, void * context)
   }
 }
 
-template <typename T>
+template <typename T, bool declared_ad>
 inline void
-dataStore(std::ostream & stream, MooseADWrapper<T> & dn_wrapper, void * context)
+dataStore(std::ostream & stream, MooseADWrapper<T, declared_ad> & dn_wrapper, void * context)
 {
   dataStore(stream, dn_wrapper.value(), context);
   dataStore(stream, dn_wrapper.dn(false), context);
@@ -653,9 +653,9 @@ dataLoad(std::istream & stream, VectorValue<T> & v, void * context)
   }
 }
 
-template <typename T>
+template <typename T, bool declared_ad>
 inline void
-dataLoad(std::istream & stream, MooseADWrapper<T> & dn_wrapper, void * context)
+dataLoad(std::istream & stream, MooseADWrapper<T, declared_ad> & dn_wrapper, void * context)
 {
   dataLoad(stream, dn_wrapper.value(), context);
   dataLoad(stream, dn_wrapper.dn(false), context);

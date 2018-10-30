@@ -10,7 +10,7 @@
 
 #include <typeinfo>
 
-template <typename T>
+template <typename T, bool declared_ad = false>
 class MooseADWrapper
 {
 public:
@@ -50,7 +50,7 @@ private:
 };
 
 template <>
-class MooseADWrapper<Real>
+class MooseADWrapper<Real, true>
 {
 public:
   MooseADWrapper() : _val(), _dual_number() {}
@@ -74,7 +74,7 @@ private:
 };
 
 template <>
-class MooseADWrapper<libMesh::VectorValue<Real>>
+class MooseADWrapper<libMesh::VectorValue<Real>, true>
 {
 public:
   MooseADWrapper() : _val(), _dual_number() {}
@@ -106,7 +106,7 @@ private:
 };
 
 template <>
-class MooseADWrapper<libMesh::TensorValue<Real>>
+class MooseADWrapper<libMesh::TensorValue<Real>, true>
 {
 public:
   MooseADWrapper() : _val(), _dual_number() {}
