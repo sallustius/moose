@@ -180,20 +180,6 @@ private:
   declareADHelper(MaterialProperties & props, const std::string & prop_name, unsigned int prop_id);
 };
 
-// template <typename T,
-//           typename std::enable_if<!std::is_same> const MaterialProperty<T> * castToMatProp(
-//               PropertyValue const * const & prop_to_be_cast)
-// {
-//   return dynamic_cast<const MaterialProperty<T> *>(prop_to_be_cast);
-// }
-
-// template <>
-// const MaterialProperty<Real> *
-// castToMatProp<ADReal, Real>(PropertyValue const * const & prop_to_be_cast)
-// {
-//   return dynamic_cast<const MaterialProperty<Real> *>(prop_to_be_cast);
-// }
-
 template <typename T>
 inline bool
 MaterialData::haveProperty(const std::string & prop_name) const
@@ -222,11 +208,11 @@ MaterialData::resizeProps(unsigned int size)
     _props_older.resize(n, nullptr);
 
   if (_props[size] == nullptr)
-    _props[size] = new ADMaterialPropertyObject<T, ad_property>;
+    _props[size] = new ADMaterialPropertyObject<T>;
   if (_props_old[size] == nullptr)
-    _props_old[size] = new ADMaterialPropertyObject<T, false>;
+    _props_old[size] = new MaterialProperty<T>;
   if (_props_older[size] == nullptr)
-    _props_older[size] = new ADMaterialPropertyObject<T, false>;
+    _props_older[size] = new MaterialProperty<T>;
 }
 
 template <typename T>
@@ -237,7 +223,7 @@ MaterialData::declareProperty(const std::string & prop_name)
 }
 
 template <typename T>
-ADMaterialPropertyObject<T, true> &
+ADMaterialPropertyObject<T> &
 MaterialData::declareADProperty(const std::string & prop_name)
 {
   return declareADHelper<T>(_props, prop_name, _storage.addProperty(prop_name));
@@ -272,13 +258,13 @@ MaterialData::declareHelper(MaterialProperties & props,
 }
 
 template <typename T>
-ADMaterialPropertyObject<T, true> &
+ADMaterialPropertyObject<T> &
 MaterialData::declareADHelper(MaterialProperties & props,
                               const std::string & libmesh_dbg_var(prop_name),
                               unsigned int prop_id)
 {
-  resizeProps<T, true>(prop_id);
-  auto prop = dynamic_cast<ADMaterialPropertyObject<T, true> *>(props[prop_id]);
+  resizeProps<T>(prop_id);
+  auto prop = dynamic_cast<ADMaterialPropertyObject<T> *>(props[prop_id]);
   mooseAssert(prop != nullptr, "Internal error in declaring material property: " + prop_name);
   return *prop;
 }
@@ -296,7 +282,7 @@ MaterialData::getProperty(const std::string & name)
 }
 
 template <typename T>
-ADMaterialPropertyObject<T, true> &
+ADMaterialPropertyObject<T> &
 MaterialData::getADProperty(const std::string & name)
 {
   auto prop_id = getPropertyId(name);

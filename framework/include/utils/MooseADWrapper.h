@@ -10,7 +10,7 @@
 
 #include <typeinfo>
 
-template <typename T, bool declared_ad = false>
+template <typename T>
 class MooseADWrapper
 {
 public:
@@ -21,20 +21,20 @@ public:
   const T & operator()(bool requested_by_user = true) const
   {
     if (requested_by_user)
-      mooseWarning("Either type ",
+      mooseWarning("Type ",
                    typeid(T).name(),
-                   " does not currently support automatic differentiation or the material property "
-                   "was not declared as an AD property. Your Jacobian may be inaccurate");
+                   " does not currently support automatic differentiation. Either template this "
+                   "class or use a regular material property.");
     return _val;
   }
 
   T & operator()(bool requested_by_user = true)
   {
     if (requested_by_user)
-      mooseWarning("Either type ",
+      mooseWarning("Type ",
                    typeid(T).name(),
-                   " does not currently support automatic differentiation or the material property "
-                   "was not declared as an AD property. Your Jacobian may be inaccurate");
+                   " does not currently support automatic differentiation. Either template this "
+                   "class or use a regular material property.");
     return _val;
   }
 
@@ -46,7 +46,7 @@ private:
 };
 
 template <>
-class MooseADWrapper<Real, true>
+class MooseADWrapper<Real>
 {
 public:
   MooseADWrapper() : _val() {}
@@ -65,7 +65,7 @@ private:
 };
 
 template <>
-class MooseADWrapper<libMesh::VectorValue<Real>, true>
+class MooseADWrapper<libMesh::VectorValue<Real>>
 {
 public:
   MooseADWrapper() : _val() {}
@@ -92,7 +92,7 @@ private:
 };
 
 template <>
-class MooseADWrapper<libMesh::TensorValue<Real>, true>
+class MooseADWrapper<libMesh::TensorValue<Real>>
 {
 public:
   MooseADWrapper() : _val() {}

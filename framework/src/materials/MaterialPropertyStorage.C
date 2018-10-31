@@ -28,6 +28,20 @@ shallowCopyData(const std::vector<unsigned int> & stateful_prop_ids,
                 MaterialProperties & data,
                 MaterialProperties & data_from)
 {
+  MaterialProperty<Real> * mat_prop_to;
+  ADMaterialPropertyObject<Real> * ad_prop_to;
+  MaterialProperty<Real> * mat_prop_from;
+  ADMaterialPropertyObject<Real> * ad_prop_from;
+  for (auto & prop_value_ptr : data)
+  {
+    mat_prop_to = dynamic_cast<MaterialProperty<Real> *>(prop_value_ptr);
+    ad_prop_to = dynamic_cast<ADMaterialPropertyObject<Real> *>(prop_value_ptr);
+  }
+  for (auto & prop_value_ptr : data_from)
+  {
+    mat_prop_from = dynamic_cast<MaterialProperty<Real> *>(prop_value_ptr);
+    ad_prop_from = dynamic_cast<ADMaterialPropertyObject<Real> *>(prop_value_ptr);
+  }
   for (unsigned int i = 0; i < stateful_prop_ids.size(); ++i)
   {
     if (i >= data_from.size() || stateful_prop_ids[i] >= data.size())
@@ -276,7 +290,7 @@ MaterialPropertyStorage::shift()
     std::swap(_props_elem_older, _props_elem_old);
 
   // Intentional fall through for case above and for handling just using old properties
-  std::swap(_props_elem_old, _props_elem);
+  _props_elem_old = _props_elem;
 }
 
 void

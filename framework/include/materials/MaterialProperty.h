@@ -167,9 +167,9 @@ public:
    */
   virtual void load(std::istream & stream) override;
 
-  void copyValueToDualNumber(const unsigned int i) override {}
+  void copyValueToDualNumber(const unsigned int /*i*/) override {}
 
-  void copyDualNumberToValue(const unsigned int i) override {}
+  void copyDualNumberToValue(const unsigned int /*i*/) override {}
 
 private:
   /// private copy constructor to avoid shallow copying of material properties
@@ -248,7 +248,7 @@ MaterialProperty<T>::load(std::istream & stream)
     loadHelper(stream, _value[i], NULL);
 }
 
-template <typename T, bool declared_ad = false>
+template <typename T>
 class ADMaterialPropertyObject : public MaterialProperty<T>
 {
 public:
@@ -259,12 +259,12 @@ public:
   /**
    * @returns a read-only reference to the parameter dual number.
    */
-  const MooseArray<MooseADWrapper<T, declared_ad>> & get() const { return _dual_number; }
+  const MooseArray<MooseADWrapper<T>> & get() const { return _dual_number; }
 
   /**
    * @returns a writable reference to the parameter dual number.
    */
-  MooseArray<MooseADWrapper<T, declared_ad>> & set() { return _dual_number; }
+  MooseArray<MooseADWrapper<T>> & set() { return _dual_number; }
 
   virtual PropertyValue * init(int size) override;
   virtual void resize(int n) override;
@@ -310,65 +310,63 @@ public:
 
 protected:
   /// Stored dual number
-  MooseArray<MooseADWrapper<T, declared_ad>> _dual_number;
+  MooseArray<MooseADWrapper<T>> _dual_number;
 };
 
-template <typename T, bool declared_ad>
+template <typename T>
 inline PropertyValue *
-ADMaterialPropertyObject<T, declared_ad>::init(int size)
+ADMaterialPropertyObject<T>::init(int size)
 {
-  ADMaterialPropertyObject<T, declared_ad> * copy = new ADMaterialPropertyObject<T, declared_ad>;
+  ADMaterialPropertyObject<T> * copy = new ADMaterialPropertyObject<T>;
   copy->_value.resize(size, T{});
-  copy->_dual_number.resize(size, MooseADWrapper<T, declared_ad>{});
+  copy->_dual_number.resize(size, MooseADWrapper<T>{});
   return copy;
 }
 
-template <typename T, bool declared_ad>
+template <typename T>
 inline void
-ADMaterialPropertyObject<T, declared_ad>::resize(int n)
+ADMaterialPropertyObject<T>::resize(int n)
 {
   _dual_number.resize(n);
   this->_value.resize(n);
 }
 
-template <typename T, bool declared_ad>
+template <typename T>
 inline void
-ADMaterialPropertyObject<T, declared_ad>::swap(PropertyValue * rhs)
+ADMaterialPropertyObject<T>::swap(PropertyValue * rhs)
 {
   mooseAssert(rhs != NULL, "Assigning NULL?");
-  this->_value.swap(cast_ptr<ADMaterialPropertyObject<T, reverse_order> *>(rhs)->_value);
-  _dual_number.swap(cast_ptr<ADMaterialPropertyObject<T, reverse_order> *>(rhs)->_dual_number);
+  this->_value.swap(cast_ptr<ADMaterialPropertyObject<T> *>(rhs)->_value);
+  _dual_number.swap(cast_ptr<ADMaterialPropertyObject<T> *>(rhs)->_dual_number);
 }
 
-template <typename T, bool declared_ad>
+template <typename T>
 inline void
-ADMaterialPropertyObject<T, declared_ad>::qpCopy(const unsigned int to_qp,
-                                                 PropertyValue * rhs,
-                                                 const unsigned int from_qp)
+ADMaterialPropertyObject<T>::qpCopy(const unsigned int to_qp,
+                                    PropertyValue * rhs,
+                                    const unsigned int from_qp)
 {
   mooseAssert(rhs != NULL, "Assigning NULL?");
-  this->_value[to_qp] =
-      cast_ptr<const ADMaterialPropertyObject<T, declared_ad> *>(rhs)->_value[from_qp];
-  _dual_number[to_qp] =
-      cast_ptr<const ADMaterialPropertyObject<T, declared_ad> *>(rhs)->_dual_number[from_qp];
+  this->_value[to_qp] = cast_ptr<const ADMaterialPropertyObject<T> *>(rhs)->_value[from_qp];
+  _dual_number[to_qp] = cast_ptr<const ADMaterialPropertyObject<T> *>(rhs)->_dual_number[from_qp];
 }
 
-template <typename T, bool declared_ad>
+template <typename T>
 inline void
-ADMaterialPropertyObject<T, declared_ad>::store(std::ostream & stream)
+ADMaterialPropertyObject<T>::store(std::ostream & stream)
 {
-  for (unsigned int i = 0; i < size(); i++)
+  for (unsigned int i = 0; i < this->size(); i++)
   {
     storeHelper(stream, this->_value[i], nullptr);
     storeHelper(stream, _dual_number[i], nullptr);
   }
 }
 
-template <typename T, bool declared_ad>
+template <typename T>
 inline void
-ADMaterialPropertyObject<T, declared_ad>::load(std::istream & stream)
+ADMaterialPropertyObject<T>::load(std::istream & stream)
 {
-  for (unsigned int i = 0; i < size(); i++)
+  for (unsigned int i = 0; i < this->size(); i++)
   {
     loadHelper(stream, this->_value[i], nullptr);
     loadHelper(stream, _dual_number[i], nullptr);

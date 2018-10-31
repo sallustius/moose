@@ -1,6 +1,10 @@
 [Mesh]
   dim = 3
-  file = cube.e
+  # file = cube.e
+  type = GeneratedMesh
+  nx = 1
+  ny = 1
+  nz = 1
 []
 
 [Variables]
@@ -49,13 +53,13 @@
   [./bottom]
     type = DirichletBC
     variable = u
-    boundary = 1
+    boundary = 'bottom'
     value = 0.0
   [../]
   [./top]
     type = DirichletBC
     variable = u
-    boundary = 2
+    boundary = 'top'
     value = 1.0
   [../]
 []
