@@ -1,5 +1,3 @@
-# This input file tests outflow boundary conditions for the incompressible NS equations.
-
 [GlobalParams]
   gravity = '0 0 0'
   integrate_p_by_parts = true
@@ -52,15 +50,16 @@
   [./p]
     block = 0
   [../]
-  [./disp_x]
-  [../]
   [./disp_y]
-  [../]
-  [./vel_x_solid]
-    block = 1
   [../]
   [./vel_y_solid]
     block = 1
+  [../]
+[]
+
+[AuxVariables]
+  [./disp_x]
+    initial_condition = 0
   [../]
 []
 
@@ -106,20 +105,15 @@
     block = 0
     use_displaced_mesh = true
   [../]
-  [./disp_x_fluid]
-    type = Diffusion
-    variable = disp_x
-    block = 0
-  [../]
   [./disp_y_fluid]
     type = Diffusion
     variable = disp_y
     block = 0
   [../]
-  [./accel_tensor_x]
-    type = CoupledTimeDerivative
-    variable = disp_x
-    v = vel_x_solid
+  [./disp_y_stress_solid]
+    type = MatDiffusion
+    variable = disp_y
+    D_name = 'ym'
     block = 1
   [../]
   [./accel_tensor_y]
@@ -128,23 +122,11 @@
     v = vel_y_solid
     block = 1
   [../]
-  [./vxs_time_derivative_term]
-    type = CoupledTimeDerivative
-    variable = vel_x_solid
-    v = disp_x
-    block = 1
-  [../]
   [./vys_time_derivative_term]
     type = CoupledTimeDerivative
     variable = vel_y_solid
     v = disp_y
     block = 1
-  [../]
-  [./source_vxs]
-    type = MatReaction
-    variable = vel_x_solid
-    block = 1
-    mob_name = 1
   [../]
   [./source_vys]
     type = MatReaction
@@ -155,14 +137,6 @@
 []
 
 [InterfaceKernels]
-  [./penalty_interface_x]
-    type = CoupledPenaltyInterfaceDiffusion
-    variable = vel_x
-    neighbor_var = disp_x
-    slave_coupled_var = vel_x_solid
-    boundary = master0_interface
-    penalty = 1e6
-  [../]
   [./penalty_interface_y]
     type = CoupledPenaltyInterfaceDiffusion
     variable = vel_y
@@ -173,25 +147,31 @@
   [../]
 []
 
-[Modules/TensorMechanics/Master]
-  [./solid_domain]
-    strain = SMALL
-    incremental = false
-    # generate_output = 'strain_xx strain_yy strain_zz' ## Not at all necessary, but nice
-    block = '1'
-  [../]
-[]
+# [Modules/TensorMechanics/Master]
+#   [./solid_domain]
+#     strain = SMALL
+#     incremental = false
+#     # generate_output = 'strain_xx strain_yy strain_zz' ## Not at all necessary, but nice
+#     block = '1'
+#   [../]
+# []
 
 [Materials]
-  [./elasticity_tensor]
-    type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1e0
-    poissons_ratio = 0.3
-    block = '1'
-  [../]
-  [./small_stress]
-    type = ComputeLinearElasticStress
+  # [./elasticity_tensor]
+  #   type = ComputeIsotropicElasticityTensor
+  #   youngs_modulus = 1e0
+  #   poissons_ratio = 0.3
+  #   block = '1'
+  # [../]
+  # [./small_stress]
+  #   type = ComputeLinearElasticStress
+  #   block = 1
+  # [../]
+  [./const_solid]
+    type = GenericConstantMaterial
     block = 1
+    prop_names = 'ym'
+    prop_values = '100'
   [../]
   [./const]
     type = GenericConstantMaterial
@@ -205,43 +185,37 @@
   [./fluid_x_no_slip]
     type = DirichletBC
     variable = vel_x
-    boundary = 'bottom'
+    boundary = 'bottom master0_interface'
     value = 0.0
   [../]
   [./fluid_y_no_slip]
     type = DirichletBC
     variable = vel_y
-    boundary = 'bottom left_to_0'
+    boundary = 'bottom'
     value = 0.0
   [../]
-  [./x_inlet]
+  # [./x_inlet]
+  #   type = FunctionDirichletBC
+  #   variable = vel_x
+  #   boundary = 'left_to_0'
+  #   function = 'inlet_func'
+  # [../]
+  [./p_inlet]
     type = FunctionDirichletBC
-    variable = vel_x
+    variable = p
     boundary = 'left_to_0'
-    function = 'inlet_func'
-  [../]
-  [./no_disp_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = 'bottom left_to_1 left_to_0 right_to_1 right_to_0'
-    value = 0
-  [../]
+    function = 'inlet_p_func'
+
   [./no_disp_y]
     type = DirichletBC
     variable = disp_y
-    boundary = 'bottom left_to_1 left_to_0 right_to_1 right_to_0'
+    boundary = 'bottom top'
     value = 0
-  [../]
-  [./solid_vel_x_no_slip]
-    type = DirichletBC
-    variable = vel_x_solid
-    boundary = 'left_to_1 right_to_1'
-    value = 0.0
   [../]
   [./solid_vel_y_no_slip]
     type = DirichletBC
     variable = vel_y_solid
-    boundary = 'left_to_1 right_to_1'
+    boundary = 'top'
     value = 0.0
   [../]
 []
