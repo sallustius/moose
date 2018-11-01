@@ -214,12 +214,6 @@
     boundary = 'bottom'
     value = 0.0
   [../]
-  [./x_inlet]
-    type = FunctionDirichletBC
-    variable = vel_x
-    boundary = 'left_to_0'
-    function = 'inlet_func'
-  [../]
   [./p_inlet]
     type = FunctionDirichletBC
     variable = p
@@ -235,25 +229,25 @@
   [./no_disp_x]
     type = DirichletBC
     variable = disp_x
-    boundary = 'bottom top left_to_1 right_to_1 left_to_0 right_to_0'
+    boundary = 'bottom top'
     value = 0
   [../]
   [./no_disp_y]
     type = DirichletBC
     variable = disp_y
-    boundary = 'bottom top left_to_1 right_to_1 left_to_0 right_to_0'
+    boundary = 'bottom top'
     value = 0
   [../]
   [./solid_x_no_slip]
     type = DirichletBC
     variable = vel_x_solid
-    boundary = 'top left_to_1 right_to_1'
+    boundary = 'top'
     value = 0.0
   [../]
   [./solid_y_no_slip]
     type = DirichletBC
     variable = vel_y_solid
-    boundary = 'top left_to_1 right_to_1'
+    boundary = 'top'
     value = 0.0
   [../]
 []
