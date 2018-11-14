@@ -65,6 +65,7 @@
 #include "AllLocalDofIndicesThread.h"
 #include "FloatingPointExceptionGuard.h"
 #include "MaxVarNDofsPerElem.h"
+#include "MaxVarNDofsPerNode.h"
 
 // libMesh
 #include "libmesh/nonlinear_solver.h"
@@ -195,6 +196,13 @@ NonlinearSystemBase::init()
   _max_var_n_dofs_per_elem = mvndpe.max();
   _communicator.max(_max_var_n_dofs_per_elem);
   Moose::perf_log.pop("maxVarNDofsPerElem()", "Setup");
+
+  Moose::perf_log.push("maxVarNDofsPerNode()", "Setup");
+  MaxVarNDofsPerNode mvndpn(_fe_problem, *this);
+  Threads::parallel_reduce(*_mesh.getLocalNodeRange(), mvndpn);
+  _max_var_n_dofs_per_node = mvndpn.max();
+  _communicator.max(_max_var_n_dofs_per_node);
+  Moose::perf_log.pop("maxVarNDofsPerNode()", "Setup");
 }
 
 void

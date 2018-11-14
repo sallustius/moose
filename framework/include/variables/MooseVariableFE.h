@@ -585,6 +585,12 @@ public:
   const MooseArray<Number> & dofValuesDuDotDuNeighbor() override;
 
   /**
+   * Return the AD dof values
+   */
+  template <ComputeStage compute_stage>
+  const MooseArray<typename Moose::RealType<compute_stage>::type> & adDofValues();
+
+  /**
    * Compute and store incremental change in solution at QPs based on increment_vec
    */
   void computeIncrementAtQps(const NumericVector<Number> & increment_vec);
@@ -645,6 +651,9 @@ public:
   const MooseArray<Real> & nodalVectorTagValue(TagID tag);
   const MooseArray<Real> & nodalMatrixTagValue(TagID tag);
 
+  template <ComputeStage compute_stage>
+  const typename Moose::ValueType<compute_stage, OutputType>::type & adNodalValue();
+
   virtual void computeNodalValues() override;
   virtual void computeNodalNeighborValues() override;
 
@@ -660,6 +669,13 @@ public:
                          const FieldVariablePhiValue & phi,
                          const FieldVariablePhiGradient & grad_phi,
                          const FieldVariablePhiSecond *& second_phi);
+
+  void assignNodalValue(const Real & value, const unsigned int & component);
+  void assignADNodalValue(const ADReal & value, const unsigned int & component);
+  void assignNodalValueOld(const Real & value, const unsigned int & component);
+  void assignNodalValueOlder(const Real & value, const unsigned int & component);
+  void assignNodalValuePreviousNL(const Real & value, const unsigned int & component);
+  void assignNodalValueDot(const Real & value, const unsigned int & component);
 
 protected:
   /// Our assembly
@@ -904,6 +920,9 @@ protected:
   /// nodal values of u_dot
   OutputType _nodal_value_dot;
 
+  /// AD nodal value
+  typename Moose::ValueType<JACOBIAN, OutputType>::type _ad_nodal_value;
+
   /// A zero AD variable
   const ADReal _ad_zero;
 
@@ -980,4 +999,19 @@ template <>
 template <>
 const VectorVariableValue & MooseVariableFE<RealVectorValue>::adUDotNeighbor<RESIDUAL>();
 
+template <>
+template <>
+const MooseArray<Real> & MooseVariableFE<Real>::adDofValues<RESIDUAL>();
+
+template <>
+template <>
+const MooseArray<Real> & MooseVariableFE<RealVectorValue>::adDofValues<RESIDUAL>();
+
+template <>
+template <>
+const Real & MooseVariableFE<Real>::adNodalValue<RESIDUAL>();
+
+template <>
+template <>
+const RealVectorValue & MooseVariableFE<RealVectorValue>::adNodalValue<RESIDUAL>();
 #endif /* MOOSEVARIABLEFE_H */

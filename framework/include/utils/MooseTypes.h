@@ -242,7 +242,7 @@ struct ValueType<compute_stage, W<Real>>
 {
   typedef W<typename RealType<compute_stage>::type> type;
 };
-}
+} // MOOSE
 
 template <ComputeStage compute_stage, typename T>
 struct VariableValueType

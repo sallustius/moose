@@ -92,7 +92,8 @@ SystemBase::SystemBase(SubProblem & subproblem,
     _saved_old(nullptr),
     _saved_older(nullptr),
     _var_kind(var_kind),
-    _max_var_n_dofs_per_elem(0)
+    _max_var_n_dofs_per_elem(0),
+    _max_var_n_dofs_per_node(0)
 {
 }
 

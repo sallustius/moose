@@ -1632,12 +1632,13 @@ MooseVariableFE<OutputType>::computeNodalValues()
 
   if (_has_dofs)
   {
-    const size_t n = _dof_indices.size();
+    auto n = _dof_indices.size();
     mooseAssert(n, "There must be a non-zero number of degrees of freedom");
     _dof_values.resize(n);
 
     _sys.currentSolution()->get(_dof_indices, &_dof_values[0]);
-    _nodal_value = _dof_values[0];
+    for (decltype(n) i = 0; i < n; ++i)
+      assignNodalValue(_dof_values[i], i);
 
     for (auto tag : active_coupleable_vector_tags)
       _vector_tags_dof_u[tag].resize(n);
@@ -1674,7 +1675,8 @@ MooseVariableFE<OutputType>::computeNodalValues()
     {
       _dof_values_previous_nl.resize(n);
       _sys.solutionPreviousNewton()->get(_dof_indices, &_dof_values_previous_nl[0]);
-      _nodal_value_previous_nl = _dof_values_previous_nl[0];
+      for (decltype(n) i = 0; i < n; ++i)
+        assignNodalValuePreviousNL(_dof_values_previous_nl[i], i);
     }
 
     if (_subproblem.isTransient())
@@ -1683,14 +1685,31 @@ MooseVariableFE<OutputType>::computeNodalValues()
       _dof_values_older.resize(n);
       _sys.solutionOld().get(_dof_indices, &_dof_values_old[0]);
       _sys.solutionOlder().get(_dof_indices, &_dof_values_older[0]);
-      _nodal_value_old = _dof_values_old[0];
-      _nodal_value_older = _dof_values_older[0];
+      for (decltype(n) i = 0; i < n; ++i)
+      {
+        assignNodalValueOld(_dof_values_old[i], i);
+        assignNodalValueOlder(_dof_values_older[i], i);
+      }
 
       _dof_values_dot.resize(n);
       _dof_du_dot_du.resize(n);
       _dof_values_dot[0] = _sys.solutionUDot()(_dof_indices[0]);
       _dof_du_dot_du[0] = _sys.duDotDu();
-      _nodal_value_dot = _dof_values_dot[0];
+      for (decltype(n) i = 0; i < n; ++i)
+        assignNodalValueDot(_dof_values_dot[i], i);
+    }
+
+    if (_need_ad && _computing_jacobian)
+    {
+      _ad_dof_values.resize(n);
+      auto ad_offset = _var_num * _sys.getMaxVarNDofsPerNode();
+
+      for (decltype(n) i = 0; i < n; ++i)
+      {
+        _ad_dof_values[i] = _dof_values[i];
+        _ad_dof_values[i].derivatives()[ad_offset + i] = 1.;
+        assignADNodalValue(_ad_dof_values[i], i);
+      }
     }
   }
   else
@@ -1708,61 +1727,94 @@ MooseVariableFE<OutputType>::computeNodalValues()
   }
 }
 
+template <typename OutputType>
+void
+MooseVariableFE<OutputType>::assignNodalValue(const Real & value, const unsigned int &)
+{
+  _nodal_value = value;
+}
+
 template <>
 void
-MooseVariableFE<RealVectorValue>::computeNodalValues()
+MooseVariableFE<RealVectorValue>::assignNodalValue(const Real & value,
+                                                   const unsigned int & component)
 {
-  if (_has_dofs)
-  {
-    const std::size_t n = _dof_indices.size();
-    mooseAssert(n, "There must be a non-zero number of degrees of freedom");
-    _dof_values.resize(n);
-    _sys.currentSolution()->get(_dof_indices, &_dof_values[0]);
-    for (size_t i = 0; i < n; ++i)
-      _nodal_value(i) = _dof_values[i];
+  _nodal_value(component) = value;
+}
 
-    if (_need_dof_values_previous_nl)
-    {
-      _dof_values_previous_nl.resize(n);
-      _sys.solutionPreviousNewton()->get(_dof_indices, &_dof_values_previous_nl[0]);
-      _nodal_value_previous_nl = _dof_values_previous_nl[0];
-      for (size_t i = 0; i < n; ++i)
-        _nodal_value_previous_nl(i) = _dof_values_previous_nl[i];
-    }
+template <typename OutputType>
+void
+MooseVariableFE<OutputType>::assignADNodalValue(const ADReal & value, const unsigned int &)
+{
+  _ad_nodal_value = value;
+}
 
-    if (_subproblem.isTransient())
-    {
-      _dof_values_old.resize(n);
-      _dof_values_older.resize(n);
-      _sys.solutionOld().get(_dof_indices, &_dof_values_old[0]);
-      _sys.solutionOlder().get(_dof_indices, &_dof_values_older[0]);
-      for (size_t i = 0; i < n; ++i)
-      {
-        _nodal_value_old(i) = _dof_values_old[i];
-        _nodal_value_older(i) = _dof_values_older[i];
-      }
-      _dof_values_dot.resize(n);
-      _dof_du_dot_du.resize(n);
-      for (size_t i = 0; i < n; ++i)
-      {
-        _dof_values_dot[i] = _sys.solutionUDot()(_dof_indices[i]);
-        _nodal_value_dot(i) = _dof_values_dot[i];
-      }
-    }
-  }
-  else
-  {
-    _dof_values.resize(0);
-    if (_need_dof_values_previous_nl)
-      _dof_values_previous_nl.resize(0);
-    if (_subproblem.isTransient())
-    {
-      _dof_values_old.resize(0);
-      _dof_values_older.resize(0);
-      _dof_values_dot.resize(0);
-      _dof_du_dot_du.resize(0);
-    }
-  }
+template <>
+void
+MooseVariableFE<RealVectorValue>::assignADNodalValue(const ADReal & value,
+                                                     const unsigned int & component)
+{
+  _ad_nodal_value(component) = value;
+}
+
+template <typename OutputType>
+void
+MooseVariableFE<OutputType>::assignNodalValueOld(const Real & value, const unsigned int &)
+{
+  _nodal_value_old = value;
+}
+
+template <>
+void
+MooseVariableFE<RealVectorValue>::assignNodalValueOld(const Real & value,
+                                                      const unsigned int & component)
+{
+  _nodal_value_old(component) = value;
+}
+
+template <typename OutputType>
+void
+MooseVariableFE<OutputType>::assignNodalValueOlder(const Real & value, const unsigned int &)
+{
+  _nodal_value_older = value;
+}
+
+template <>
+void
+MooseVariableFE<RealVectorValue>::assignNodalValueOlder(const Real & value,
+                                                        const unsigned int & component)
+{
+  _nodal_value_older(component) = value;
+}
+
+template <typename OutputType>
+void
+MooseVariableFE<OutputType>::assignNodalValuePreviousNL(const Real & value, const unsigned int &)
+{
+  _nodal_value_previous_nl = value;
+}
+
+template <>
+void
+MooseVariableFE<RealVectorValue>::assignNodalValuePreviousNL(const Real & value,
+                                                             const unsigned int & component)
+{
+  _nodal_value_previous_nl(component) = value;
+}
+
+template <typename OutputType>
+void
+MooseVariableFE<OutputType>::assignNodalValueDot(const Real & value, const unsigned int &)
+{
+  _nodal_value_dot = value;
+}
+
+template <>
+void
+MooseVariableFE<RealVectorValue>::assignNodalValueDot(const Real & value,
+                                                      const unsigned int & component)
+{
+  _nodal_value_dot(component) = value;
 }
 
 template <typename OutputType>
@@ -1950,5 +2002,60 @@ MooseVariableFE<RealVectorValue>::adUDotNeighbor<RESIDUAL>()
   return _u_dot_neighbor;
 }
 
+template <typename OutputType>
+template <ComputeStage compute_stage>
+const MooseArray<typename Moose::RealType<compute_stage>::type> &
+MooseVariableFE<OutputType>::adDofValues()
+{
+  _need_ad = true;
+  return _ad_dof_values;
+}
+
+template <>
+template <>
+const MooseArray<Real> &
+MooseVariableFE<Real>::adDofValues<RESIDUAL>()
+{
+  return _dof_values;
+}
+
+template <>
+template <>
+const MooseArray<Real> &
+MooseVariableFE<RealVectorValue>::adDofValues<RESIDUAL>()
+{
+  return _dof_values;
+}
+
+template <typename OutputType>
+template <ComputeStage compute_stage>
+const typename Moose::ValueType<compute_stage, OutputType>::type &
+MooseVariableFE<OutputType>::adNodalValue()
+{
+  _need_ad = true;
+  return _ad_nodal_value;
+}
+
+template <>
+template <>
+const Real &
+MooseVariableFE<Real>::adNodalValue<RESIDUAL>()
+{
+  return _nodal_value;
+}
+
+template <>
+template <>
+const RealVectorValue &
+MooseVariableFE<RealVectorValue>::adNodalValue<RESIDUAL>()
+{
+  return _nodal_value;
+}
+
 template class MooseVariableFE<Real>;
 template class MooseVariableFE<RealVectorValue>;
+template const MooseArray<ADReal> & MooseVariableFE<Real>::adDofValues<JACOBIAN>();
+template const MooseArray<ADReal> & MooseVariableFE<RealVectorValue>::adDofValues<JACOBIAN>();
+template const ADReal & MooseVariableFE<Real>::adNodalValue<JACOBIAN>();
+template const libMesh::VectorValue<ADReal> &
+MooseVariableFE<RealVectorValue>::adNodalValue<JACOBIAN>();

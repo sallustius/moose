@@ -407,6 +407,13 @@ public:
   size_t getMaxVarNDofsPerElem() { return _max_var_n_dofs_per_elem; }
 
   /**
+   * Gets the maximum number of dofs used by any one variable on any one node
+   *
+   * @return The max
+   */
+  size_t getMaxVarNDofsPerNode() { return _max_var_n_dofs_per_node; }
+
+  /**
    * Adds this variable to the list of variables to be zeroed during each residual evaluation.
    * @param var_name The name of the variable to be zeroed.
    */
@@ -695,6 +702,9 @@ protected:
 
   /// Maximum number of dofs for any one variable on any one element
   size_t _max_var_n_dofs_per_elem;
+
+  /// Maximum number of dofs for any one variable on any one node
+  size_t _max_var_n_dofs_per_node;
 };
 
 #define PARALLEL_TRY
