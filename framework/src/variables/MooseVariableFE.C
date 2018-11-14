@@ -1112,14 +1112,17 @@ MooseVariableFE<OutputType>::computeValuesHelper(QBase *& qrule,
 
   // Automatic differentiation
   if (_need_ad && _computing_jacobian && _time_integrator)
-    computeAD(num_dofs, nqp, is_transient);
+    computeAD(num_dofs, nqp, is_transient, phi, grad_phi, second_phi);
 }
 
 template <typename OutputType>
 void
 MooseVariableFE<OutputType>::computeAD(const unsigned int & num_dofs,
                                        const unsigned int & nqp,
-                                       const bool & is_transient)
+                                       const bool & is_transient,
+                                       const FieldVariablePhiValue & phi,
+                                       const FieldVariablePhiGradient & grad_phi,
+                                       const FieldVariablePhiSecond *& second_phi)
 {
   _ad_dof_values.resize(num_dofs);
   _ad_u.resize(nqp);
@@ -1177,16 +1180,16 @@ MooseVariableFE<OutputType>::computeAD(const unsigned int & num_dofs,
   {
     for (unsigned int qp = 0; qp < nqp; qp++)
     {
-      _ad_u[qp] += _ad_dof_values[i] * _phi[i][qp];
+      _ad_u[qp] += _ad_dof_values[i] * phi[i][qp];
 
       if (_need_ad_grad_u)
-        _ad_grad_u[qp] += _ad_dof_values[i] * _grad_phi[i][qp];
+        _ad_grad_u[qp] += _ad_dof_values[i] * grad_phi[i][qp];
 
       if (_need_ad_second_u)
-        _ad_second_u[qp] += _ad_dof_values[i] * (*_second_phi)[i][qp];
+        _ad_second_u[qp] += _ad_dof_values[i] * (*second_phi)[i][qp];
 
       if (is_transient)
-        _ad_u_dot[qp] += _phi[i][qp] * _ad_dofs_dot[i];
+        _ad_u_dot[qp] += phi[i][qp] * _ad_dofs_dot[i];
     }
   }
 }
@@ -1195,7 +1198,11 @@ template <typename OutputType>
 void
 MooseVariableFE<OutputType>::computeADNeighbor(const unsigned int & num_dofs,
                                                const unsigned int & nqp,
-                                               const bool & is_transient)
+                                               const bool & is_transient,
+                                               const FieldVariablePhiValue & phi,
+                                               const FieldVariablePhiGradient & grad_phi,
+                                               const FieldVariablePhiSecond *& second_phi)
+
 {
   _neighbor_ad_dof_values.resize(num_dofs);
   _neighbor_ad_u.resize(nqp);
@@ -1251,16 +1258,16 @@ MooseVariableFE<OutputType>::computeADNeighbor(const unsigned int & num_dofs,
   {
     for (unsigned int qp = 0; qp < nqp; qp++)
     {
-      _neighbor_ad_u[qp] += _neighbor_ad_dof_values[i] * _phi_neighbor[i][qp];
+      _neighbor_ad_u[qp] += _neighbor_ad_dof_values[i] * phi[i][qp];
 
       if (_need_neighbor_ad_grad_u)
-        _neighbor_ad_grad_u[qp] += _neighbor_ad_dof_values[i] * _grad_phi_neighbor[i][qp];
+        _neighbor_ad_grad_u[qp] += _neighbor_ad_dof_values[i] * grad_phi[i][qp];
 
       if (_need_neighbor_ad_second_u)
-        _neighbor_ad_second_u[qp] += _neighbor_ad_dof_values[i] * (*_second_phi_neighbor)[i][qp];
+        _neighbor_ad_second_u[qp] += _neighbor_ad_dof_values[i] * (*second_phi)[i][qp];
 
       if (is_transient)
-        _neighbor_ad_u_dot[qp] += _phi_neighbor[i][qp] * _neighbor_ad_dofs_dot[i];
+        _neighbor_ad_u_dot[qp] += phi[i][qp] * _neighbor_ad_dofs_dot[i];
     }
   }
 }
@@ -1462,7 +1469,7 @@ MooseVariableFE<OutputType>::computeNeighborValuesHelper(QBase *& qrule,
 
   // Automatic differentiation
   if (_need_neighbor_ad_u && _computing_jacobian && _time_integrator)
-    computeADNeighbor(num_dofs, nqp, is_transient);
+    computeADNeighbor(num_dofs, nqp, is_transient, phi, grad_phi, second_phi);
 }
 
 template <typename OutputType>

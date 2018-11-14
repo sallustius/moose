@@ -73,7 +73,13 @@ declareADValidParams(ADVectorIntegratedBC);
   using ADIntegratedBCTempl<type, compute_stage>::_dt;                                             \
   using ADIntegratedBCTempl<type, compute_stage>::_current_elem;                                   \
   using ADIntegratedBCTempl<type, compute_stage>::_t;                                              \
-  using ADIntegratedBCTempl<type, compute_stage>::_q_point
+  using ADIntegratedBCTempl<type, compute_stage>::_q_point;                                        \
+  using ADIntegratedBCTempl<type, compute_stage>::_assembly;                                       \
+  using ADIntegratedBCTempl<type, compute_stage>::_local_ke;                                       \
+  using ADIntegratedBCTempl<type, compute_stage>::_j;                                              \
+  using ADIntegratedBCTempl<type, compute_stage>::_JxW;                                            \
+  using ADIntegratedBCTempl<type, compute_stage>::_coord;                                          \
+  using ADIntegratedBCTempl<type, compute_stage>::_qrule
 
 #define usingIntegratedBCMembers usingTemplIntegratedBCMembers(Real)
 #define usingVectorIntegratedBCMembers usingTemplIntegratedBCMembers(RealVectorValue)
