@@ -33,6 +33,9 @@ class DenseVector;
 #define adZeroValue() this->template adZeroValueTemplate<compute_stage>()
 #define adZeroGradient() this->template adZeroGradientTemplate<compute_stage>()
 #define adZeroSecond() this->template adZeroSecondTemplate<compute_stage>()
+#define adCoupledNodalValue this->template adCoupledNodalValueTemplate<compute_stage, Real>
+#define adCoupledNodalVectorValue                                                                  \
+  this->template adCoupledNodalValueTemplate<compute_stage, RealVectorValue>
 
 /**
  * Interface for objects that needs coupling capabilities
@@ -453,8 +456,18 @@ protected:
    * @param comp Component number for vector of coupled variables
    * @return Reference to a VariableValue for the coupled variable
    */
-  virtual const VariableValue & coupledNodalValue(const std::string & var_name,
-                                                  unsigned int comp = 0);
+  template <typename T>
+  const T & coupledNodalValue(const std::string & var_name, unsigned int comp = 0);
+
+  /**
+   * Returns AD nodal values of a coupled variable
+   * @param var_name Name of coupled variable
+   * @param comp Component number for vector of coupled variables
+   * @return Reference to a VariableValue for the coupled variable
+   */
+  template <ComputeStage compute_stage, typename T>
+  const typename Moose::ValueType<compute_stage, T>::type &
+  adCoupledNodalValueTemplate(const std::string & var_name, unsigned int comp = 0);
 
   /**
    * Returns an old nodal value from previous time step  of a coupled variable
@@ -462,8 +475,8 @@ protected:
    * @param comp Component number for vector of coupled variables
    * @return Reference to a VariableValue containing the old value of the coupled variable
    */
-  virtual const VariableValue & coupledNodalValueOld(const std::string & var_name,
-                                                     unsigned int comp = 0);
+  template <typename T>
+  const T & coupledNodalValueOld(const std::string & var_name, unsigned int comp = 0);
 
   /**
    * Returns an old nodal value from two time steps previous of a coupled variable
@@ -471,8 +484,8 @@ protected:
    * @param comp Component number for vector of coupled variables
    * @return Reference to a VariableValue containing the older value of the coupled variable
    */
-  virtual const VariableValue & coupledNodalValueOlder(const std::string & var_name,
-                                                       unsigned int comp = 0);
+  template <typename T>
+  const T & coupledNodalValueOlder(const std::string & var_name, unsigned int comp = 0);
 
   /**
    * Returns nodal values of a coupled variable for previous Newton iterate
@@ -480,8 +493,8 @@ protected:
    * @param comp Component number for vector of coupled variables
    * @return Reference to a VariableValue for the coupled variable
    */
-  virtual const VariableValue & coupledNodalValuePreviousNL(const std::string & var_name,
-                                                            unsigned int comp = 0);
+  template <typename T>
+  const T & coupledNodalValuePreviousNL(const std::string & var_name, unsigned int comp = 0);
 
   /**
    * Nodal values of time derivative of a coupled variable
@@ -490,8 +503,14 @@ protected:
    * @return Reference to a VariableValue containing the nodal values of time derivative of the
    * coupled variable
    */
-  virtual const VariableValue & coupledNodalDot(const std::string & var_name,
-                                                unsigned int comp = 0);
+  template <typename T>
+  const T & coupledNodalDot(const std::string & var_name, unsigned int comp = 0);
+
+  /**
+   * Get nodal default value
+   */
+  template <typename T>
+  const T & getNodalDefaultValue(const std::string & var_name, unsigned int comp = 0);
 
   /**
    * Returns DoFs in the current solution vector of a coupled variable for the local element
@@ -640,6 +659,12 @@ protected:
    * @return Pointer to the desired variable
    */
   MooseVariableFEBase * getFEVar(const std::string & var_name, unsigned int comp);
+
+  /**
+   * Helper that segues off to either getVar of getVectorVar depending on template paramter
+   */
+  template <typename T>
+  MooseVariableFE<T> * getVarHelper(const std::string & var_name, unsigned int comp);
 
   /**
    * Extract pointer to a coupled variable
@@ -917,5 +942,11 @@ template <>
 const VariableGradient & Coupleable::adZeroGradientTemplate<RESIDUAL>();
 template <>
 const VariableSecond & Coupleable::adZeroSecondTemplate<RESIDUAL>();
+template <>
+const RealVectorValue &
+Coupleable::getNodalDefaultValue<RealVectorValue>(const std::string & var_name, unsigned int comp);
+template <>
+MooseVariableFE<RealVectorValue> *
+Coupleable::getVarHelper<RealVectorValue>(const std::string & var_name, unsigned int comp);
 
 #endif /* COUPLEABLE_H */

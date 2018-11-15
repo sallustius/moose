@@ -197,6 +197,20 @@ Coupleable::getFEVar(const std::string & var_name, unsigned int comp)
     mooseError(_c_name, ": Trying to get a non-existent component of variable '", var_name, "'");
 }
 
+template <typename T>
+MooseVariableFE<T> *
+Coupleable::getVarHelper(const std::string & var_name, unsigned int comp)
+{
+  return getVar(var_name, comp);
+}
+
+template <>
+MooseVariableFE<RealVectorValue> *
+Coupleable::getVarHelper<RealVectorValue>(const std::string & var_name, unsigned int comp)
+{
+  return getVectorVar(var_name, comp);
+}
+
 MooseVariable *
 Coupleable::getVar(const std::string & var_name, unsigned int comp)
 {
@@ -300,6 +314,22 @@ Coupleable::getVectorDefaultValue(const std::string & var_name)
   }
 
   return default_value_it->second;
+}
+
+template <typename T>
+const T &
+Coupleable::getNodalDefaultValue(const std::string & var_name, unsigned int comp)
+{
+  auto && default_variable_value = getDefaultValue(var_name, comp);
+  return default_variable_value->firstElement();
+}
+
+template <>
+const RealVectorValue &
+Coupleable::getNodalDefaultValue<RealVectorValue>(const std::string & var_name, unsigned int)
+{
+  auto && default_variable_value = getVectorDefaultValue(var_name);
+  return default_variable_value->firstElement();
 }
 
 const VariableValue &
@@ -1007,15 +1037,16 @@ Coupleable::coupledSecondPreviousNL(const std::string & var_name, unsigned int c
     return var->secondSlnPreviousNLNeighbor();
 }
 
-const VariableValue &
+template <typename T>
+const T &
 Coupleable::coupledNodalValue(const std::string & var_name, unsigned int comp)
 {
   checkVar(var_name);
   if (!isCoupled(var_name))
-    return *getDefaultValue(var_name, comp);
+    return getNodalDefaultValue<T>(var_name, comp);
 
   coupledCallback(var_name, false);
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariableFE<T> * var = getVarHelper<T>(var_name, comp);
   if (var == NULL)
     mooseError("Call corresponding vector variable method");
   if (!var->isNodal())
@@ -1025,21 +1056,22 @@ Coupleable::coupledNodalValue(const std::string & var_name, unsigned int comp)
                "', but it is not nodal.");
 
   if (!_coupleable_neighbor)
-    return (_c_is_implicit) ? var->dofValues() : var->dofValuesOld();
+    return (_c_is_implicit) ? var->nodalValue() : var->nodalValueOld();
   else
-    return (_c_is_implicit) ? var->dofValuesNeighbor() : var->dofValuesOldNeighbor();
+    return (_c_is_implicit) ? var->nodalValueNeighbor() : var->nodalValueOldNeighbor();
 }
 
-const VariableValue &
+template <typename T>
+const T &
 Coupleable::coupledNodalValueOld(const std::string & var_name, unsigned int comp)
 {
   checkVar(var_name);
   if (!isCoupled(var_name))
-    return *getDefaultValue(var_name, comp);
+    return getNodalDefaultValue<T>(var_name, comp);
 
   validateExecutionerType(var_name, "coupledNodalValueOld");
   coupledCallback(var_name, true);
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariableFE<T> * var = getVarHelper<T>(var_name, comp);
   if (var == NULL)
     mooseError("Call corresponding vector variable method");
   if (!var->isNodal())
@@ -1049,21 +1081,22 @@ Coupleable::coupledNodalValueOld(const std::string & var_name, unsigned int comp
                "', but it is not nodal.");
 
   if (!_coupleable_neighbor)
-    return (_c_is_implicit) ? var->dofValuesOld() : var->dofValuesOlder();
+    return (_c_is_implicit) ? var->nodalValueOld() : var->nodalValueOlder();
   else
-    return (_c_is_implicit) ? var->dofValuesOldNeighbor() : var->dofValuesOlderNeighbor();
+    return (_c_is_implicit) ? var->nodalValueOldNeighbor() : var->nodalValueOlderNeighbor();
 }
 
-const VariableValue &
+template <typename T>
+const T &
 Coupleable::coupledNodalValueOlder(const std::string & var_name, unsigned int comp)
 {
   checkVar(var_name);
   if (!isCoupled(var_name))
-    return *getDefaultValue(var_name, comp);
+    return getNodalDefaultValue<T>(var_name, comp);
 
   validateExecutionerType(var_name, "coupledNodalValueOlder");
   coupledCallback(var_name, true);
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariableFE<T> * var = getVarHelper<T>(var_name, comp);
   if (var == NULL)
     mooseError("Call corresponding vector variable method");
   if (!var->isNodal())
@@ -1074,50 +1107,53 @@ Coupleable::coupledNodalValueOlder(const std::string & var_name, unsigned int co
   if (_c_is_implicit)
   {
     if (!_coupleable_neighbor)
-      return var->dofValuesOlder();
+      return var->nodalValueOlder();
     else
-      return var->dofValuesOlderNeighbor();
+      return var->nodalValueOlderNeighbor();
   }
   else
     mooseError(_c_name, ": Older values not available for explicit schemes");
 }
 
-const VariableValue &
+template <typename T>
+const T &
 Coupleable::coupledNodalValuePreviousNL(const std::string & var_name, unsigned int comp)
 {
   checkVar(var_name);
   if (!isCoupled(var_name))
-    return *getDefaultValue(var_name, comp);
+    return getNodalDefaultValue<T>(var_name, comp);
 
   _c_fe_problem.needsPreviousNewtonIteration(true);
   coupledCallback(var_name, true);
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariableFE<T> * var = getVarHelper<T>(var_name, comp);
   if (var == NULL)
     mooseError("Call corresponding vector variable method");
 
   if (!_coupleable_neighbor)
-    return var->dofValuesPreviousNL();
+    return var->nodalValuePreviousNL();
   else
-    return var->dofValuesPreviousNLNeighbor();
+    return var->nodalValuePreviousNLNeighbor();
 }
 
-const VariableValue &
+template <typename T>
+const T &
 Coupleable::coupledNodalDot(const std::string & var_name, unsigned int comp)
 {
   checkVar(var_name);
+  static const T zero = 0;
   if (!isCoupled(var_name)) // Return default 0
-    return _default_value_zero;
+    return zero;
 
   validateExecutionerType(var_name, "coupledNodalDot");
   coupledCallback(var_name, false);
-  MooseVariable * var = getVar(var_name, comp);
+  MooseVariableFE<T> * var = getVarHelper<T>(var_name, comp);
   if (var == NULL)
     mooseError("Call corresponding vector variable method");
 
   if (!_coupleable_neighbor)
-    return var->dofValuesDot();
+    return var->nodalValueDot();
   else
-    return var->dofValuesDotNeighbor();
+    return var->nodalValueDotNeighbor();
 }
 
 const DenseVector<Number> &
@@ -1240,3 +1276,70 @@ Coupleable::adZeroSecondTemplate<RESIDUAL>()
 {
   return _second_zero;
 }
+
+template <ComputeStage compute_stage, typename T>
+const typename Moose::ValueType<compute_stage, T>::type &
+Coupleable::adCoupledNodalValueTemplate(const std::string & var_name, unsigned int comp)
+{
+  static const typename Moose::ValueType<compute_stage, T>::type zero = 0;
+  if (!isCoupled(var_name))
+    return zero;
+
+  if (!_c_nodal)
+    mooseError("The adCoupledNodalValue method should only be called for nodal computing objects");
+  if (_coupleable_neighbor)
+    mooseError(
+        "The adCoupledNodalValue method shouldn't be called for neighbor computing objects. I "
+        "don't even know what that would mean, although maybe someone could explain it to me.");
+  if (!_c_is_implicit)
+    mooseError("If you're going to use an explicit scheme, then use coupledNodalValue instead of "
+               "adCoupledNodalValue");
+
+  coupledCallback(var_name, false);
+  MooseVariableFE<T> * var = getVarHelper<T>(var_name, comp);
+
+  return var->template adNodalValue<compute_stage>();
+}
+
+// Explicit instantiations
+
+template const Real & Coupleable::getNodalDefaultValue<Real>(const std::string & var_name,
+                                                             unsigned int comp);
+template MooseVariableFE<Real> * Coupleable::getVarHelper<Real>(const std::string & var_name,
+                                                                unsigned int comp);
+
+template const Real & Coupleable::coupledNodalValue<Real>(const std::string & var_name,
+                                                          unsigned int comp);
+template const RealVectorValue &
+Coupleable::coupledNodalValue<RealVectorValue>(const std::string & var_name, unsigned int comp);
+template const Real & Coupleable::coupledNodalValueOld<Real>(const std::string & var_name,
+                                                             unsigned int comp);
+template const RealVectorValue &
+Coupleable::coupledNodalValueOld<RealVectorValue>(const std::string & var_name, unsigned int comp);
+template const Real & Coupleable::coupledNodalValueOlder<Real>(const std::string & var_name,
+                                                               unsigned int comp);
+template const RealVectorValue &
+Coupleable::coupledNodalValueOlder<RealVectorValue>(const std::string & var_name,
+                                                    unsigned int comp);
+template const Real & Coupleable::coupledNodalValuePreviousNL<Real>(const std::string & var_name,
+                                                                    unsigned int comp);
+template const RealVectorValue &
+Coupleable::coupledNodalValuePreviousNL<RealVectorValue>(const std::string & var_name,
+                                                         unsigned int comp);
+template const Real & Coupleable::coupledNodalDot<Real>(const std::string & var_name,
+                                                        unsigned int comp);
+template const RealVectorValue &
+Coupleable::coupledNodalDot<RealVectorValue>(const std::string & var_name, unsigned int comp);
+
+template const Real &
+Coupleable::adCoupledNodalValueTemplate<RESIDUAL, Real>(const std::string & var_name,
+                                                        unsigned int comp);
+template const RealVectorValue &
+Coupleable::adCoupledNodalValueTemplate<RESIDUAL, RealVectorValue>(const std::string & var_name,
+                                                                   unsigned int comp);
+template const ADReal &
+Coupleable::adCoupledNodalValueTemplate<JACOBIAN, Real>(const std::string & var_name,
+                                                        unsigned int comp);
+template const libMesh::VectorValue<ADReal> &
+Coupleable::adCoupledNodalValueTemplate<JACOBIAN, RealVectorValue>(const std::string & var_name,
+                                                                   unsigned int comp);

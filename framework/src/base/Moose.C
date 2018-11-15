@@ -114,6 +114,9 @@ addActionTypes(Syntax & syntax)
   registerMooseObjectTask("add_bc",                       BoundaryCondition,      false);
   registerMooseObjectTask("add_ad_bc",                    ADIntegratedBC,         false);
   appendMooseObjectTask  ("add_ad_bc",                    ADVectorIntegratedBC);
+  appendMooseObjectTask  ("add_ad_bc",                    ADNodalBC);
+  appendMooseObjectTask  ("add_ad_bc",                    ADVectorNodalBC);
+
   registerMooseObjectTask("add_function",                 Function,               false);
   registerMooseObjectTask("add_distribution",             Distribution,           false);
   registerMooseObjectTask("add_sampler",                  Sampler,                false);
