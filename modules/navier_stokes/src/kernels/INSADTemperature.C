@@ -12,7 +12,7 @@
 registerADMooseObject("NavierStokesApp", INSADTemperature);
 
 defineADValidParams(INSADTemperature,
-                    ADKernel,
+                    INSADBase,
                     params.addClassDescription(
                         "This class computes the residual and Jacobian contributions for the "
                         "incompressible Navier-Stokes temperature (energy) equation.");
@@ -26,21 +26,21 @@ defineADValidParams(INSADTemperature,
                     params.addParam<MaterialPropertyName>("k_name",
                                                           "k",
                                                           "thermal conductivity name");
-                    params.addParam<MaterialPropertyName>("cp_name", "cp", "specific heat name"););
+                    params.addParam<MaterialPropertyName>("cp_name", "cp", "specific heat name");
+                    params.addParam<bool>("supg", false, "Whether to perform SUPG stabilization"););
 
 template <ComputeStage compute_stage>
 INSADTemperature<compute_stage>::INSADTemperature(const InputParameters & parameters)
-  : ADKernel<compute_stage>(parameters),
-
-    // Coupled variables
-    _u_vel(adCoupledValue("u")),
-    _v_vel(adCoupledValue("v")),
-    _w_vel(adCoupledValue("w")),
+  : INSADBase<compute_stage>(parameters),
 
     // Material Properties
-    _rho(adGetADMaterialProperty<Real>("rho_name")),
     _k(adGetADMaterialProperty<Real>("k_name")),
-    _cp(adGetADMaterialProperty<Real>("cp_name"))
+    _cp(adGetADMaterialProperty<Real>("cp_name")),
+    _grad_k(adGetADMaterialProperty<RealVectorValue>("grad_" +
+                                                     adGetParam<MaterialPropertyName>("k_name"))),
+    _second_u(_var.template adSecondSln<compute_stage>()),
+    _u_dot(_var.template adUDot<compute_stage>()),
+    _supg(adGetParam<bool>("supg"))
 {
 }
 
@@ -48,17 +48,23 @@ template <ComputeStage compute_stage>
 ADResidual
 INSADTemperature<compute_stage>::computeQpResidual()
 {
-  // The convection part, rho * cp u.grad(T) * v.
-  // Note: _u is the temperature variable, _grad_u is its gradient.
-  auto convective_part = _rho[_qp] * _cp[_qp] *
-                         (_u_vel[_qp] * _grad_u[_qp](0) + _v_vel[_qp] * _grad_u[_qp](1) +
-                          _w_vel[_qp] * _grad_u[_qp](2)) *
-                         _test[_i][_qp];
+  INSVectorValue<compute_stage> U(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
 
-  // Thermal conduction part, k * grad(T) * grad(v)
-  auto conduction_part = _k[_qp] * _grad_u[_qp] * _grad_test[_i][_qp];
+  auto strong_convective_part = _rho[_qp] * _cp[_qp] * U * _grad_u[_qp];
 
-  return convective_part + conduction_part;
+  auto residual =
+      strong_convective_part * _test[_i][_qp] + _k[_qp] * _grad_u[_qp] * _grad_test[_i][_qp];
+
+  if (_supg)
+  {
+    residual += strong_convective_part * this->tau() * U * _grad_test[_i][_qp];
+    residual += -(_grad_k[_qp] * _grad_u[_qp] + _k[_qp] * _second_u[_qp].tr()) * this->tau() * U *
+                _grad_test[_i][_qp];
+    if (_transient_term)
+      residual += _rho[_qp] * _cp[_qp] * _u_dot[_qp] * this->tau() * U * _grad_test[_i][_qp];
+  }
+
+  return residual;
 }
 
 template class INSADTemperature<RESIDUAL>;

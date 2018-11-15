@@ -10,7 +10,7 @@
 #ifndef INSADTEMPERATURE_H
 #define INSADTEMPERATURE_H
 
-#include "ADKernel.h"
+#include "INSADBase.h"
 
 // Forward Declarations
 template <ComputeStage>
@@ -23,7 +23,7 @@ declareADValidParams(INSADTemperature);
  * incompressible Navier-Stokes temperature (energy) equation.
  */
 template <ComputeStage compute_stage>
-class INSADTemperature : public ADKernel<compute_stage>
+class INSADTemperature : public INSADBase<compute_stage>
 {
 public:
   INSADTemperature(const InputParameters & parameters);
@@ -33,17 +33,17 @@ public:
 protected:
   virtual ADResidual computeQpResidual() override;
 
-  // Coupled variables
-  const ADVariableValue & _u_vel;
-  const ADVariableValue & _v_vel;
-  const ADVariableValue & _w_vel;
-
   // Required parameters
-  const ADMaterialProperty(Real) & _rho;
   const ADMaterialProperty(Real) & _k;
   const ADMaterialProperty(Real) & _cp;
+  const ADMaterialProperty(RealVectorValue) & _grad_k;
 
-  usingKernelMembers;
+  const ADVariableSecond & _second_u;
+  const ADVariableValue & _u_dot;
+
+  const bool _supg;
+
+  usingINSBaseMembers;
 };
 
 #endif // INSADTEMPERATURE_H
