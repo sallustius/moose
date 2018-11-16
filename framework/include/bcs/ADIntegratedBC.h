@@ -79,7 +79,8 @@ declareADValidParams(ADVectorIntegratedBC);
   using ADIntegratedBCTempl<type, compute_stage>::_j;                                              \
   using ADIntegratedBCTempl<type, compute_stage>::_JxW;                                            \
   using ADIntegratedBCTempl<type, compute_stage>::_coord;                                          \
-  using ADIntegratedBCTempl<type, compute_stage>::_qrule
+  using ADIntegratedBCTempl<type, compute_stage>::_qrule;                                          \
+  using ADIntegratedBCTempl<type, compute_stage>::_normals
 
 #define usingIntegratedBCMembers usingTemplIntegratedBCMembers(Real)
 #define usingVectorIntegratedBCMembers usingTemplIntegratedBCMembers(RealVectorValue)
