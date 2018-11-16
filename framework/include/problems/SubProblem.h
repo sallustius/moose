@@ -500,6 +500,11 @@ public:
    */
   virtual bool currentlyComputingJacobian() const { return _currently_computing_jacobian; };
 
+  virtual void setCurrentlyComputingJacobian(const bool & flag)
+  {
+    _currently_computing_jacobian = flag;
+  }
+
   /// Check whether residual being evaulated is non-linear
   bool & computingNonlinearResid() { return _computing_nonlinear_residual; }
 

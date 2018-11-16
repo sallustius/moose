@@ -1111,7 +1111,7 @@ MooseVariableFE<OutputType>::computeValuesHelper(QBase *& qrule,
   }
 
   // Automatic differentiation
-  if (_need_ad && _computing_jacobian && _time_integrator)
+  if (_need_ad && _subproblem.currentlyComputingJacobian())
     computeAD(num_dofs, nqp, is_transient, phi, grad_phi, second_phi);
 }
 
@@ -1468,7 +1468,7 @@ MooseVariableFE<OutputType>::computeNeighborValuesHelper(QBase *& qrule,
   }
 
   // Automatic differentiation
-  if (_need_neighbor_ad_u && _computing_jacobian && _time_integrator)
+  if (_need_neighbor_ad_u && _subproblem.currentlyComputingJacobian())
     computeADNeighbor(num_dofs, nqp, is_transient, phi, grad_phi, second_phi);
 }
 
@@ -1699,7 +1699,7 @@ MooseVariableFE<OutputType>::computeNodalValues()
         assignNodalValueDot(_dof_values_dot[i], i);
     }
 
-    if (_need_ad && _computing_jacobian)
+    if (_need_ad && _subproblem.currentlyComputingJacobian())
     {
       _ad_dof_values.resize(n);
       auto ad_offset = _var_num * _sys.getMaxVarNDofsPerNode();

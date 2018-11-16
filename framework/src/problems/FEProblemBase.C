@@ -3019,7 +3019,11 @@ FEProblemBase::execute(const ExecFlagType & exec_type)
   // Set the current flag
   setCurrentExecuteOnFlag(exec_type);
   if (exec_type == EXEC_NONLINEAR)
+  {
     _currently_computing_jacobian = true;
+    if (_displaced_problem)
+      _displaced_problem->setCurrentlyComputingJacobian(true);
+  }
 
   // Samplers
   if (exec_type != EXEC_INITIAL)
@@ -3041,6 +3045,8 @@ FEProblemBase::execute(const ExecFlagType & exec_type)
   // Return the current flag to None
   setCurrentExecuteOnFlag(EXEC_NONE);
   _currently_computing_jacobian = false;
+  if (_displaced_problem)
+    _displaced_problem->setCurrentlyComputingJacobian(false);
 }
 
 void
@@ -4652,6 +4658,8 @@ FEProblemBase::computeJacobianTags(const std::set<TagID> & tags)
 
     _current_execute_on_flag = EXEC_NONLINEAR;
     _currently_computing_jacobian = true;
+    if (_displaced_problem)
+      _displaced_problem->setCurrentlyComputingJacobian(true);
 
     execTransfers(EXEC_NONLINEAR);
     execMultiApps(EXEC_NONLINEAR);
@@ -4689,6 +4697,8 @@ FEProblemBase::computeJacobianTags(const std::set<TagID> & tags)
 
     _current_execute_on_flag = EXEC_NONE;
     _currently_computing_jacobian = false;
+    if (_displaced_problem)
+      _displaced_problem->setCurrentlyComputingJacobian(false);
     _has_jacobian = true;
     _safe_access_tagged_matrices = true;
   }
