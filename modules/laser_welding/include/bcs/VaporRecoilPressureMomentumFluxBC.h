@@ -10,7 +10,7 @@
 #ifndef VAPORRECOILPRESSUREMOMENTUMFLUXBC_H
 #define VAPORRECOILPRESSUREMOMENTUMFLUXBC_H
 
-#include "ADNodalBC.h"
+#include "ADIntegratedBC.h"
 
 template <ComputeStage compute_stage>
 class VaporRecoilPressureMomentumFluxBC;
@@ -18,15 +18,15 @@ class VaporRecoilPressureMomentumFluxBC;
 declareADValidParams(VaporRecoilPressureMomentumFluxBC);
 
 template <ComputeStage compute_stage>
-class VaporRecoilPressureMomentumFluxBC : public ADNodalBC<compute_stage>
+class VaporRecoilPressureMomentumFluxBC : public ADIntegratedBC<compute_stage>
 {
 public:
   VaporRecoilPressureMomentumFluxBC(const InputParameters & parameters);
 
 protected:
-  virtual typename Moose::RealType<compute_stage>::type computeQpResidual() override;
+  virtual ADResidual computeQpResidual() override;
 
-  usingNodalBCMembers;
+  usingIntegratedBCMembers;
 
   const Real _ap0;
   const Real _ap1;
@@ -40,7 +40,8 @@ protected:
   const Real _Tbound1;
   const Real _Tbound2;
 
-  const typename Moose::RealType<compute_stage>::type & _temperature;
+  const ADVariableValue & _temperature;
+  const unsigned _component;
 };
 
 #endif /* VAPORRECOILPRESSUREMOMENTUMFLUXBC_H */

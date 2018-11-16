@@ -12,7 +12,7 @@
 registerADMooseObject("LaserWeldingApp", VaporRecoilPressureMomentumFluxBC);
 
 defineADValidParams(VaporRecoilPressureMomentumFluxBC,
-                    ADNodalBC,
+                    ADIntegratedBC,
                     params.addClassDescription("Vapor recoil pressure momentum flux");
                     params.addParam<Real>("ap0", 0, "");
                     params.addParam<Real>("ap1", 1.851502e1, "");
@@ -25,12 +25,13 @@ defineADValidParams(VaporRecoilPressureMomentumFluxBC,
                     params.addParam<Real>("Tb", 3000, "The boiling temperature");
                     params.addParam<Real>("Tbound1", 0, "The first temperature bound");
                     params.addParam<Real>("Tbound2", 170, "The second temperature bound");
-                    params.addRequiredCoupledVar("temperature", "The temperature"););
+                    params.addRequiredCoupledVar("temperature", "The temperature");
+                    params.addRequiredParam<unsigned>("component", "The velocity component"););
 
 template <ComputeStage compute_stage>
 VaporRecoilPressureMomentumFluxBC<compute_stage>::VaporRecoilPressureMomentumFluxBC(
     const InputParameters & parameters)
-  : ADNodalBC<compute_stage>(parameters),
+  : ADIntegratedBC<compute_stage>(parameters),
     _ap0(adGetParam<Real>("ap0")),
     _ap1(adGetParam<Real>("ap1")),
     _ap2(adGetParam<Real>("ap2")),
@@ -42,15 +43,16 @@ VaporRecoilPressureMomentumFluxBC<compute_stage>::VaporRecoilPressureMomentumFlu
     _Tb(adGetParam<Real>("Tb")),
     _Tbound1(adGetParam<Real>("Tbound1")),
     _Tbound2(adGetParam<Real>("Tbound2")),
-    _temperature(adCoupledNodalValue("temperature"))
+    _temperature(adCoupledValue("temperature")),
+    _component(adGetParam<unsigned>("component"))
 {
 }
 
 template <ComputeStage compute_stage>
-typename Moose::RealType<compute_stage>::type
+ADResidual
 VaporRecoilPressureMomentumFluxBC<compute_stage>::computeQpResidual()
 {
-  auto && theta = _temperature - _Tb;
+  auto && theta = _temperature[_qp] - _Tb;
   typename Moose::RealType<compute_stage>::type recoil_pressure;
   if (theta < _Tbound1)
     recoil_pressure = 0;
@@ -59,5 +61,5 @@ VaporRecoilPressureMomentumFluxBC<compute_stage>::computeQpResidual()
   else
     recoil_pressure = _bp0 + _bp1 * theta + _bp2 * theta * theta + _bp3 * theta * theta * theta;
 
-  return _u - recoil_pressure;
+  return _test[_i][_qp] * std::abs(_normals[_qp](_component)) * recoil_pressure;
 }
