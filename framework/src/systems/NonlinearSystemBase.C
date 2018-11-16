@@ -195,6 +195,9 @@ NonlinearSystemBase::init()
   Threads::parallel_reduce(*_mesh.getActiveLocalElementRange(), mvndpe);
   _max_var_n_dofs_per_elem = mvndpe.max();
   _communicator.max(_max_var_n_dofs_per_elem);
+  auto displaced_problem = _fe_problem.getDisplacedProblem();
+  if (displaced_problem)
+    displaced_problem->nlSys().assignMaxVarNDofsPerElem(_max_var_n_dofs_per_elem);
   Moose::perf_log.pop("maxVarNDofsPerElem()", "Setup");
 
   Moose::perf_log.push("maxVarNDofsPerNode()", "Setup");
@@ -202,6 +205,8 @@ NonlinearSystemBase::init()
   Threads::parallel_reduce(*_mesh.getLocalNodeRange(), mvndpn);
   _max_var_n_dofs_per_node = mvndpn.max();
   _communicator.max(_max_var_n_dofs_per_node);
+  if (displaced_problem)
+    displaced_problem->nlSys().assignMaxVarNDofsPerNode(_max_var_n_dofs_per_node);
   Moose::perf_log.pop("maxVarNDofsPerNode()", "Setup");
 }
 
@@ -305,6 +310,9 @@ NonlinearSystemBase::addTimeIntegrator(const std::string & type,
 
   std::shared_ptr<TimeIntegrator> ti = _factory.create<TimeIntegrator>(type, name, parameters);
   _time_integrator = ti;
+  auto displaced_problem = _fe_problem.getDisplacedProblem();
+  if (displaced_problem)
+    displaced_problem->nlSys().addTimeIntegrator(ti);
 }
 
 void

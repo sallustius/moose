@@ -132,8 +132,7 @@ MooseVariableFE<OutputType>::MooseVariableFE(unsigned int var_num,
   _need_matrix_tag_u.resize(num_matrix_tags);
   _matrix_tag_u.resize(num_matrix_tags);
 
-  if (auto nl_sys = dynamic_cast<NonlinearSystemBase *>(&_sys))
-    _time_integrator = nl_sys->getTimeIntegrator();
+  _time_integrator = _sys.getTimeIntegrator();
 }
 
 template <typename OutputType>
@@ -1168,7 +1167,7 @@ MooseVariableFE<OutputType>::computeAD(const unsigned int & num_dofs,
     // NOTE!  You have to do this AFTER setting the value!
     _ad_dof_values[i].derivatives()[ad_offset + i] = 1.0;
 
-    if (is_transient)
+    if (is_transient && _time_integrator)
     {
       _ad_dofs_dot[i] = _ad_dof_values[i];
       _time_integrator->computeADTimeDerivatives(_ad_dofs_dot[i], _dof_indices[i]);
@@ -1245,7 +1244,7 @@ MooseVariableFE<OutputType>::computeADNeighbor(const unsigned int & num_dofs,
     // NOTE!  You have to do this AFTER setting the value!
     _neighbor_ad_dof_values[i].derivatives()[ad_offset + i] = 1.0;
 
-    if (is_transient)
+    if (is_transient && _time_integrator)
     {
       _neighbor_ad_dofs_dot[i] = _neighbor_ad_dof_values[i];
       _time_integrator->computeADTimeDerivatives(_neighbor_ad_dofs_dot[i],

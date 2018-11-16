@@ -162,6 +162,8 @@ public:
   virtual System & system() override { return _sys; }
   virtual const System & system() const override { return _sys; }
 
+  void addTimeIntegrator(std::shared_ptr<TimeIntegrator> ti) override;
+
 protected:
   SystemBase & _undisplaced_system;
   TransientExplicitSystem & _sys;

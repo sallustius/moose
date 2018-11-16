@@ -15,6 +15,7 @@
 #include "DataIO.h"
 #include "MooseTypes.h"
 #include "VariableWarehouse.h"
+#include "InputParameters.h"
 
 // libMesh
 #include "libmesh/exodusII_io.h"
@@ -35,6 +36,7 @@ typedef MooseVariableFE<VectorValue<Real>> VectorMooseVariable;
 class MooseMesh;
 class SubProblem;
 class SystemBase;
+class TimeIntegrator;
 
 // libMesh forward declarations
 namespace libMesh
@@ -414,6 +416,16 @@ public:
   size_t getMaxVarNDofsPerNode() { return _max_var_n_dofs_per_node; }
 
   /**
+   * assign the maximum element dofs
+   */
+  void assignMaxVarNDofsPerElem(const size_t & max_dofs) { _max_var_n_dofs_per_elem = max_dofs; }
+
+  /**
+   * assign the maximum node dofs
+   */
+  void assignMaxVarNDofsPerNode(const size_t & max_dofs) { _max_var_n_dofs_per_node = max_dofs; }
+
+  /**
    * Adds this variable to the list of variables to be zeroed during each residual evaluation.
    * @param var_name The name of the variable to be zeroed.
    */
@@ -651,9 +663,9 @@ public:
                                  Real scale_factor,
                                  const std::set<SubdomainID> * const active_subdomains = NULL);
 
-  const std::vector<VariableName> & getVariableNames() const { return _vars[0].names(); };
+  const std::vector<VariableName> & getVariableNames() const { return _vars[0].names(); }
 
-  virtual void computeVariables(const NumericVector<Number> & /*soln*/){};
+  virtual void computeVariables(const NumericVector<Number> & /*soln*/) {}
 
   void copyVars(ExodusII_IO & io);
 
@@ -661,6 +673,16 @@ public:
    * Copy current solution into old and older
    */
   virtual void copySolutionsBackwards();
+
+  virtual void addTimeIntegrator(const std::string & /*type*/,
+                                 const std::string & /*name*/,
+                                 InputParameters /*parameters*/)
+  {
+  }
+
+  virtual void addTimeIntegrator(std::shared_ptr<TimeIntegrator> /*ti*/) {}
+
+  TimeIntegrator * getTimeIntegrator() { return _time_integrator.get(); }
 
 protected:
   SubProblem & _subproblem;
@@ -705,6 +727,9 @@ protected:
 
   /// Maximum number of dofs for any one variable on any one node
   size_t _max_var_n_dofs_per_node;
+
+  /// Time integrator
+  std::shared_ptr<TimeIntegrator> _time_integrator;
 };
 
 #define PARALLEL_TRY

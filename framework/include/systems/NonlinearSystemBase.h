@@ -114,8 +114,10 @@ public:
    * @param name The name of the integrator
    * @param parameters Integrator params
    */
-  void
-  addTimeIntegrator(const std::string & type, const std::string & name, InputParameters parameters);
+  void addTimeIntegrator(const std::string & type,
+                         const std::string & name,
+                         InputParameters parameters) override;
+  using SystemBase::addTimeIntegrator;
 
   /**
    * Adds a kernel
@@ -491,8 +493,6 @@ public:
   void setPredictor(std::shared_ptr<Predictor> predictor);
   Predictor * getPredictor() { return _predictor.get(); }
 
-  TimeIntegrator * getTimeIntegrator() { return _time_integrator.get(); }
-
   void setPCSide(MooseEnum pcs);
 
   Moose::PCSideType getPCSide() { return _pc_side; }
@@ -635,9 +635,6 @@ protected:
 
   /// Copy of the residual vector
   NumericVector<Number> & _residual_copy;
-
-  /// Time integrator
-  std::shared_ptr<TimeIntegrator> _time_integrator;
 
   /// solution vector for u^dot
   NumericVector<Number> * _u_dot;
