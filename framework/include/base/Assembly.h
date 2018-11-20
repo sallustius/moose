@@ -1024,12 +1024,21 @@ protected:
    */
   void modifyFaceWeightsDueToXFEM(const Elem * elem, unsigned int side = 0);
 
+  void resizeADObjects(unsigned int n_qp, unsigned int dim);
+  void computeAffineMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned int n_qp);
+  void computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned p);
+
 protected:
   SystemBase & _sys;
+
+  const bool _displaced;
 
   /// Coupling matrices
   const CouplingMatrix * _cm;
   const CouplingMatrix & _nonlocal_cm;
+
+  const bool & _computing_jacobian;
+
   /// Entries in the coupling matrix for field variables
   std::vector<std::pair<MooseVariableFEBase *, MooseVariableFEBase *>> _cm_ff_entry;
   /// Entries in the coupling matrix for field variables vs scalar variables
@@ -1316,6 +1325,22 @@ protected:
   std::vector<std::vector<Real>> _cached_jacobian_contribution_vals;
   std::vector<std::vector<numeric_index_type>> _cached_jacobian_contribution_rows;
   std::vector<std::vector<numeric_index_type>> _cached_jacobian_contribution_cols;
+
+  /// AD quantities
+  std::vector<libMesh::VectorValue<ADReal>> _ad_dxyzdxi_map;
+  std::vector<libMesh::VectorValue<ADReal>> _ad_dxyzdeta_map;
+  std::vector<libMesh::VectorValue<ADReal>> _ad_dxyzdzeta_map;
+  std::vector<ADReal> _ad_jac;
+  std::vector<ADReal> _ad_JxW;
+  std::vector<ADReal> _ad_dxidx_map;
+  std::vector<ADReal> _ad_dxidy_map;
+  std::vector<ADReal> _ad_dxidz_map;
+  std::vector<ADReal> _ad_detadx_map;
+  std::vector<ADReal> _ad_detady_map;
+  std::vector<ADReal> _ad_detadz_map;
+  std::vector<ADReal> _ad_dzetadx_map;
+  std::vector<ADReal> _ad_dzetady_map;
+  std::vector<ADReal> _ad_dzetadz_map;
 };
 
 template <>

@@ -498,7 +498,7 @@ public:
   /**
    * Returns true if the problem is in the process of computing Jacobian
    */
-  virtual bool currentlyComputingJacobian() const { return _currently_computing_jacobian; };
+  virtual const bool & currentlyComputingJacobian() const { return _currently_computing_jacobian; };
 
   virtual void setCurrentlyComputingJacobian(const bool & flag)
   {
