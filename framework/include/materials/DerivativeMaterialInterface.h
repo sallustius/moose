@@ -10,6 +10,7 @@
 #ifndef DERIVATIVEMATERIALINTERFACE_H
 #define DERIVATIVEMATERIALINTERFACE_H
 
+#include "MaterialProperty.h"
 #include "AuxiliarySystem.h"
 #include "BlockRestrictable.h"
 #include "BoundaryRestrictable.h"
@@ -17,7 +18,6 @@
 #include "KernelBase.h"
 #include "BoundaryCondition.h"
 #include "Material.h"
-#include "MaterialProperty.h"
 #include "MooseVariableFE.h"
 #include "NonlinearSystem.h"
 

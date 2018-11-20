@@ -12,9 +12,12 @@
 
 // MOOSE includes
 #include "HashMap.h"
-#include "MaterialProperty.h" // MaterialProperties
 #include "InfixIterator.h"
 #include "MooseEnumItem.h"
+#include "Moose.h"
+#include "MooseError.h"
+
+#include "libmesh/print_trace.h"
 
 // C++ includes
 #include <string>
@@ -26,6 +29,7 @@
 // Forward Declarations
 class InputParameters;
 class ExecFlagEnum;
+class MaterialProperties;
 
 namespace libMesh
 {

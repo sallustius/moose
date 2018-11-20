@@ -17,6 +17,13 @@
 
 #include "libmesh/coupling_matrix.h"
 
+namespace libMesh
+{
+template <typename>
+class VectorValue;
+typedef VectorValue<Real> RealVectorValue;
+}
+
 class MooseMesh;
 class SubProblem;
 class Factory;

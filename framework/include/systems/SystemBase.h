@@ -20,8 +20,6 @@
 // libMesh
 #include "libmesh/exodusII_io.h"
 #include "libmesh/parallel_object.h"
-#include "libmesh/dof_map.h"
-#include "libmesh/equation_systems.h"
 #include "libmesh/numeric_vector.h"
 #include "libmesh/sparse_matrix.h"
 
@@ -42,6 +40,8 @@ class TimeIntegrator;
 namespace libMesh
 {
 class System;
+class DofMap;
+class FEType;
 }
 
 /**
@@ -580,7 +580,7 @@ public:
   /**
    * Remove a vector from the system with the given name.
    */
-  virtual void removeVector(const std::string & name) { system().remove_vector(name); }
+  virtual void removeVector(const std::string & name);
 
   /**
    * Adds a solution length vector to the system.
@@ -650,7 +650,7 @@ public:
     mooseError("Removing a matrix is not supported for this type of system!");
   }
 
-  virtual const std::string & name() const { return system().name(); }
+  virtual const std::string & name() const;
 
   /**
    * Adds a scalar variable

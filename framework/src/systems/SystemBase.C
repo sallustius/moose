@@ -24,6 +24,8 @@
 #include "MooseMesh.h"
 #include "MooseUtils.h"
 
+#include "libmesh/dof_map.h"
+
 /// Free function used for a libMesh callback
 void
 extraSendList(std::vector<dof_id_type> & send_list, void * context)
@@ -961,6 +963,18 @@ SystemBase::restoreSolutions()
   if (solutionPreviousNewton())
     *solutionPreviousNewton() = solutionOld();
   system().update();
+}
+
+void
+SystemBase::removeVector(const std::string & name)
+{
+  system().remove_vector(name);
+}
+
+const std::string &
+SystemBase::name() const
+{
+  return system().name();
 }
 
 template MooseVariableFE<Real> & SystemBase::getFieldVariable<Real>(THREAD_ID tid,

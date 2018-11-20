@@ -10,8 +10,8 @@
 #ifndef MATERIALPROPERTYSTORAGE_H
 #define MATERIALPROPERTYSTORAGE_H
 
-#include "Moose.h"
 #include "MaterialProperty.h"
+#include "Moose.h"
 #include "HashMap.h"
 
 // Forward declarations

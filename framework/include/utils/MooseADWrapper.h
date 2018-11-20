@@ -1,12 +1,15 @@
 #ifndef MOOSEADWRAPPER_H
 #define MOOSEADWRAPPER_H
 
-#include "MooseTypes.h"
-#include "MooseError.h"
+#include "metaphysicl/dualnumber.h"
+#include "metaphysicl/numberarray.h"
 
 #include "libmesh/dense_matrix.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
+
+#include "MooseError.h"
+#include "ADReal.h"
 
 #include <typeinfo>
 

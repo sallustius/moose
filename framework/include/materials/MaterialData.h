@@ -10,8 +10,8 @@
 #ifndef MATERIALDATA_H
 #define MATERIALDATA_H
 
-#include "Moose.h"
 #include "MaterialProperty.h"
+#include "Moose.h"
 #include "MaterialPropertyStorage.h"
 
 // libMesh

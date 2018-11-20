@@ -32,6 +32,8 @@
 #include "libmesh/tensor_value.h"
 #include "libmesh/vector_value.h"
 
+#include "metaphysicl/dualnumber.h"
+
 Assembly::Assembly(SystemBase & sys, THREAD_ID tid)
   : _sys(sys),
     _displaced(dynamic_cast<DisplacedSystem *>(&sys) ? true : false),

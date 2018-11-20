@@ -17,7 +17,8 @@
 #include "libmesh/dense_vector.h"
 #include "libmesh/enum_quadrature_type.h"
 #include "libmesh/fe_type.h"
-#include "libmesh/tensor_tools.h"
+#include "metaphysicl/dualnumber_decl.h"
+#include "libmesh/point.h"
 
 // libMesh forward declarations
 namespace libMesh
@@ -25,6 +26,9 @@ namespace libMesh
 class DofMap;
 class CouplingMatrix;
 class Elem;
+template <typename>
+class VectorValue;
+typedef VectorValue<Real> RealVectorValue;
 template <typename T>
 class FEGenericBase;
 typedef FEGenericBase<Real> FEBase;

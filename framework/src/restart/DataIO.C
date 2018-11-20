@@ -7,12 +7,15 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
+#include "MooseADWrapper.h"
 #include "DataIO.h"
 #include "MooseMesh.h"
 #include "ColumnMajorMatrix.h"
 #include "RankTwoTensor.h"
 #include "RankFourTensor.h"
 
+#include "libmesh/vector_value.h"
+#include "libmesh/tensor_value.h"
 #include "libmesh/numeric_vector.h"
 #include "libmesh/dense_matrix.h"
 #include "libmesh/elem.h"
@@ -60,6 +63,14 @@ void
 dataStore(std::ostream & stream, RankFourTensor & rft, void * context)
 {
   dataStore(stream, rft._vals, context);
+}
+
+inline void
+dataStore(std::ostream & stream, ADReal & dn, void * context)
+{
+  dataStore(stream, dn.value(), context);
+  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
+    dataStore(stream, dn.derivatives()[i], context);
 }
 
 template <>
@@ -165,6 +176,63 @@ dataStore(std::ostream & stream, DenseMatrix<Real> & v, void * context)
     }
 }
 
+template <typename T>
+void
+dataStore(std::ostream & stream, TensorValue<T> & v, void * context)
+{
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
+    {
+      T r = v(i, j);
+      dataStore(stream, r, context);
+    }
+}
+
+template void dataStore(std::ostream & stream, TensorValue<Real> & v, void * context);
+template void dataStore(std::ostream & stream, TensorValue<ADReal> & v, void * context);
+
+template <typename T>
+void
+dataStore(std::ostream & stream, VectorValue<T> & v, void * context)
+{
+  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
+  // won't work.
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+  {
+    T r = v(i);
+    dataStore(stream, r, context);
+  }
+}
+
+template void dataStore(std::ostream & stream, VectorValue<Real> & v, void * context);
+template void dataStore(std::ostream & stream, VectorValue<ADReal> & v, void * context);
+
+void
+dataStore(std::ostream & stream, Point & p, void * context)
+{
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+  {
+    Real r = p(i);
+    dataStore(stream, r, context);
+  }
+}
+
+template <typename T>
+inline void
+dataStore(std::ostream & stream, MooseADWrapper<T> & dn_wrapper, void * context)
+{
+  dataStore(stream, dn_wrapper.value(), context);
+  dataStore(stream, dn_wrapper.dn(false), context);
+}
+
+template void dataStore(std::ostream & stream, MooseADWrapper<Real> & dn_wrapper, void * context);
+template void dataStore(std::ostream & stream,
+                        MooseADWrapper<libMesh::VectorValue<Real>> & dn_wrapper,
+                        void * context);
+template void dataStore(std::ostream & stream,
+                        MooseADWrapper<libMesh::TensorValue<Real>> & dn_wrapper,
+                        void * context);
+
 // global load functions
 
 template <>
@@ -214,6 +282,15 @@ void
 dataLoad(std::istream & stream, RankFourTensor & rft, void * context)
 {
   dataLoad(stream, rft._vals, context);
+}
+
+inline void
+dataLoad(std::istream & stream, ADReal & dn, void * context)
+{
+  dataLoad(stream, dn.value(), context);
+
+  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
+    dataLoad(stream, dn.derivatives()[i], context);
 }
 
 template <>
@@ -335,3 +412,65 @@ dataLoad(std::istream & stream, DenseMatrix<Real> & v, void * /*context*/)
       v(i, j) = r;
     }
 }
+
+template <typename T>
+void
+dataLoad(std::istream & stream, TensorValue<T> & v, void * context)
+{
+  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
+  // won't work.
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
+    {
+      T r = 0;
+      dataLoad(stream, r, context);
+      v(i, j) = r;
+    }
+}
+
+template void dataLoad(std::istream & stream, TensorValue<Real> & v, void * context);
+template void dataLoad(std::istream & stream, TensorValue<ADReal> & v, void * context);
+
+template <typename T>
+void
+dataLoad(std::istream & stream, VectorValue<T> & v, void * context)
+{
+  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
+  // won't work.
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+  {
+    T r = 0;
+    dataLoad(stream, r, context);
+    v(i) = r;
+  }
+}
+
+template void dataLoad(std::istream & stream, VectorValue<Real> & v, void * context);
+template void dataLoad(std::istream & stream, VectorValue<ADReal> & v, void * context);
+
+void
+dataLoad(std::istream & stream, Point & p, void * context)
+{
+  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
+  {
+    Real r = 0;
+    dataLoad(stream, r, context);
+    p(i) = r;
+  }
+}
+
+template <typename T>
+inline void
+dataLoad(std::istream & stream, MooseADWrapper<T> & dn_wrapper, void * context)
+{
+  dataLoad(stream, dn_wrapper.value(), context);
+  dataLoad(stream, dn_wrapper.dn(false), context);
+}
+
+template void dataLoad(std::istream & stream, MooseADWrapper<Real> & dn_wrapper, void * context);
+template void dataLoad(std::istream & stream,
+                       MooseADWrapper<libMesh::VectorValue<Real>> & dn_wrapper,
+                       void * context);
+template void dataLoad(std::istream & stream,
+                       MooseADWrapper<libMesh::TensorValue<Real>> & dn_wrapper,
+                       void * context);

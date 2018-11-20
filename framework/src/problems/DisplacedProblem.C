@@ -8,9 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 // MOOSE includes
-#include "DisplacedProblem.h"
 
-#include "Assembly.h"
 #include "AuxiliarySystem.h"
 #include "FEProblem.h"
 #include "MooseApp.h"
@@ -20,6 +18,8 @@
 #include "ResetDisplacedMeshThread.h"
 #include "SubProblem.h"
 #include "UpdateDisplacedMeshThread.h"
+#include "Assembly.h"
+#include "DisplacedProblem.h"
 
 #include "libmesh/numeric_vector.h"
 
@@ -97,7 +97,16 @@ void
 DisplacedProblem::init()
 {
   for (THREAD_ID tid = 0; tid < libMesh::n_threads(); ++tid)
+  {
     _assembly[tid]->init(_mproblem.couplingMatrix());
+    std::vector<unsigned> disp_numbers;
+    for (const auto & disp_string : _displacements)
+    {
+      const auto & disp_variable = getVariable(tid, disp_string, Moose::VarKindType::VAR_NONLINEAR);
+      disp_numbers.push_back(disp_variable.number());
+    }
+    _assembly[tid]->assignDisplacements(std::move(disp_numbers));
+  }
 
   _displaced_nl.dofMap().attach_extra_send_list_function(&extraSendList, &_displaced_nl);
   _displaced_aux.dofMap().attach_extra_send_list_function(&extraSendList, &_displaced_aux);

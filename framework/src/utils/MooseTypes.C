@@ -7,24 +7,13 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef BNDNODE_H
-#define BNDNODE_H
-
 #include "MooseTypes.h"
+#include "libmesh/elem.h"
 
-namespace libMesh
+namespace Moose
 {
-class Node;
+const SubdomainID ANY_BLOCK_ID = libMesh::Elem::invalid_subdomain_id - 1;
+const SubdomainID INVALID_BLOCK_ID = libMesh::Elem::invalid_subdomain_id;
+const BoundaryID ANY_BOUNDARY_ID = static_cast<BoundaryID>(-1);
+const BoundaryID INVALID_BOUNDARY_ID = libMesh::BoundaryInfo::invalid_id;
 }
-
-struct BndNode
-{
-  BndNode(Node * node, BoundaryID bnd_id) : _node(node), _bnd_id(bnd_id) {}
-
-  /// pointer to the node
-  Node * _node;
-  /// boundary id for the node
-  BoundaryID _bnd_id;
-};
-
-#endif /* BNDNODE_H */

@@ -10,6 +10,9 @@
 #ifndef MOOSEVARIABLEFE_H
 #define MOOSEVARIABLEFE_H
 
+#include "metaphysicl/numberarray.h"
+#include "metaphysicl/dualnumber.h"
+
 #include "MooseTypes.h"
 #include "MooseVariableFEBase.h"
 #include "Assembly.h"
