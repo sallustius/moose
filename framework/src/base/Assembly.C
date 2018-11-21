@@ -616,6 +616,7 @@ Assembly::resizeADObjects(unsigned int n_qp, unsigned int dim, unsigned int n_no
 
   _ad_jac.resize(n_qp);
   _ad_JxW.resize(n_qp);
+
   _ad_grad_phi.resize(n_nodes);
   for (decltype(_ad_grad_phi.size()) i = 0; i < _ad_grad_phi.size(); ++i)
     _ad_grad_phi[i].resize(n_qp);
@@ -701,14 +702,14 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
         }
         else
           return;
-
-        const auto jacm2 = 1. / _ad_jac[p] / _ad_jac[p];
-        _ad_dxidx_map[p] = jacm2 * _ad_dxyzdxi_map[p](0);
-        _ad_dxidy_map[p] = jacm2 * _ad_dxyzdxi_map[p](1);
-        _ad_dxidz_map[p] = jacm2 * _ad_dxyzdxi_map[p](2);
-
-        _ad_JxW[p] = _ad_jac[p] * qw[p];
       }
+
+      const auto jacm2 = 1. / _ad_jac[p] / _ad_jac[p];
+      _ad_dxidx_map[p] = jacm2 * _ad_dxyzdxi_map[p](0);
+      _ad_dxidy_map[p] = jacm2 * _ad_dxyzdxi_map[p](1);
+      _ad_dxidz_map[p] = jacm2 * _ad_dxyzdxi_map[p](2);
+
+      _ad_JxW[p] = _ad_jac[p] * qw[p];
 
       break;
     }
