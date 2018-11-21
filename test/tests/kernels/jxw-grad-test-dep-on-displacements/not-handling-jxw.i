@@ -4,7 +4,7 @@
 
 [Mesh]
   type = GeneratedMesh
-  nx = 1
+  nx = 2
   dim = 1
 []
 
