@@ -31,9 +31,10 @@ ADKernelTempl<T, compute_stage>::ADKernelTempl(const InputParameters & parameter
                                                            : Moose::VarFieldType::VAR_FIELD_VECTOR),
     _var(*this->mooseVariable()),
     _test(_var.phi()),
-    _grad_test(_var.gradPhi()),
+    _grad_test(_assembly.adGradPhi<compute_stage>(_var)),
     _u(_var.template adSln<compute_stage>()),
-    _grad_u(_var.template adGradSln<compute_stage>())
+    _grad_u(_var.template adGradSln<compute_stage>()),
+    _ad_JxW(_assembly.adJxW<compute_stage>())
 {
   addMooseVariableDependency(this->mooseVariable());
   _save_in.resize(_save_in_strings.size());
@@ -93,7 +94,7 @@ ADKernelTempl<T, compute_stage>::computeResidual()
 
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
+      _local_re(_i) += _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
 
   accumulateTaggedLocalResidual();
 
@@ -131,7 +132,7 @@ ADKernelTempl<T, compute_stage>::computeJacobian()
       ADReal residual =
           computeQpResidual(); // This will also compute the derivative with respect to all dofs
       for (_j = 0; _j < _var.phiSize(); _j++)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * residual.derivatives()[ad_offset + _j];
+        _local_ke(_i, _j) += (_ad_JxW[_qp] * _coord[_qp] * residual).derivatives()[ad_offset + _j];
     }
   }
 
@@ -186,7 +187,8 @@ ADKernelTempl<T, compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jv
             computeQpResidual(); // This will also compute the derivative with respect to all dofs
 
         for (_j = 0; _j < jvar.phiSize(); _j++)
-          _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * residual.derivatives()[ad_offset + _j];
+          _local_ke(_i, _j) +=
+              (_ad_JxW[_qp] * _coord[_qp] * residual).derivatives()[ad_offset + _j];
       }
     }
 

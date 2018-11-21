@@ -11,6 +11,7 @@
 #include <typeinfo>
 #include "TimeIntegrator.h"
 #include "NonlinearSystemBase.h"
+#include "DisplacedSystem.h"
 
 template <typename OutputType>
 MooseVariableFE<OutputType>::MooseVariableFE(unsigned int var_num,
@@ -20,6 +21,7 @@ MooseVariableFE<OutputType>::MooseVariableFE(unsigned int var_num,
                                              Moose::VarKindType var_kind,
                                              THREAD_ID tid)
   : MooseVariableFEBase(var_num, fe_type, sys, var_kind, tid),
+    _displaced(dynamic_cast<DisplacedSystem *>(&sys) ? true : false),
     _assembly(assembly),
     _qrule(_assembly.qRule()),
     _qrule_face(_assembly.qRuleFace()),
@@ -1125,6 +1127,7 @@ MooseVariableFE<OutputType>::computeAD(const unsigned int & num_dofs,
 {
   _ad_dof_values.resize(num_dofs);
   _ad_u.resize(nqp);
+  const auto & ad_grad_phi = _assembly.adGradPhi<JACOBIAN>(*this);
 
   if (_need_ad_grad_u)
     _ad_grad_u.resize(nqp);
@@ -1182,7 +1185,12 @@ MooseVariableFE<OutputType>::computeAD(const unsigned int & num_dofs,
       _ad_u[qp] += _ad_dof_values[i] * phi[i][qp];
 
       if (_need_ad_grad_u)
-        _ad_grad_u[qp] += _ad_dof_values[i] * grad_phi[i][qp];
+      {
+        if (_displaced)
+          _ad_grad_u[qp] += _ad_dof_values[i] * ad_grad_phi[i][qp];
+        else
+          _ad_grad_u[qp] += _ad_dof_values[i] * grad_phi[i][qp];
+      }
 
       if (_need_ad_second_u)
         _ad_second_u[qp] += _ad_dof_values[i] * (*second_phi)[i][qp];

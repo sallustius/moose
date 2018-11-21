@@ -496,22 +496,98 @@ Assembly::reinitFE(const Elem * elem)
       const_cast<std::vector<Point> &>((*_holder_fe_helper[dim])->get_xyz()));
   _current_JxW.shallowCopy(const_cast<std::vector<Real> &>((*_holder_fe_helper[dim])->get_JxW()));
 
-  if (_displaced && _computing_jacobian)
+  if (_computing_jacobian)
   {
     auto n_qp = _current_qrule->n_points();
-    const auto & qw = _current_qrule->get_weights();
-    resizeADObjects(n_qp, dim);
-    if (elem->has_affine_map())
-      computeAffineMapAD(elem, qw, n_qp);
+    if (_displaced)
+    {
+      const auto & qw = _current_qrule->get_weights();
+      resizeADObjects(n_qp, dim);
+      if (elem->has_affine_map())
+        computeAffineMapAD(elem, qw, n_qp);
+      else
+      {
+        for (unsigned int qp = 0; qp != n_qp; qp++)
+          computeSinglePointMapAD(elem, qw, qp);
+      }
+      computeGradPhiAD(elem, n_qp);
+    }
     else
     {
-      for (unsigned int p = 0; p != n_qp; p++)
-        computeSinglePointMapAD(elem, qw, p);
+      for (unsigned qp = 0; qp < n_qp; ++qp)
+      {
+        _ad_JxW[qp] = _current_JxW[qp];
+        for (unsigned i = 0; i < elem->n_nodes(); ++i)
+          _ad_grad_phi[i][qp] = _grad_phi[i][qp];
+      }
     }
   }
 
   if (_xfem != nullptr)
     modifyWeightsDueToXFEM(elem);
+}
+
+void
+Assembly::computeGradPhiAD(const Elem * elem, unsigned int n_qp)
+{
+  auto dim = elem->dim();
+  const auto & dphidxi_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphidxi_map();
+  const auto & dphideta_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphideta_map();
+  const auto & dphidzeta_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphidzeta_map();
+
+  switch (dim)
+  {
+    case 0:
+    {
+      for (unsigned i = 0; i < elem->n_nodes(); ++i)
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+          _ad_grad_phi[i][qp] = 0;
+      break;
+    }
+
+    case 1:
+    {
+      for (unsigned i = 0; i < elem->n_nodes(); ++i)
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+        {
+          _ad_grad_phi[i][qp](0) = dphidxi_map[i][qp] * _ad_dxidx_map[qp];
+          _ad_grad_phi[i][qp](1) = dphidxi_map[i][qp] * _ad_dxidy_map[qp];
+          _ad_grad_phi[i][qp](2) = dphidxi_map[i][qp] * _ad_dxidz_map[qp];
+        }
+      break;
+    }
+
+    case 2:
+    {
+      for (unsigned i = 0; i < elem->n_nodes(); ++i)
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+        {
+          _ad_grad_phi[i][qp](0) =
+              dphidxi_map[i][qp] * _ad_dxidx_map[qp] + dphideta_map[i][qp] * _ad_detadx_map[qp];
+          _ad_grad_phi[i][qp](1) =
+              dphidxi_map[i][qp] * _ad_dxidy_map[qp] + dphideta_map[i][qp] * _ad_detady_map[qp];
+          _ad_grad_phi[i][qp](2) =
+              dphidxi_map[i][qp] * _ad_dxidz_map[qp] + dphideta_map[i][qp] * _ad_detadz_map[qp];
+        }
+    }
+
+    case 3:
+    {
+      for (unsigned i = 0; i < elem->n_nodes(); ++i)
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+        {
+          _ad_grad_phi[i][qp](0) = dphidxi_map[i][qp] * _ad_dxidx_map[qp] +
+                                   dphideta_map[i][qp] * _ad_detadx_map[qp] +
+                                   dphidzeta_map[i][qp] * _ad_dzetadx_map[qp];
+          _ad_grad_phi[i][qp](1) = dphidxi_map[i][qp] * _ad_dxidy_map[qp] +
+                                   dphideta_map[i][qp] * _ad_detady_map[qp] +
+                                   dphidzeta_map[i][qp] * _ad_dzetady_map[qp];
+          _ad_grad_phi[i][qp](2) = dphidxi_map[i][qp] * _ad_dxidz_map[qp] +
+                                   dphideta_map[i][qp] * _ad_detadz_map[qp] +
+                                   dphidzeta_map[i][qp] * _ad_dzetadz_map[qp];
+        }
+    }
+  }
 }
 
 void
@@ -600,7 +676,10 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
       for (std::size_t i = 0; i < num_nodes; i++)
       {
         libmesh_assert(elem_nodes[i]);
-        const Point & elem_point = *elem_nodes[i];
+        libMesh::VectorValue<ADReal> elem_point = *elem_nodes[i];
+        unsigned dimension = 0;
+        for (const auto & disp_num : _displacements)
+          elem_point(dimension++).derivatives()[disp_num * _sys.getMaxVarNDofsPerElem() + i] = 1.;
 
         _ad_dxyzdxi_map[p].add_scaled(elem_point, dphidxi_map[i][p]);
       }
@@ -639,7 +718,10 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
       for (std::size_t i = 0; i < num_nodes; i++)
       {
         libmesh_assert(elem_nodes[i]);
-        const Point & elem_point = *elem_nodes[i];
+        libMesh::VectorValue<ADReal> elem_point = *elem_nodes[i];
+        unsigned dimension = 0;
+        for (const auto & disp_num : _displacements)
+          elem_point(dimension++).derivatives()[disp_num * _sys.getMaxVarNDofsPerElem() + i] = 1.;
 
         _ad_dxyzdxi_map[p].add_scaled(elem_point, dphidxi_map[i][p]);
         _ad_dxyzdeta_map[p].add_scaled(elem_point, dphideta_map[i][p]);
@@ -703,7 +785,10 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
       for (std::size_t i = 0; i < num_nodes; i++)
       {
         libmesh_assert(elem_nodes[i]);
-        const Point & elem_point = *elem_nodes[i];
+        libMesh::VectorValue<ADReal> elem_point = *elem_nodes[i];
+        unsigned dimension = 0;
+        for (const auto & disp_num : _displacements)
+          elem_point(dimension++).derivatives()[disp_num * _sys.getMaxVarNDofsPerElem() + i] = 1.;
 
         _ad_dxyzdxi_map[p].add_scaled(elem_point, dphidxi_map[i][p]);
         _ad_dxyzdeta_map[p].add_scaled(elem_point, dphideta_map[i][p]);
@@ -2679,4 +2764,25 @@ Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type)
   _need_curl[type] = true;
   buildVectorFaceNeighborFE(type);
   return _vector_fe_shape_data_face_neighbor[type]->_curl_phi;
+}
+
+template <>
+const typename VariableTestGradientType<JACOBIAN, Real>::type &
+Assembly::adGradPhi<JACOBIAN>(const MooseVariableFE<Real> & /*v*/) const
+{
+  return _ad_grad_phi;
+}
+
+template <>
+const typename VariableTestGradientType<JACOBIAN, RealVectorValue>::type &
+Assembly::adGradPhi<JACOBIAN>(const MooseVariableFE<RealVectorValue> & /*v*/) const
+{
+  return _ad_vector_grad_phi;
+}
+
+template <>
+const MooseArray<typename Moose::RealType<RESIDUAL>::type> &
+Assembly::adJxW<RESIDUAL>() const
+{
+  return _current_JxW;
 }

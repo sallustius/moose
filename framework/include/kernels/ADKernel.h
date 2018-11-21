@@ -39,13 +39,16 @@ protected:
   const ADTemplateVariableTestValue & _test;
 
   /// gradient of the test function
-  const ADTemplateVariableTestGradient & _grad_test;
+  const typename VariableTestGradientType<compute_stage, T>::type & _grad_test;
 
   /// Holds the solution at current quadrature points
   const ADTemplateVariableValue & _u;
 
   /// Holds the solution gradient at the current quadrature points
   const ADTemplateVariableGradient & _grad_u;
+
+  /// The ad version of JxW
+  const MooseArray<typename Moose::RealType<compute_stage>::type> & _ad_JxW;
 };
 
 template <ComputeStage compute_stage>

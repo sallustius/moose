@@ -71,53 +71,6 @@ public:
                   THREAD_ID tid);
   virtual ~MooseVariableFE();
 
-  template <typename T>
-  class MooseArrayContainer
-  {
-  public:
-    MooseArrayContainer(
-        MooseArray<
-            MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
-            data)
-      : _data(data)
-    {
-    }
-
-    const T & operator[](unsigned int i) const { return _data[i].value(); }
-    T & operator[](unsigned int i) { return _data[i].value(); }
-
-    void resize(unsigned int n) { _data.resize(n); }
-
-  protected:
-    MooseArray<
-        MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
-        _data;
-  };
-
-  template <typename T>
-  class ADMooseArrayContainer : public MooseArrayContainer<T>
-  {
-  public:
-    ADMooseArrayContainer(
-        MooseArray<
-            MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>>> &
-            data)
-      : MooseArrayContainer<T>(data)
-    {
-    }
-
-    const MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
-    operator[](unsigned int i) const
-    {
-      return this->_data[i];
-    }
-    MetaPhysicL::NotADuckDualNumber<T, MetaPhysicL::NumberArray<AD_MAX_DOFS_PER_ELEM, T>> &
-    operator[](unsigned int i)
-    {
-      return this->_data[i];
-    }
-  };
-
   void clearDofIndices() override;
 
   void prepare() override;
@@ -681,6 +634,9 @@ public:
   void assignNodalValueDot(const Real & value, const unsigned int & component);
 
 protected:
+  /// Whether this variable is on the displaced system
+  const bool _displaced;
+
   /// Our assembly
   Assembly & _assembly;
 
