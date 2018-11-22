@@ -12,6 +12,7 @@
 #include "TimeIntegrator.h"
 #include "NonlinearSystemBase.h"
 #include "DisplacedSystem.h"
+#include "Assembly.h"
 
 template <typename OutputType>
 MooseVariableFE<OutputType>::MooseVariableFE(unsigned int var_num,
@@ -2057,6 +2058,70 @@ const RealVectorValue &
 MooseVariableFE<RealVectorValue>::adNodalValue<RESIDUAL>()
 {
   return _nodal_value;
+}
+
+template <typename OutputType>
+const typename MooseVariableFE<OutputType>::FieldVariablePhiSecond &
+MooseVariableFE<OutputType>::secondPhi()
+{
+  _second_phi = &_assembly.feSecondPhi<OutputType>(_fe_type);
+  return *_second_phi;
+}
+
+template <typename OutputType>
+const typename MooseVariableFE<OutputType>::FieldVariablePhiCurl &
+MooseVariableFE<OutputType>::curlPhi()
+{
+  _curl_phi = &_assembly.feCurlPhi<OutputType>(_fe_type);
+  return *_curl_phi;
+}
+
+template <typename OutputType>
+const typename MooseVariableFE<OutputType>::FieldVariablePhiSecond &
+MooseVariableFE<OutputType>::secondPhiFace()
+{
+  _second_phi_face = &_assembly.feSecondPhiFace<OutputType>(_fe_type);
+  return *_second_phi_face;
+}
+
+template <typename OutputType>
+const typename MooseVariableFE<OutputType>::FieldVariablePhiCurl &
+MooseVariableFE<OutputType>::curlPhiFace()
+{
+  _curl_phi_face = &_assembly.feCurlPhiFace<OutputType>(_fe_type);
+  return *_curl_phi_face;
+}
+
+template <typename OutputType>
+const typename MooseVariableFE<OutputType>::FieldVariablePhiSecond &
+MooseVariableFE<OutputType>::secondPhiNeighbor()
+{
+  _second_phi_neighbor = &_assembly.feSecondPhiNeighbor<OutputType>(_fe_type);
+  return *_second_phi_neighbor;
+}
+
+template <typename OutputType>
+const typename MooseVariableFE<OutputType>::FieldVariablePhiCurl &
+MooseVariableFE<OutputType>::curlPhiNeighbor()
+{
+  _curl_phi_neighbor = &_assembly.feCurlPhiNeighbor<OutputType>(_fe_type);
+  return *_curl_phi_neighbor;
+}
+
+template <typename OutputType>
+const typename MooseVariableFE<OutputType>::FieldVariablePhiSecond &
+MooseVariableFE<OutputType>::secondPhiFaceNeighbor()
+{
+  _second_phi_face_neighbor = &_assembly.feSecondPhiFaceNeighbor<OutputType>(_fe_type);
+  return *_second_phi_face_neighbor;
+}
+
+template <typename OutputType>
+const typename MooseVariableFE<OutputType>::FieldVariablePhiCurl &
+MooseVariableFE<OutputType>::curlPhiFaceNeighbor()
+{
+  _curl_phi_face_neighbor = &_assembly.feCurlPhiFaceNeighbor<OutputType>(_fe_type);
+  return *_curl_phi_face_neighbor;
 }
 
 template class MooseVariableFE<Real>;

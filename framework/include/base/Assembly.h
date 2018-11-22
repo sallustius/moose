@@ -1067,7 +1067,7 @@ protected:
   void modifyFaceWeightsDueToXFEM(const Elem * elem, unsigned int side = 0);
 
   void computeGradPhiAD(const Elem * elem, unsigned int n_qp);
-  void resizeADObjects(unsigned int n_qp, unsigned int dim);
+  void resizeADObjects(unsigned int n_qp, unsigned int dim, unsigned int n_nodes);
   void computeAffineMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned int n_qp);
   void computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned p);
 
@@ -1456,12 +1456,12 @@ const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
 Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type);
 
 template <>
-const typename VariableTestGradientType<JACOBIAN, Real>::type &
-Assembly::adGradPhi<JACOBIAN>(const MooseVariableFE<Real> & v) const;
+const typename VariableTestGradientType<ComputeStage::JACOBIAN, Real>::type &
+Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<Real> & v) const;
 
 template <>
-const typename VariableTestGradientType<JACOBIAN, RealVectorValue>::type &
-Assembly::adGradPhi<JACOBIAN>(const MooseVariableFE<RealVectorValue> & v) const;
+const typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &
+Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<RealVectorValue> & v) const;
 
 template <>
 const MooseArray<typename Moose::RealType<RESIDUAL>::type> & Assembly::adJxW<RESIDUAL>() const;

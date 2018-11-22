@@ -15,7 +15,6 @@
 
 #include "MooseTypes.h"
 #include "MooseVariableFEBase.h"
-#include "Assembly.h"
 #include "SubProblem.h"
 #include "SystemBase.h"
 #include "MooseMesh.h"
@@ -195,55 +194,23 @@ public:
 
   const FieldVariablePhiValue & phi() { return _phi; }
   const FieldVariablePhiGradient & gradPhi() { return _grad_phi; }
-  const FieldVariablePhiSecond & secondPhi()
-  {
-    _second_phi = &_assembly.feSecondPhi<OutputType>(_fe_type);
-    return *_second_phi;
-  }
-  const FieldVariablePhiCurl & curlPhi()
-  {
-    _curl_phi = &_assembly.feCurlPhi<OutputType>(_fe_type);
-    return *_curl_phi;
-  }
+  const FieldVariablePhiSecond & secondPhi();
+  const FieldVariablePhiCurl & curlPhi();
 
   const FieldVariablePhiValue & phiFace() { return _phi_face; }
   const FieldVariablePhiGradient & gradPhiFace() { return _grad_phi_face; }
-  const FieldVariablePhiSecond & secondPhiFace()
-  {
-    _second_phi_face = &_assembly.feSecondPhiFace<OutputType>(_fe_type);
-    return *_second_phi_face;
-  }
-  const FieldVariablePhiCurl & curlPhiFace()
-  {
-    _curl_phi_face = &_assembly.feCurlPhiFace<OutputType>(_fe_type);
-    return *_curl_phi_face;
-  }
+  const FieldVariablePhiSecond & secondPhiFace();
+  const FieldVariablePhiCurl & curlPhiFace();
 
   const FieldVariablePhiValue & phiNeighbor() { return _phi_neighbor; }
   const FieldVariablePhiGradient & gradPhiNeighbor() { return _grad_phi_neighbor; }
-  const FieldVariablePhiSecond & secondPhiNeighbor()
-  {
-    _second_phi_neighbor = &_assembly.feSecondPhiNeighbor<OutputType>(_fe_type);
-    return *_second_phi_neighbor;
-  }
-  const FieldVariablePhiCurl & curlPhiNeighbor()
-  {
-    _curl_phi_neighbor = &_assembly.feCurlPhiNeighbor<OutputType>(_fe_type);
-    return *_curl_phi_neighbor;
-  }
+  const FieldVariablePhiSecond & secondPhiNeighbor();
+  const FieldVariablePhiCurl & curlPhiNeighbor();
 
   const FieldVariablePhiValue & phiFaceNeighbor() { return _phi_face_neighbor; }
   const FieldVariablePhiGradient & gradPhiFaceNeighbor() { return _grad_phi_face_neighbor; }
-  const FieldVariablePhiSecond & secondPhiFaceNeighbor()
-  {
-    _second_phi_face_neighbor = &_assembly.feSecondPhiFaceNeighbor<OutputType>(_fe_type);
-    return *_second_phi_face_neighbor;
-  }
-  const FieldVariablePhiCurl & curlPhiFaceNeighbor()
-  {
-    _curl_phi_face_neighbor = &_assembly.feCurlPhiFaceNeighbor<OutputType>(_fe_type);
-    return *_curl_phi_face_neighbor;
-  }
+  const FieldVariablePhiSecond & secondPhiFaceNeighbor();
+  const FieldVariablePhiCurl & curlPhiFaceNeighbor();
 
   // damping
   FieldVariableValue & increment() { return _increment; }

@@ -499,10 +499,10 @@ Assembly::reinitFE(const Elem * elem)
   if (_computing_jacobian)
   {
     auto n_qp = _current_qrule->n_points();
+    resizeADObjects(n_qp, dim, elem->n_nodes());
     if (_displaced)
     {
       const auto & qw = _current_qrule->get_weights();
-      resizeADObjects(n_qp, dim);
       if (elem->has_affine_map())
         computeAffineMapAD(elem, qw, n_qp);
       else
@@ -591,7 +591,7 @@ Assembly::computeGradPhiAD(const Elem * elem, unsigned int n_qp)
 }
 
 void
-Assembly::resizeADObjects(unsigned int n_qp, unsigned int dim)
+Assembly::resizeADObjects(unsigned int n_qp, unsigned int dim, unsigned int n_nodes)
 {
   _ad_dxyzdxi_map.resize(n_qp);
   _ad_dxidx_map.resize(n_qp);
@@ -616,6 +616,9 @@ Assembly::resizeADObjects(unsigned int n_qp, unsigned int dim)
 
   _ad_jac.resize(n_qp);
   _ad_JxW.resize(n_qp);
+  _ad_grad_phi.resize(n_nodes);
+  for (decltype(_ad_grad_phi.size()) i = 0; i < _ad_grad_phi.size(); ++i)
+    _ad_grad_phi[i].resize(n_qp);
 }
 
 void
@@ -2767,15 +2770,15 @@ Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type)
 }
 
 template <>
-const typename VariableTestGradientType<JACOBIAN, Real>::type &
-Assembly::adGradPhi<JACOBIAN>(const MooseVariableFE<Real> & /*v*/) const
+const typename VariableTestGradientType<ComputeStage::JACOBIAN, Real>::type &
+Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<Real> & /*v*/) const
 {
   return _ad_grad_phi;
 }
 
 template <>
-const typename VariableTestGradientType<JACOBIAN, RealVectorValue>::type &
-Assembly::adGradPhi<JACOBIAN>(const MooseVariableFE<RealVectorValue> & /*v*/) const
+const typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &
+Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<RealVectorValue> & /*v*/) const
 {
   return _ad_vector_grad_phi;
 }
