@@ -10,7 +10,6 @@
 #ifndef DERIVATIVEMATERIALINTERFACE_H
 #define DERIVATIVEMATERIALINTERFACE_H
 
-#include "MaterialProperty.h"
 #include "AuxiliarySystem.h"
 #include "BlockRestrictable.h"
 #include "BoundaryRestrictable.h"
@@ -23,6 +22,8 @@
 
 // Forward declarations
 class FEProblemBase;
+template <typename>
+class MaterialProperty;
 
 /**
  * Interface class ("Veneer") to provide generator methods for derivative

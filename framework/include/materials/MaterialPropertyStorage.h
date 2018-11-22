@@ -10,7 +10,6 @@
 #ifndef MATERIALPROPERTYSTORAGE_H
 #define MATERIALPROPERTYSTORAGE_H
 
-#include "MaterialProperty.h"
 #include "Moose.h"
 #include "HashMap.h"
 
@@ -18,6 +17,7 @@
 class Material;
 class MaterialData;
 class QpMap;
+class MaterialProperties;
 
 // libMesh forward declarations
 namespace libMesh

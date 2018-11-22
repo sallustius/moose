@@ -180,20 +180,6 @@ private:
   declareADHelper(MaterialProperties & props, const std::string & prop_name, unsigned int prop_id);
 };
 
-// template <typename T,
-//           typename std::enable_if<!std::is_same> const MaterialProperty<T> * castToMatProp(
-//               PropertyValue const * const & prop_to_be_cast)
-// {
-//   return dynamic_cast<const MaterialProperty<T> *>(prop_to_be_cast);
-// }
-
-// template <>
-// const MaterialProperty<Real> *
-// castToMatProp<ADReal, Real>(PropertyValue const * const & prop_to_be_cast)
-// {
-//   return dynamic_cast<const MaterialProperty<Real> *>(prop_to_be_cast);
-// }
-
 template <typename T>
 inline bool
 MaterialData::haveProperty(const std::string & prop_name) const
