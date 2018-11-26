@@ -71,13 +71,13 @@ INSADMomentumBase<compute_stage>::computeQpPGResidual()
 
   const auto & convective_term =
       _convective_term ? this->convectiveTerm() : INSVectorValue<compute_stage>(0, 0, 0);
-  const auto & viscous_term =
-      _laplace ? this->strongViscousTermLaplace() : this->strongViscousTermTraction();
+  // const auto & viscous_term =
+  //     _laplace ? this->strongViscousTermLaplace() : this->strongViscousTermTraction();
   const auto & transient_term =
       _transient_term ? this->timeDerivativeTerm() : INSVectorValue<compute_stage>(0, 0, 0);
 
   return this->tau() * U * _grad_test[_i][_qp] *
-         ((convective_term + viscous_term + transient_term + this->strongPressureTerm() +
+         ((convective_term + /*viscous_term +*/ transient_term + this->strongPressureTerm() +
            this->gravityTerm())(_component)-_ffn.value(_t, _q_point[_qp]));
 }
 

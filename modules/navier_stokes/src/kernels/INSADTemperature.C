@@ -58,8 +58,9 @@ INSADTemperature<compute_stage>::computeQpResidual()
   if (_supg)
   {
     residual += strong_convective_part * this->tau() * U * _grad_test[_i][_qp];
-    residual += -(_grad_k[_qp] * _grad_u[_qp] + _k[_qp] * _second_u[_qp].tr()) * this->tau() * U *
-                _grad_test[_i][_qp];
+    // residual += -(_grad_k[_qp] * _grad_u[_qp] + _k[_qp] * _second_u[_qp].tr()) * this->tau() * U
+    // *
+    //             _grad_test[_i][_qp];
     if (_transient_term)
       residual += _rho[_qp] * _cp[_qp] * _u_dot[_qp] * this->tau() * U * _grad_test[_i][_qp];
   }
