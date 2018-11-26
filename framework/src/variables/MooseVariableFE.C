@@ -99,6 +99,8 @@ MooseVariableFE<OutputType>::MooseVariableFE(unsigned int var_num,
     _grad_phi_neighbor(_assembly.feGradPhiNeighbor<OutputType>(_fe_type)),
     _phi_face_neighbor(_assembly.fePhiFaceNeighbor<OutputType>(_fe_type)),
     _grad_phi_face_neighbor(_assembly.feGradPhiFaceNeighbor<OutputType>(_fe_type)),
+    _ad_grad_phi(_assembly.feADGradPhi<OutputType>(_fe_type)),
+    _ad_grad_phi_face(_assembly.feADGradPhiFace<OutputType>(_fe_type)),
     _ad_u(),
     _ad_grad_u(),
     _ad_second_u(),
@@ -642,14 +644,15 @@ template <typename OutputType>
 void
 MooseVariableFE<OutputType>::computeElemValues()
 {
-  computeValuesHelper(_qrule, _phi, _grad_phi, _second_phi, _curl_phi);
+  computeValuesHelper(_qrule, _phi, _grad_phi, _second_phi, _curl_phi, _ad_grad_phi);
 }
 
 template <typename OutputType>
 void
 MooseVariableFE<OutputType>::computeElemValuesFace()
 {
-  computeValuesHelper(_qrule_face, _phi_face, _grad_phi_face, _second_phi_face, _curl_phi_face);
+  computeValuesHelper(
+      _qrule_face, _phi_face, _grad_phi_face, _second_phi_face, _curl_phi_face, _ad_grad_phi_face);
 }
 
 template <typename OutputType>
@@ -767,11 +770,13 @@ MooseVariableFE<OutputType>::getValue(const Elem * elem,
 
 template <typename OutputType>
 void
-MooseVariableFE<OutputType>::computeValuesHelper(QBase *& qrule,
-                                                 const FieldVariablePhiValue & phi,
-                                                 const FieldVariablePhiGradient & grad_phi,
-                                                 const FieldVariablePhiSecond *& second_phi,
-                                                 const FieldVariablePhiValue *& curl_phi)
+MooseVariableFE<OutputType>::computeValuesHelper(
+    QBase *& qrule,
+    const FieldVariablePhiValue & phi,
+    const FieldVariablePhiGradient & grad_phi,
+    const FieldVariablePhiSecond *& second_phi,
+    const FieldVariablePhiValue *& curl_phi,
+    const typename VariableTestGradientType<JACOBIAN, OutputType>::type & ad_grad_phi)
 
 {
   bool is_transient = _subproblem.isTransient();
@@ -1114,21 +1119,22 @@ MooseVariableFE<OutputType>::computeValuesHelper(QBase *& qrule,
 
   // Automatic differentiation
   if (_need_ad && _subproblem.currentlyComputingJacobian())
-    computeAD(num_dofs, nqp, is_transient, phi, grad_phi, second_phi);
+    computeAD(num_dofs, nqp, is_transient, phi, grad_phi, second_phi, ad_grad_phi);
 }
 
 template <typename OutputType>
 void
-MooseVariableFE<OutputType>::computeAD(const unsigned int & num_dofs,
-                                       const unsigned int & nqp,
-                                       const bool & is_transient,
-                                       const FieldVariablePhiValue & phi,
-                                       const FieldVariablePhiGradient & grad_phi,
-                                       const FieldVariablePhiSecond *& second_phi)
+MooseVariableFE<OutputType>::computeAD(
+    const unsigned int & num_dofs,
+    const unsigned int & nqp,
+    const bool & is_transient,
+    const FieldVariablePhiValue & phi,
+    const FieldVariablePhiGradient & grad_phi,
+    const FieldVariablePhiSecond *& second_phi,
+    const typename VariableTestGradientType<JACOBIAN, OutputType>::type & ad_grad_phi)
 {
   _ad_dof_values.resize(num_dofs);
   _ad_u.resize(nqp);
-  const auto & ad_grad_phi = _assembly.adGradPhi<JACOBIAN>(*this);
 
   if (_need_ad_grad_u)
     _ad_grad_u.resize(nqp);

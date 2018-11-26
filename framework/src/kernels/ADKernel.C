@@ -31,7 +31,7 @@ ADKernelTempl<T, compute_stage>::ADKernelTempl(const InputParameters & parameter
                                                            : Moose::VarFieldType::VAR_FIELD_VECTOR),
     _var(*this->mooseVariable()),
     _test(_var.phi()),
-    _grad_test(_assembly.adGradPhi<compute_stage>(_var)),
+    _grad_test(_var.template adGradPhi<compute_stage>()),
     _u(_var.template adSln<compute_stage>()),
     _grad_u(_var.template adGradSln<compute_stage>()),
     _ad_JxW(_assembly.adJxW<compute_stage>())

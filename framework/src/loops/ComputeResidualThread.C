@@ -120,11 +120,7 @@ ComputeResidualThread::onElement(const Elem * elem)
   {
     const auto & kernels = _tag_kernels->getActiveBlockObjects(_subdomain, _tid);
     for (const auto & kernel : kernels)
-    {
-      // Hack!
-      kernel->subProblem().prepareShapes(kernel->variable().number(), _tid);
       kernel->computeResidual();
-    }
   }
 }
 

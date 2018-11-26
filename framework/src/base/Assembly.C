@@ -499,7 +499,7 @@ Assembly::reinitFE(const Elem * elem)
   if (_computing_jacobian)
   {
     auto n_qp = _current_qrule->n_points();
-    resizeADObjects(n_qp, dim, elem->n_nodes());
+    resizeMappingObjects(n_qp, dim);
     if (_displaced)
     {
       const auto & qw = _current_qrule->get_weights();
@@ -510,15 +510,51 @@ Assembly::reinitFE(const Elem * elem)
         for (unsigned int qp = 0; qp != n_qp; qp++)
           computeSinglePointMapAD(elem, qw, qp);
       }
-      computeGradPhiAD(elem, n_qp);
     }
     else
-    {
       for (unsigned qp = 0; qp < n_qp; ++qp)
-      {
         _ad_JxW[qp] = _current_JxW[qp];
-        for (unsigned i = 0; i < elem->n_nodes(); ++i)
-          _ad_grad_phi[i][qp] = _grad_phi[i][qp];
+
+    for (const auto & it : _fe[dim])
+    {
+      FEBase * fe = it.second;
+      auto fe_type = it.first;
+      auto num_shapes = fe->n_shape_functions();
+      auto & grad_phi = _ad_grad_phi_data[fe_type];
+
+      grad_phi.resize(num_shapes);
+      for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+        grad_phi[i].resize(n_qp);
+
+      if (_displaced)
+        computeGradPhiAD(elem, n_qp, grad_phi, fe);
+      else
+      {
+        const auto & regular_grad_phi = _fe_shape_data[fe_type]->_grad_phi;
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+          for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+            grad_phi[i][qp] = regular_grad_phi[i][qp];
+      }
+    }
+    for (const auto & it : _vector_fe[dim])
+    {
+      FEVectorBase * fe = it.second;
+      auto fe_type = it.first;
+      auto num_shapes = fe->n_shape_functions();
+      auto & grad_phi = _ad_vector_grad_phi_data[fe_type];
+
+      grad_phi.resize(num_shapes);
+      for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+        grad_phi[i].resize(n_qp);
+
+      if (_displaced)
+        computeGradPhiAD(elem, n_qp, grad_phi, fe);
+      else
+      {
+        const auto & regular_grad_phi = _vector_fe_shape_data[fe_type]->_grad_phi;
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+          for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+            grad_phi[i][qp] = regular_grad_phi[i][qp];
       }
     }
   }
@@ -527,46 +563,52 @@ Assembly::reinitFE(const Elem * elem)
     modifyWeightsDueToXFEM(elem);
 }
 
+template <typename OutputType>
 void
-Assembly::computeGradPhiAD(const Elem * elem, unsigned int n_qp)
+Assembly::computeGradPhiAD(
+    const Elem * elem,
+    unsigned int n_qp,
+    typename VariableTestGradientType<ComputeStage::JACOBIAN, OutputType>::type & grad_phi,
+    FEGenericBase<OutputType> * fe)
 {
   auto dim = elem->dim();
-  const auto & dphidxi_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphidxi_map();
-  const auto & dphideta_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphideta_map();
-  const auto & dphidzeta_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphidzeta_map();
+  const auto & dphidxi_map = fe->get_fe_map().get_dphidxi_map();
+  const auto & dphideta_map = fe->get_fe_map().get_dphideta_map();
+  const auto & dphidzeta_map = fe->get_fe_map().get_dphidzeta_map();
+  auto num_shapes = grad_phi.size();
 
   switch (dim)
   {
     case 0:
     {
-      for (unsigned i = 0; i < elem->n_nodes(); ++i)
+      for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
         for (unsigned qp = 0; qp < n_qp; ++qp)
-          _ad_grad_phi[i][qp] = 0;
+          grad_phi[i][qp] = 0;
       break;
     }
 
     case 1:
     {
-      for (unsigned i = 0; i < elem->n_nodes(); ++i)
+      for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
         for (unsigned qp = 0; qp < n_qp; ++qp)
         {
-          _ad_grad_phi[i][qp](0) = dphidxi_map[i][qp] * _ad_dxidx_map[qp];
-          _ad_grad_phi[i][qp](1) = dphidxi_map[i][qp] * _ad_dxidy_map[qp];
-          _ad_grad_phi[i][qp](2) = dphidxi_map[i][qp] * _ad_dxidz_map[qp];
+          grad_phi[i][qp](0) = dphidxi_map[i][qp] * _ad_dxidx_map[qp];
+          grad_phi[i][qp](1) = dphidxi_map[i][qp] * _ad_dxidy_map[qp];
+          grad_phi[i][qp](2) = dphidxi_map[i][qp] * _ad_dxidz_map[qp];
         }
       break;
     }
 
     case 2:
     {
-      for (unsigned i = 0; i < elem->n_nodes(); ++i)
+      for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
         for (unsigned qp = 0; qp < n_qp; ++qp)
         {
-          _ad_grad_phi[i][qp](0) =
+          grad_phi[i][qp](0) =
               dphidxi_map[i][qp] * _ad_dxidx_map[qp] + dphideta_map[i][qp] * _ad_detadx_map[qp];
-          _ad_grad_phi[i][qp](1) =
+          grad_phi[i][qp](1) =
               dphidxi_map[i][qp] * _ad_dxidy_map[qp] + dphideta_map[i][qp] * _ad_detady_map[qp];
-          _ad_grad_phi[i][qp](2) =
+          grad_phi[i][qp](2) =
               dphidxi_map[i][qp] * _ad_dxidz_map[qp] + dphideta_map[i][qp] * _ad_detadz_map[qp];
         }
       break;
@@ -574,18 +616,18 @@ Assembly::computeGradPhiAD(const Elem * elem, unsigned int n_qp)
 
     case 3:
     {
-      for (unsigned i = 0; i < elem->n_nodes(); ++i)
+      for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
         for (unsigned qp = 0; qp < n_qp; ++qp)
         {
-          _ad_grad_phi[i][qp](0) = dphidxi_map[i][qp] * _ad_dxidx_map[qp] +
-                                   dphideta_map[i][qp] * _ad_detadx_map[qp] +
-                                   dphidzeta_map[i][qp] * _ad_dzetadx_map[qp];
-          _ad_grad_phi[i][qp](1) = dphidxi_map[i][qp] * _ad_dxidy_map[qp] +
-                                   dphideta_map[i][qp] * _ad_detady_map[qp] +
-                                   dphidzeta_map[i][qp] * _ad_dzetady_map[qp];
-          _ad_grad_phi[i][qp](2) = dphidxi_map[i][qp] * _ad_dxidz_map[qp] +
-                                   dphideta_map[i][qp] * _ad_detadz_map[qp] +
-                                   dphidzeta_map[i][qp] * _ad_dzetadz_map[qp];
+          grad_phi[i][qp](0) = dphidxi_map[i][qp] * _ad_dxidx_map[qp] +
+                               dphideta_map[i][qp] * _ad_detadx_map[qp] +
+                               dphidzeta_map[i][qp] * _ad_dzetadx_map[qp];
+          grad_phi[i][qp](1) = dphidxi_map[i][qp] * _ad_dxidy_map[qp] +
+                               dphideta_map[i][qp] * _ad_detady_map[qp] +
+                               dphidzeta_map[i][qp] * _ad_dzetady_map[qp];
+          grad_phi[i][qp](2) = dphidxi_map[i][qp] * _ad_dxidz_map[qp] +
+                               dphideta_map[i][qp] * _ad_detadz_map[qp] +
+                               dphidzeta_map[i][qp] * _ad_dzetadz_map[qp];
         }
       break;
     }
@@ -593,7 +635,7 @@ Assembly::computeGradPhiAD(const Elem * elem, unsigned int n_qp)
 }
 
 void
-Assembly::resizeADObjects(unsigned int n_qp, unsigned int dim, unsigned int n_nodes)
+Assembly::resizeMappingObjects(unsigned int n_qp, unsigned int dim)
 {
   _ad_dxyzdxi_map.resize(n_qp);
   _ad_dxidx_map.resize(n_qp);
@@ -618,10 +660,6 @@ Assembly::resizeADObjects(unsigned int n_qp, unsigned int dim, unsigned int n_no
 
   _ad_jac.resize(n_qp);
   _ad_JxW.resize(n_qp);
-
-  _ad_grad_phi.resize(n_nodes);
-  for (decltype(_ad_grad_phi.size()) i = 0; i < _ad_grad_phi.size(); ++i)
-    _ad_grad_phi[i].resize(n_qp);
 }
 
 void
@@ -661,7 +699,7 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
 {
   auto dim = elem->dim();
   const auto & elem_nodes = elem->get_nodes();
-  auto num_nodes = elem->n_nodes();
+  auto num_shapes = (*_holder_fe_helper[dim])->n_shape_functions();
   const auto & dphidxi_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphidxi_map();
   const auto & dphideta_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphideta_map();
   const auto & dphidzeta_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphidzeta_map();
@@ -679,7 +717,7 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
     {
       _ad_dxyzdxi_map[p].zero();
 
-      for (std::size_t i = 0; i < num_nodes; i++)
+      for (std::size_t i = 0; i < num_shapes; i++)
       {
         libmesh_assert(elem_nodes[i]);
         libMesh::VectorValue<ADReal> elem_point = *elem_nodes[i];
@@ -721,7 +759,7 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
       _ad_dxyzdxi_map[p].zero();
       _ad_dxyzdeta_map[p].zero();
 
-      for (std::size_t i = 0; i < num_nodes; i++)
+      for (std::size_t i = 0; i < num_shapes; i++)
       {
         libmesh_assert(elem_nodes[i]);
         libMesh::VectorValue<ADReal> elem_point = *elem_nodes[i];
@@ -788,7 +826,7 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
       _ad_dxyzdeta_map[p].zero();
       _ad_dxyzdzeta_map[p].zero();
 
-      for (std::size_t i = 0; i < num_nodes; i++)
+      for (std::size_t i = 0; i < num_shapes; i++)
       {
         libmesh_assert(elem_nodes[i]);
         libMesh::VectorValue<ADReal> elem_point = *elem_nodes[i];
@@ -900,6 +938,47 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
       const_cast<std::vector<Real> &>((*_holder_fe_face_helper[dim])->get_JxW()));
   _current_normals.shallowCopy(
       const_cast<std::vector<Point> &>((*_holder_fe_face_helper[dim])->get_normals()));
+
+  if (_computing_jacobian)
+  {
+    auto n_qp = _current_qrule_face->n_points();
+    resizeMappingObjects(n_qp, dim);
+    for (unsigned qp = 0; qp < n_qp; ++qp)
+      _ad_JxW_face[qp] = _current_JxW_face[qp];
+
+    for (const auto & it : _fe_face[dim])
+    {
+      FEBase * fe = it.second;
+      auto fe_type = it.first;
+      auto num_shapes = fe->n_shape_functions();
+      auto & grad_phi = _ad_grad_phi_data_face[fe_type];
+
+      grad_phi.resize(num_shapes);
+      for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+        grad_phi[i].resize(n_qp);
+
+      const auto & regular_grad_phi = _fe_shape_data_face[fe_type]->_grad_phi;
+      for (unsigned qp = 0; qp < n_qp; ++qp)
+        for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+          grad_phi[i][qp] = regular_grad_phi[i][qp];
+    }
+    for (const auto & it : _vector_fe_face[dim])
+    {
+      FEVectorBase * fe = it.second;
+      auto fe_type = it.first;
+      auto num_shapes = fe->n_shape_functions();
+      auto & grad_phi = _ad_vector_grad_phi_data_face[fe_type];
+
+      grad_phi.resize(num_shapes);
+      for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+        grad_phi[i].resize(n_qp);
+
+      const auto & regular_grad_phi = _vector_fe_shape_data_face[fe_type]->_grad_phi;
+      for (unsigned qp = 0; qp < n_qp; ++qp)
+        for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+          grad_phi[i][qp] = regular_grad_phi[i][qp];
+    }
+  }
 
   if (_xfem != nullptr)
     modifyFaceWeightsDueToXFEM(elem, side);
@@ -2774,16 +2853,16 @@ Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type)
 
 template <>
 const typename VariableTestGradientType<ComputeStage::JACOBIAN, Real>::type &
-Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<Real> & /*v*/) const
+Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<Real> & v) const
 {
-  return _ad_grad_phi;
+  return _ad_grad_phi_data.at(v.feType());
 }
 
 template <>
 const typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &
-Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<RealVectorValue> & /*v*/) const
+Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<RealVectorValue> & v) const
 {
-  return _ad_vector_grad_phi;
+  return _ad_vector_grad_phi_data.at(v.feType());
 }
 
 template <>
@@ -2792,3 +2871,9 @@ Assembly::adJxW<RESIDUAL>() const
 {
   return _current_JxW;
 }
+
+template void Assembly::computeGradPhiAD<Real>(
+    const Elem * elem,
+    unsigned int n_qp,
+    typename VariableTestGradientType<ComputeStage::JACOBIAN, Real>::type & grad_phi,
+    FEGenericBase<Real> * fe);
