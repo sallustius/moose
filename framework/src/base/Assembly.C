@@ -569,6 +569,7 @@ Assembly::computeGradPhiAD(const Elem * elem, unsigned int n_qp)
           _ad_grad_phi[i][qp](2) =
               dphidxi_map[i][qp] * _ad_dxidz_map[qp] + dphideta_map[i][qp] * _ad_detadz_map[qp];
         }
+      break;
     }
 
     case 3:
@@ -586,6 +587,7 @@ Assembly::computeGradPhiAD(const Elem * elem, unsigned int n_qp)
                                    dphideta_map[i][qp] * _ad_detadz_map[qp] +
                                    dphidzeta_map[i][qp] * _ad_dzetadz_map[qp];
         }
+      break;
     }
   }
 }

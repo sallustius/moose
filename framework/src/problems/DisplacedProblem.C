@@ -102,8 +102,9 @@ DisplacedProblem::init()
     std::vector<unsigned> disp_numbers;
     for (const auto & disp_string : _displacements)
     {
-      const auto & disp_variable = getVariable(tid, disp_string, Moose::VarKindType::VAR_NONLINEAR);
-      disp_numbers.push_back(disp_variable.number());
+      const auto & disp_variable = getVariable(tid, disp_string);
+      if (disp_variable.kind() == Moose::VarKindType::VAR_NONLINEAR)
+        disp_numbers.push_back(disp_variable.number());
     }
     _assembly[tid]->assignDisplacements(std::move(disp_numbers));
   }
