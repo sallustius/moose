@@ -249,34 +249,14 @@ SystemBase::prepare(THREAD_ID tid)
       var->clearDofIndices();
 
     for (const auto & var : active_elemental_moose_variables)
-    {
-      // The line below doesn't prepare variables on a different problem which
-      // is a problem for example when computing the dependence of a variable
-      // in the displaced problem on a variable on the undisplaced problem
       if (&(var->sys()) == this)
         var->prepare();
-      // else
-      // {
-      //   try
-      //   {
-      //     getVariable(tid, var->number()).prepare();
-      //   }
-      //   catch (std::runtime_error & e)
-      //   {
-      //   }
-      // }
-    }
   }
   else
   {
     const std::vector<MooseVariableFEBase *> & vars = _vars[tid].fieldVariables();
     for (const auto & var : vars)
-    {
-      if (&(var->sys()) == this)
-        var->prepare();
-      // else
-      //   getVariable(tid, var->number()).prepare();
-    }
+      var->prepare();
   }
 }
 
