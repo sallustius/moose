@@ -579,12 +579,6 @@ public:
   const OutputType & nodalValuePreviousNL();
   const OutputType & nodalValueDot();
   const OutputType & nodalValueDuDotDu();
-  const OutputType & nodalValueNeighbor();
-  const OutputType & nodalValueOldNeighbor();
-  const OutputType & nodalValueOlderNeighbor();
-  const OutputType & nodalValuePreviousNLNeighbor();
-  const OutputType & nodalValueDotNeighbor();
-  const OutputType & nodalValueDuDotDuNeighbor();
   const MooseArray<Real> & nodalVectorTagValue(TagID tag);
   const MooseArray<Real> & nodalMatrixTagValue(TagID tag);
 

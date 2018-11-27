@@ -1058,7 +1058,7 @@ Coupleable::coupledNodalValue(const std::string & var_name, unsigned int comp)
   if (!_coupleable_neighbor)
     return (_c_is_implicit) ? var->nodalValue() : var->nodalValueOld();
   else
-    return (_c_is_implicit) ? var->nodalValueNeighbor() : var->nodalValueOldNeighbor();
+    mooseError("Neighbor version not implemented");
 }
 
 template <typename T>
@@ -1083,7 +1083,7 @@ Coupleable::coupledNodalValueOld(const std::string & var_name, unsigned int comp
   if (!_coupleable_neighbor)
     return (_c_is_implicit) ? var->nodalValueOld() : var->nodalValueOlder();
   else
-    return (_c_is_implicit) ? var->nodalValueOldNeighbor() : var->nodalValueOlderNeighbor();
+    mooseError("Neighbor version not implemented");
 }
 
 template <typename T>
@@ -1109,7 +1109,7 @@ Coupleable::coupledNodalValueOlder(const std::string & var_name, unsigned int co
     if (!_coupleable_neighbor)
       return var->nodalValueOlder();
     else
-      return var->nodalValueOlderNeighbor();
+      mooseError("Neighbor version not implemented");
   }
   else
     mooseError(_c_name, ": Older values not available for explicit schemes");
@@ -1132,7 +1132,7 @@ Coupleable::coupledNodalValuePreviousNL(const std::string & var_name, unsigned i
   if (!_coupleable_neighbor)
     return var->nodalValuePreviousNL();
   else
-    return var->nodalValuePreviousNLNeighbor();
+    mooseError("Neighbor version not implemented");
 }
 
 template <typename T>
@@ -1153,7 +1153,7 @@ Coupleable::coupledNodalDot(const std::string & var_name, unsigned int comp)
   if (!_coupleable_neighbor)
     return var->nodalValueDot();
   else
-    return var->nodalValueDotNeighbor();
+    mooseError("Neighbor version not implemented");
 }
 
 const DenseVector<Number> &
