@@ -942,7 +942,7 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
   if (_computing_jacobian)
   {
     auto n_qp = _current_qrule_face->n_points();
-    resizeMappingObjects(n_qp, dim);
+    _ad_JxW_face.resize(n_qp);
     for (unsigned qp = 0; qp < n_qp; ++qp)
       _ad_JxW_face[qp] = _current_JxW_face[qp];
 
