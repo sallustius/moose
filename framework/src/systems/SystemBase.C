@@ -255,16 +255,16 @@ SystemBase::prepare(THREAD_ID tid)
       // in the displaced problem on a variable on the undisplaced problem
       if (&(var->sys()) == this)
         var->prepare();
-      else
-      {
-        try
-        {
-          getVariable(tid, var->number()).prepare();
-        }
-        catch (std::runtime_error & e)
-        {
-        }
-      }
+      // else
+      // {
+      //   try
+      //   {
+      //     getVariable(tid, var->number()).prepare();
+      //   }
+      //   catch (std::runtime_error & e)
+      //   {
+      //   }
+      // }
     }
   }
   else
@@ -274,8 +274,8 @@ SystemBase::prepare(THREAD_ID tid)
     {
       if (&(var->sys()) == this)
         var->prepare();
-      else
-        getVariable(tid, var->number()).prepare();
+      // else
+      //   getVariable(tid, var->number()).prepare();
     }
   }
 }
