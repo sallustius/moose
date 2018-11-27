@@ -63,6 +63,8 @@ DisplacedProblem::DisplacedProblem(const InputParameters & parameters)
   _assembly.reserve(n_threads);
   for (unsigned int i = 0; i < n_threads; ++i)
     _assembly.emplace_back(libmesh_make_unique<Assembly>(_displaced_nl, i));
+
+  _displaced_nl.addTimeIntegrator(_mproblem.getNonlinearSystemBase().getSharedTimeIntegrator());
 }
 
 bool

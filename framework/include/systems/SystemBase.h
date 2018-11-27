@@ -684,6 +684,8 @@ public:
 
   TimeIntegrator * getTimeIntegrator() { return _time_integrator.get(); }
 
+  std::shared_ptr<TimeIntegrator> getSharedTimeIntegrator() { return _time_integrator; }
+
 protected:
   SubProblem & _subproblem;
 

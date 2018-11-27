@@ -310,9 +310,6 @@ NonlinearSystemBase::addTimeIntegrator(const std::string & type,
 
   std::shared_ptr<TimeIntegrator> ti = _factory.create<TimeIntegrator>(type, name, parameters);
   _time_integrator = ti;
-  auto displaced_problem = _fe_problem.getDisplacedProblem();
-  if (displaced_problem)
-    displaced_problem->nlSys().addTimeIntegrator(ti);
 }
 
 void
