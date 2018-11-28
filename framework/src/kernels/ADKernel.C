@@ -111,6 +111,7 @@ void
 ADKernelTempl<Real, JACOBIAN>::computeResidual()
 {
 }
+
 template <>
 void
 ADKernelTempl<RealVectorValue, JACOBIAN>::computeResidual()
@@ -164,47 +165,48 @@ ADKernelTempl<RealVectorValue, RESIDUAL>::computeJacobian()
 
 template <typename T, ComputeStage compute_stage>
 void
-ADKernelTempl<T, compute_stage>::computeOffDiagJacobian(MooseVariableFEBase & jvar)
+ADKernelTempl<T, compute_stage>::computeOffDiagJacobian(MooseVariableFEBase &)
 {
-  auto jvar_num = jvar.number();
+}
 
-  if (jvar_num == _var.number())
-    computeJacobian();
-  else
+template <typename T, ComputeStage compute_stage>
+void
+ADKernelTempl<T, compute_stage>::computeADOffDiagJacobian()
+{
+  std::vector<std::vector<ADReal>> residuals;
+  residuals.resize(_test.size());
+
+  for (_i = 0; _i < _test.size(); _i++)
+    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+      residuals[_i].push_back(_ad_JxW[_qp] * _coord[_qp] * computeQpResidual());
+
+  std::vector<std::pair<MooseVariableFEBase *, MooseVariableFEBase *>> & ce =
+      _assembly.couplingEntries();
+  for (const auto & it : ce)
   {
-    size_t ad_offset = jvar_num * _sys.getMaxVarNDofsPerElem();
+    MooseVariableFEBase & ivariable = *(it.first);
+    MooseVariableFEBase & jvariable = *(it.second);
 
-    prepareMatrixTag(_assembly, _var.number(), jvar_num);
+    unsigned int ivar = ivariable.number();
+    unsigned int jvar = jvariable.number();
 
-    if (_local_ke.m() != _test.size() || _local_ke.n() != jvar.phiSize())
-      return;
+    if (ivar != _var.number())
+      continue;
 
-    for (_i = 0; _i < _test.size(); _i++)
-    {
-      for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      {
-        ADReal residual =
-            computeQpResidual(); // This will also compute the derivative with respect to all dofs
+    size_t ad_offset = jvar * _sys.getMaxVarNDofsPerElem();
 
-        for (_j = 0; _j < jvar.phiSize(); _j++)
-          _local_ke(_i, _j) +=
-              (_ad_JxW[_qp] * _coord[_qp] * residual).derivatives()[ad_offset + _j];
-      }
-    }
+    prepareMatrixTag(_assembly, ivar, jvar);
+
+    if (_local_ke.m() != _test.size() || _local_ke.n() != jvariable.phiSize())
+      continue;
+
+    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+      for (_i = 0; _i < _test.size(); _i++)
+        for (_j = 0; _j < jvariable.phiSize(); _j++)
+          _local_ke(_i, _j) += residuals[_i][_qp].derivatives()[ad_offset + _j];
 
     accumulateTaggedLocalMatrix();
   }
-}
-
-template <>
-void
-ADKernelTempl<Real, RESIDUAL>::computeOffDiagJacobian(MooseVariableFEBase &)
-{
-}
-template <>
-void
-ADKernelTempl<RealVectorValue, RESIDUAL>::computeOffDiagJacobian(MooseVariableFEBase &)
-{
 }
 
 template <typename T, ComputeStage compute_stage>
