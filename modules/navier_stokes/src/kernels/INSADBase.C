@@ -188,10 +188,10 @@ template <ComputeStage compute_stage>
 INSReal<compute_stage>
 INSADBase<compute_stage>::tau()
 {
-  auto nu = _mu[_qp] / _rho[_qp];
+  auto && nu = _mu[_qp] / _rho[_qp];
   INSVectorValue<compute_stage> U(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
-  const auto & h = _current_elem->hmax();
-  auto transient_part = _transient_term ? 4. / (_dt * _dt) : 0.;
+  auto && h = _current_elem->hmax();
+  auto && transient_part = _transient_term ? 4. / (_dt * _dt) : 0.;
   return _alpha / std::sqrt(transient_part + (2. * U.norm() / h) * (2. * U.norm() / h) +
                             9. * (4. * nu / (h * h)) * (4. * nu / (h * h)));
 }
