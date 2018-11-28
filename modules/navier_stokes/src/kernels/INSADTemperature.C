@@ -27,6 +27,7 @@ defineADValidParams(INSADTemperature,
                                                           "k",
                                                           "thermal conductivity name");
                     params.addParam<MaterialPropertyName>("cp_name", "cp", "specific heat name");
+                    params.addParam<MaterialPropertyName>("grad_k", 0, "The gradient of k");
                     params.addParam<bool>("supg", false, "Whether to perform SUPG stabilization"););
 
 template <ComputeStage compute_stage>
@@ -36,8 +37,7 @@ INSADTemperature<compute_stage>::INSADTemperature(const InputParameters & parame
     // Material Properties
     _k(adGetADMaterialProperty<Real>("k_name")),
     _cp(adGetADMaterialProperty<Real>("cp_name")),
-    _grad_k(adGetADMaterialProperty<RealVectorValue>("grad_" +
-                                                     adGetParam<MaterialPropertyName>("k_name"))),
+    _grad_k(adGetADMaterialProperty<RealVectorValue>("grad_k")),
     _second_u(_var.template adSecondSln<compute_stage>()),
     _u_dot(_var.template adUDot<compute_stage>()),
     _supg(adGetParam<bool>("supg"))
