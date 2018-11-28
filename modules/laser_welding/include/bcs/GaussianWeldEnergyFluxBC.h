@@ -28,7 +28,9 @@ protected:
   const Real _reff;
   const Real _F0;
   const Real _R;
-  const RealVectorValue _beam_coords;
+  Function & _x_beam_coord;
+  Function & _y_beam_coord;
+  Function & _z_beam_coord;
 };
 
 #endif /* GAUSSIANWELDENERGYFLUXBC_H */
