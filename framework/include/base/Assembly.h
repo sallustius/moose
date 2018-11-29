@@ -237,6 +237,12 @@ public:
     return _ad_JxW;
   }
 
+  template <ComputeStage compute_stage>
+  const MooseArray<typename Moose::RealType<compute_stage>::type> & adJxWFace() const
+  {
+    return _current_JxW_face;
+  }
+
   /**
    * Returns the reference to the coordinate transformation coefficients
    * @return A _reference_.  Make sure to store this as a reference!
@@ -272,6 +278,12 @@ public:
    * @return A _reference_.  Make sure to store this as a reference!
    */
   const MooseArray<Point> & normals() { return _current_normals; }
+
+  template <ComputeStage compute_stage>
+  const typename NormalsType<compute_stage>::type & adNormals() const
+  {
+    return _current_normals;
+  }
 
   /**
    * Return the current element
@@ -1024,6 +1036,8 @@ protected:
    */
   void reinitFEFace(const Elem * elem, unsigned int side);
 
+  void computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem * side);
+
   void reinitFEFaceNeighbor(const Elem * neighbor, const std::vector<Point> & reference_points);
 
   void reinitFENeighbor(const Elem * neighbor, const std::vector<Point> & reference_points);
@@ -1403,7 +1417,6 @@ protected:
   std::vector<libMesh::VectorValue<ADReal>> _ad_dxyzdzeta_map;
   std::vector<ADReal> _ad_jac;
   MooseArray<ADReal> _ad_JxW;
-  MooseArray<ADReal> _ad_JxW_face;
   std::vector<ADReal> _ad_dxidx_map;
   std::vector<ADReal> _ad_dxidy_map;
   std::vector<ADReal> _ad_dxidz_map;
@@ -1413,6 +1426,9 @@ protected:
   std::vector<ADReal> _ad_dzetadx_map;
   std::vector<ADReal> _ad_dzetady_map;
   std::vector<ADReal> _ad_dzetadz_map;
+
+  MooseArray<ADReal> _ad_JxW_face;
+  MooseArray<VectorValue<ADReal>> _ad_normals;
 
   std::vector<unsigned> _displacements;
 };
@@ -1515,6 +1531,20 @@ Assembly::computeGradPhiAD<RealVectorValue>(
     FEGenericBase<RealVectorValue> *)
 {
   mooseError("Not implemented");
+}
+
+template <>
+inline const MooseArray<VectorValue<ADReal>> &
+Assembly::adNormals<ComputeStage::JACOBIAN>() const
+{
+  return _ad_normals;
+}
+
+template <>
+inline const MooseArray<ADReal> &
+Assembly::adJxWFace<ComputeStage::JACOBIAN>() const
+{
+  return _ad_JxW_face;
 }
 
 #endif /* ASSEMBLY_H */

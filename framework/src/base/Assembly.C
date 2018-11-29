@@ -31,6 +31,7 @@
 #include "libmesh/sparse_matrix.h"
 #include "libmesh/tensor_value.h"
 #include "libmesh/vector_value.h"
+#include "libmesh/fe.h"
 
 #include "metaphysicl/dualnumber.h"
 
@@ -771,7 +772,7 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
         _ad_dxyzdeta_map[p].add_scaled(elem_point, dphideta_map[i][p]);
       }
 
-      const auto dx_dxi = _ad_dxyzdxi_map[p](0), dx_deta = _ad_dxyzdeta_map[p](0),
+      const auto &dx_dxi = _ad_dxyzdxi_map[p](0), dx_deta = _ad_dxyzdeta_map[p](0),
                  dy_dxi = _ad_dxyzdxi_map[p](1), dy_deta = _ad_dxyzdeta_map[p](1),
                  dz_dxi = _ad_dxyzdxi_map[p](2), dz_deta = _ad_dxyzdeta_map[p](2);
 
@@ -941,10 +942,19 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
 
   if (_computing_jacobian)
   {
+    const std::unique_ptr<const Elem> side_elem(elem->build_side_ptr(side));
+
     auto n_qp = _current_qrule_face->n_points();
     _ad_JxW_face.resize(n_qp);
-    for (unsigned qp = 0; qp < n_qp; ++qp)
-      _ad_JxW_face[qp] = _current_JxW_face[qp];
+
+    if (_displaced)
+    {
+      const auto & qw = _current_qrule_face->get_weights();
+      computeFaceMap(dim, qw, side_elem.get());
+    }
+    else
+      for (unsigned qp = 0; qp < n_qp; ++qp)
+        _ad_JxW_face[qp] = _current_JxW_face[qp];
 
     for (const auto & it : _fe_face[dim])
     {
@@ -958,9 +968,13 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
         grad_phi[i].resize(n_qp);
 
       const auto & regular_grad_phi = _fe_shape_data_face[fe_type]->_grad_phi;
-      for (unsigned qp = 0; qp < n_qp; ++qp)
-        for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
-          grad_phi[i][qp] = regular_grad_phi[i][qp];
+
+      if (_displaced)
+        computeGradPhiAD(elem, n_qp, grad_phi, fe);
+      else
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+          for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+            grad_phi[i][qp] = regular_grad_phi[i][qp];
     }
     for (const auto & it : _vector_fe_face[dim])
     {
@@ -974,14 +988,150 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
         grad_phi[i].resize(n_qp);
 
       const auto & regular_grad_phi = _vector_fe_shape_data_face[fe_type]->_grad_phi;
-      for (unsigned qp = 0; qp < n_qp; ++qp)
-        for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
-          grad_phi[i][qp] = regular_grad_phi[i][qp];
+
+      if (_displaced)
+        computeGradPhiAD(elem, n_qp, grad_phi, fe);
+      else
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+          for (decltype(num_shapes) i = 0; i < num_shapes; ++i)
+            grad_phi[i][qp] = regular_grad_phi[i][qp];
     }
   }
 
   if (_xfem != nullptr)
     modifyFaceWeightsDueToXFEM(elem, side);
+}
+
+void
+Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem * side)
+{
+  const auto n_qp = qw.size();
+  const Elem * elem = side->parent();
+  auto side_number = elem->which_side_am_i(side);
+  const auto & dpsidxi_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_dpsidxi();
+  const auto & dpsideta_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_dpsideta();
+
+  switch (dim)
+  {
+    case 1:
+    {
+      _ad_normals.resize(n_qp);
+      _ad_JxW_face.resize(n_qp);
+
+      if (!n_qp)
+        break;
+
+      if (side->node_id(0) == elem->node_id(0))
+        _ad_normals[0] = Point(-1.);
+      else
+        _ad_normals[0] = Point(1.);
+
+      for (unsigned int p = 0; p < n_qp; p++)
+      {
+        _ad_normals[p] = _ad_normals[0];
+        _ad_JxW_face[p] = 1.0 * qw[p];
+      }
+
+      break;
+    }
+
+    case 2:
+    {
+      _ad_dxyzdxi_map.resize(n_qp);
+      _ad_normals.resize(n_qp);
+      _ad_JxW_face.resize(n_qp);
+
+      for (unsigned int p = 0; p < n_qp; p++)
+        _ad_dxyzdxi_map[p].zero();
+
+      const auto n_mapping_shape_functions =
+          FE<2, LAGRANGE>::n_shape_functions(side->type(), side->default_order());
+
+      for (unsigned int i = 0; i < n_mapping_shape_functions; i++)
+      {
+        VectorValue<ADReal> side_point = side->point(i);
+        auto element_node_number = elem->which_node_am_i(side_number, i);
+
+        unsigned dimension = 0;
+        for (const auto & disp_num : _displacements)
+          side_point(dimension++)
+              .derivatives()[disp_num * _sys.getMaxVarNDofsPerElem() + element_node_number] = 1.;
+
+        for (unsigned int p = 0; p < n_qp; p++)
+          _ad_dxyzdxi_map[p].add_scaled(side_point, dpsidxi_map[i][p]);
+      }
+
+      for (unsigned int p = 0; p < n_qp; p++)
+      {
+        _ad_normals[p] =
+            (VectorValue<ADReal>(_ad_dxyzdxi_map[p](1), -_ad_dxyzdxi_map[p](0), 0.)).unit();
+        const auto the_jac = _ad_dxyzdxi_map[p].norm();
+        _ad_JxW_face[p] = the_jac * qw[p];
+      }
+
+      break;
+    }
+
+    case 3:
+    {
+      _ad_dxyzdxi_map.resize(n_qp);
+      _ad_dxyzdeta_map.resize(n_qp);
+      _ad_normals.resize(n_qp);
+      _ad_JxW_face.resize(n_qp);
+
+      for (unsigned int p = 0; p < n_qp; p++)
+      {
+        _ad_dxyzdxi_map[p].zero();
+        _ad_dxyzdeta_map[p].zero();
+      }
+
+      const unsigned int n_mapping_shape_functions =
+          FE<3, LAGRANGE>::n_shape_functions(side->type(), side->default_order());
+
+      for (unsigned int i = 0; i < n_mapping_shape_functions; i++)
+      {
+        VectorValue<ADReal> side_point = side->point(i);
+        auto element_node_number = elem->which_node_am_i(side_number, i);
+
+        unsigned dimension = 0;
+        for (const auto & disp_num : _displacements)
+          side_point(dimension++)
+              .derivatives()[disp_num * _sys.getMaxVarNDofsPerElem() + element_node_number] = 1.;
+
+        for (unsigned int p = 0; p < n_qp; p++)
+        {
+          _ad_dxyzdxi_map[p].add_scaled(side_point, dpsidxi_map[i][p]);
+          _ad_dxyzdeta_map[p].add_scaled(side_point, dpsideta_map[i][p]);
+        }
+      }
+
+      for (unsigned int p = 0; p < n_qp; p++)
+      {
+        _ad_normals[p] = _ad_dxyzdxi_map[p].cross(_ad_dxyzdeta_map[p]).unit();
+
+        const auto &dxdxi = _ad_dxyzdxi_map[p](0), dxdeta = _ad_dxyzdeta_map[p](0),
+                   dydxi = _ad_dxyzdxi_map[p](1), dydeta = _ad_dxyzdeta_map[p](1),
+                   dzdxi = _ad_dxyzdxi_map[p](2), dzdeta = _ad_dxyzdeta_map[p](2);
+
+        const auto g11 = (dxdxi * dxdxi + dydxi * dydxi + dzdxi * dzdxi);
+
+        const auto g12 = (dxdxi * dxdeta + dydxi * dydeta + dzdxi * dzdeta);
+
+        const auto g21 = g12;
+
+        const auto g22 = (dxdeta * dxdeta + dydeta * dydeta + dzdeta * dzdeta);
+
+        const auto the_jac = std::sqrt(g11 * g22 - g12 * g21);
+
+        _ad_JxW_face[p] = the_jac * qw[p];
+      }
+
+      break;
+    }
+
+    default:
+      mooseError("Invalid dimension dim = ", dim);
+  }
 }
 
 void

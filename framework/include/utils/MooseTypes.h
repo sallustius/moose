@@ -90,6 +90,7 @@ class TensorValue;
 template <unsigned int, typename>
 class TypeNTensor;
 class Elem;
+class Point;
 }
 
 /**
@@ -253,6 +254,17 @@ template <typename mat_prop_type>
 struct MaterialPropertyType<JACOBIAN, mat_prop_type>
 {
   typedef ADMaterialPropertyObject<mat_prop_type> type;
+};
+
+template <ComputeStage compute_stage>
+struct NormalsType
+{
+  typedef MooseArray<Point> type;
+};
+template <>
+struct NormalsType<JACOBIAN>
+{
+  typedef MooseArray<VectorValue<ADReal>> type;
 };
 
 #define ADResidual typename ResidualReturnType<compute_stage>::type

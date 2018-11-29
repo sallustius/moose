@@ -39,19 +39,22 @@ protected:
   MooseVariableFE<T> & _var;
 
   /// normals at quadrature points
-  const MooseArray<Point> & _normals;
+  const typename NormalsType<compute_stage>::type & _normals;
 
   // test functions
 
   /// test function values (in QPs)
   const ADTemplateVariableTestValue & _test;
   /// gradients of test functions  (in QPs)
-  const ADTemplateVariableTestGradient & _grad_test;
+  const typename VariableTestGradientType<compute_stage, T>::type & _grad_test;
 
   /// the values of the unknown variable this BC is acting on
   const ADTemplateVariableValue & _u;
   /// the gradient of the unknown variable this BC is acting on
   const ADTemplateVariableGradient & _grad_u;
+
+  /// The ad version of JxW
+  const MooseArray<typename Moose::RealType<compute_stage>::type> & _ad_JxW;
 };
 
 template <ComputeStage compute_stage>

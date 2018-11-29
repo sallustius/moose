@@ -33,11 +33,12 @@ ADIntegratedBCTempl<T, compute_stage>::ADIntegratedBCTempl(const InputParameters
                               std::is_same<T, Real>::value ? Moose::VarFieldType::VAR_FIELD_STANDARD
                                                            : Moose::VarFieldType::VAR_FIELD_VECTOR),
     _var(*this->mooseVariable()),
-    _normals(_var.normals()),
+    _normals(_assembly.adNormals<compute_stage>()),
     _test(_var.phiFace()),
-    _grad_test(_var.gradPhiFace()),
+    _grad_test(_var.template adGradPhiFace<compute_stage>()),
     _u(_var.template adSln<compute_stage>()),
-    _grad_u(_var.template adGradSln<compute_stage>())
+    _grad_u(_var.template adGradSln<compute_stage>()),
+    _ad_JxW(_assembly.adJxWFace<compute_stage>())
 {
   addMooseVariableDependency(this->mooseVariable());
 
@@ -88,7 +89,7 @@ ADIntegratedBCTempl<T, compute_stage>::computeResidual()
 
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
-      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
+      _local_re(_i) += _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
 
   re += _local_re;
 
@@ -127,7 +128,7 @@ ADIntegratedBCTempl<T, compute_stage>::computeJacobian()
     {
       ADReal residual = computeQpResidual();
       for (_j = 0; _j < _var.phiSize(); ++_j)
-        _local_ke(_i, _j) += _JxW[_qp] * _coord[_qp] * residual.derivatives()[ad_offset + _j];
+        _local_ke(_i, _j) += (_ad_JxW[_qp] * _coord[_qp] * residual).derivatives()[ad_offset + _j];
     }
 
   ke += _local_ke;
