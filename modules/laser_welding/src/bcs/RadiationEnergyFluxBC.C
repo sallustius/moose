@@ -11,14 +11,16 @@
 
 registerADMooseObject("LaserWeldingApp", RadiationEnergyFluxBC);
 
-defineADValidParams(
-    RadiationEnergyFluxBC,
-    ADIntegratedBC,
-    params.addClassDescription("Computes heat flux due to radiation");
-    params.addRequiredParam<MaterialPropertyName>("sb_constant", "The stefan-boltzmann constant");
-    params.addRequiredParam<MaterialPropertyName>("absorptivity",
-                                                  "The absorptivity of the material");
-    params.addRequiredParam<Real>("ff_temp", "The far field temperature"););
+defineADValidParams(RadiationEnergyFluxBC,
+                    ADIntegratedBC,
+                    params.addClassDescription("Computes heat flux due to radiation");
+                    params.addParam<MaterialPropertyName>("sb_constant",
+                                                          "sb_constant",
+                                                          "The stefan-boltzmann constant");
+                    params.addParam<MaterialPropertyName>("absorptivity",
+                                                          "abs"
+                                                          "The absorptivity of the material");
+                    params.addRequiredParam<Real>("ff_temp", "The far field temperature"););
 
 template <ComputeStage compute_stage>
 RadiationEnergyFluxBC<compute_stage>::RadiationEnergyFluxBC(const InputParameters & parameters)
