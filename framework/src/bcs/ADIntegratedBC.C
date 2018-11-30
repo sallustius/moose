@@ -34,6 +34,7 @@ ADIntegratedBCTempl<T, compute_stage>::ADIntegratedBCTempl(const InputParameters
                                                            : Moose::VarFieldType::VAR_FIELD_VECTOR),
     _var(*this->mooseVariable()),
     _normals(_assembly.adNormals<compute_stage>()),
+    _ad_q_points(_assembly.adQPointsFace<compute_stage>()),
     _test(_var.phiFace()),
     _grad_test(_var.template adGradPhiFace<compute_stage>()),
     _u(_var.template adSln<compute_stage>()),
@@ -174,11 +175,10 @@ ADIntegratedBCTempl<T, compute_stage>::computeJacobianBlock(MooseVariableFEBase 
     for (_i = 0; _i < _test.size(); _i++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
       {
-        ADReal residual =
-            computeQpResidual(); // This will also compute the derivative with respect to all dofs
+        ADReal residual = _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
 
         for (_j = 0; _j < jvar.phiFaceSize(); _j++)
-          ke(_i, _j) += _JxW[_qp] * _coord[_qp] * residual.derivatives()[ad_offset + _j];
+          ke(_i, _j) += residual.derivatives()[ad_offset + _j];
       }
   }
 }

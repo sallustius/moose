@@ -39,7 +39,10 @@ protected:
   MooseVariableFE<T> & _var;
 
   /// normals at quadrature points
-  const typename NormalsType<compute_stage>::type & _normals;
+  const typename PointType<compute_stage>::type & _normals;
+
+  /// (physical) quadrature points
+  const typename PointType<compute_stage>::type & _ad_q_points;
 
   // test functions
 
@@ -83,7 +86,9 @@ declareADValidParams(ADVectorIntegratedBC);
   using ADIntegratedBCTempl<type, compute_stage>::_JxW;                                            \
   using ADIntegratedBCTempl<type, compute_stage>::_coord;                                          \
   using ADIntegratedBCTempl<type, compute_stage>::_qrule;                                          \
-  using ADIntegratedBCTempl<type, compute_stage>::_normals
+  using ADIntegratedBCTempl<type, compute_stage>::_normals;                                        \
+  using ADIntegratedBCTempl<type, compute_stage>::getFunction;                                     \
+  using ADIntegratedBCTempl<type, compute_stage>::_ad_q_points
 
 #define usingIntegratedBCMembers usingTemplIntegratedBCMembers(Real)
 #define usingVectorIntegratedBCMembers usingTemplIntegratedBCMembers(RealVectorValue)

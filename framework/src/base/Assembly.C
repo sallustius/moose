@@ -72,7 +72,8 @@ Assembly::Assembly(SystemBase & sys, THREAD_ID tid)
 
     _max_cached_residuals(0),
     _max_cached_jacobians(0),
-    _block_diagonal_matrix(false)
+    _block_diagonal_matrix(false),
+    _calculate_face_xyz(true)
 {
   // Build fe's for the helpers
   buildFE(FEType(FIRST, LAGRANGE));
@@ -945,16 +946,25 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
     const std::unique_ptr<const Elem> side_elem(elem->build_side_ptr(side));
 
     auto n_qp = _current_qrule_face->n_points();
+    _ad_normals.resize(n_qp);
     _ad_JxW_face.resize(n_qp);
+    _ad_q_points_face.resize(n_qp);
 
     if (_displaced)
     {
       const auto & qw = _current_qrule_face->get_weights();
       computeFaceMap(dim, qw, side_elem.get());
+      if (!_calculate_face_xyz)
+        for (unsigned qp = 0; qp < n_qp; ++qp)
+          _ad_q_points_face[qp] = _current_q_points_face[qp];
     }
     else
       for (unsigned qp = 0; qp < n_qp; ++qp)
+      {
         _ad_JxW_face[qp] = _current_JxW_face[qp];
+        _ad_q_points_face[qp] = _current_q_points_face[qp];
+        _ad_normals[qp] = _current_normals[qp];
+      }
 
     for (const auto & it : _fe_face[dim])
     {
@@ -1010,14 +1020,12 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
   auto side_number = elem->which_side_am_i(side);
   const auto & dpsidxi_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_dpsidxi();
   const auto & dpsideta_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_dpsideta();
+  const auto & psi_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_psi();
 
   switch (dim)
   {
     case 1:
     {
-      _ad_normals.resize(n_qp);
-      _ad_JxW_face.resize(n_qp);
-
       if (!n_qp)
         break;
 
@@ -1026,8 +1034,26 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
       else
         _ad_normals[0] = Point(1.);
 
+      VectorValue<ADReal> side_point;
+      if (_calculate_face_xyz)
+      {
+        side_point = side->point(0);
+        auto element_node_number = elem->which_node_am_i(side_number, 0);
+
+        unsigned dimension = 0;
+        for (const auto & disp_num : _displacements)
+          side_point(dimension++)
+              .derivatives()[disp_num * _sys.getMaxVarNDofsPerElem() + element_node_number] = 1.;
+      }
+
       for (unsigned int p = 0; p < n_qp; p++)
       {
+        if (_calculate_face_xyz)
+        {
+          _ad_q_points_face[p].zero();
+          _ad_q_points_face[p].add_scaled(side_point, psi_map[0][p]);
+        }
+
         _ad_normals[p] = _ad_normals[0];
         _ad_JxW_face[p] = 1.0 * qw[p];
       }
@@ -1038,8 +1064,6 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
     case 2:
     {
       _ad_dxyzdxi_map.resize(n_qp);
-      _ad_normals.resize(n_qp);
-      _ad_JxW_face.resize(n_qp);
 
       for (unsigned int p = 0; p < n_qp; p++)
         _ad_dxyzdxi_map[p].zero();
@@ -1076,8 +1100,6 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
     {
       _ad_dxyzdxi_map.resize(n_qp);
       _ad_dxyzdeta_map.resize(n_qp);
-      _ad_normals.resize(n_qp);
-      _ad_JxW_face.resize(n_qp);
 
       for (unsigned int p = 0; p < n_qp; p++)
       {

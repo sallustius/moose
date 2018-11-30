@@ -280,9 +280,15 @@ public:
   const MooseArray<Point> & normals() { return _current_normals; }
 
   template <ComputeStage compute_stage>
-  const typename NormalsType<compute_stage>::type & adNormals() const
+  const typename PointType<compute_stage>::type & adNormals() const
   {
     return _current_normals;
+  }
+
+  template <ComputeStage compute_stage>
+  const typename PointType<compute_stage>::type & adQPointsFace() const
+  {
+    return _current_q_points_face;
   }
 
   /**
@@ -1429,8 +1435,11 @@ protected:
 
   MooseArray<ADReal> _ad_JxW_face;
   MooseArray<VectorValue<ADReal>> _ad_normals;
+  MooseArray<VectorValue<ADReal>> _ad_q_points_face;
 
   std::vector<unsigned> _displacements;
+
+  bool _calculate_face_xyz;
 };
 
 template <>
@@ -1538,6 +1547,13 @@ inline const MooseArray<VectorValue<ADReal>> &
 Assembly::adNormals<ComputeStage::JACOBIAN>() const
 {
   return _ad_normals;
+}
+
+template <>
+inline const typename PointType<ComputeStage::JACOBIAN>::type &
+Assembly::adQPointsFace<ComputeStage::JACOBIAN>() const
+{
+  return _ad_q_points_face;
 }
 
 template <>

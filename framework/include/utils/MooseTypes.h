@@ -257,12 +257,12 @@ struct MaterialPropertyType<JACOBIAN, mat_prop_type>
 };
 
 template <ComputeStage compute_stage>
-struct NormalsType
+struct PointType
 {
   typedef MooseArray<Point> type;
 };
 template <>
-struct NormalsType<JACOBIAN>
+struct PointType<JACOBIAN>
 {
   typedef MooseArray<VectorValue<ADReal>> type;
 };
