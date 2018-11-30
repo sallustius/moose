@@ -10,20 +10,21 @@
 #ifndef GAUSSIANWELDENERGYFLUXBC_H
 #define GAUSSIANWELDENERGYFLUXBC_H
 
-#include "IntegratedBC.h"
+#include "ADIntegratedBC.h"
 
+template <ComputeStage>
 class GaussianWeldEnergyFluxBC;
 
-template <>
-InputParameters validParams<GaussianWeldEnergyFluxBC>();
+declareADValidParams(GaussianWeldEnergyFluxBC);
 
-class GaussianWeldEnergyFluxBC : public IntegratedBC
+template <ComputeStage compute_stage>
+class GaussianWeldEnergyFluxBC : public ADIntegratedBC<compute_stage>
 {
 public:
   GaussianWeldEnergyFluxBC(const InputParameters & params);
 
 protected:
-  virtual Real computeQpResidual() override;
+  virtual ADResidual computeQpResidual() override;
 
   const Real _reff;
   const Real _F0;
@@ -31,6 +32,8 @@ protected:
   Function & _x_beam_coord;
   Function & _y_beam_coord;
   Function & _z_beam_coord;
+
+  usingIntegratedBCMembers;
 };
 
 #endif /* GAUSSIANWELDENERGYFLUXBC_H */

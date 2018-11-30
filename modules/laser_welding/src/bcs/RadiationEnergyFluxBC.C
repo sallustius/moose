@@ -18,7 +18,7 @@ defineADValidParams(RadiationEnergyFluxBC,
                                                           "sb_constant",
                                                           "The stefan-boltzmann constant");
                     params.addParam<MaterialPropertyName>("absorptivity",
-                                                          "abs"
+                                                          "abs",
                                                           "The absorptivity of the material");
                     params.addRequiredParam<Real>("ff_temp", "The far field temperature"););
 
