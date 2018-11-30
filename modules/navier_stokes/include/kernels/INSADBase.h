@@ -15,6 +15,10 @@
 // Forward Declarations
 template <ComputeStage>
 class INSADBase;
+namespace libMesh
+{
+class Elem;
+}
 
 declareADValidParams(INSADBase);
 
@@ -57,6 +61,8 @@ protected:
 
   /// Provides tau which yields superconvergence for 1D advection-diffusion
   virtual INSReal<compute_stage> tauNodal();
+
+  typename Moose::RealType<compute_stage>::type hmax_helper();
 
   // Coupled variables
   const ADVariableValue & _u_vel;
