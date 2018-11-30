@@ -32,15 +32,21 @@ public:
   virtual ~INSADMomentumBase() {}
 
 protected:
-  virtual ADResidual computeQpResidual();
-  virtual ADResidual computeQpResidualViscousPart() = 0;
-
-  virtual ADResidual computeQpPGResidual();
+  virtual ADResidual computeQpResidual() override;
+  void beforeQpLoop() override;
+  void beforeTestLoop() override;
+  void computeTestTerms();
+  void computeGradTestTerms();
+  void computeGradTestComponentTerms();
 
   unsigned _component;
   bool _integrate_p_by_parts;
   bool _supg;
   Function & _ffn;
+
+  typename Moose::RealType<compute_stage>::type _test_terms;
+  VectorValue<typename Moose::RealType<compute_stage>::type> _grad_test_terms;
+  typename Moose::RealType<compute_stage>::type _grad_test_component_terms;
 
   usingINSBaseMembers;
 };

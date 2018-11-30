@@ -37,7 +37,7 @@ class INSADBase : public ADKernel<compute_stage>
 public:
   INSADBase(const InputParameters & parameters);
 
-  virtual ~INSADBase() {}
+  virtual ~INSADBase();
 
 protected:
   virtual ADResidual computeQpResidual() = 0;
@@ -62,7 +62,7 @@ protected:
   /// Provides tau which yields superconvergence for 1D advection-diffusion
   virtual INSReal<compute_stage> tauNodal();
 
-  typename Moose::RealType<compute_stage>::type hmax_helper();
+  void computeHMax();
 
   // Coupled variables
   const ADVariableValue & _u_vel;
@@ -97,6 +97,9 @@ protected:
   bool _convective_term;
   bool _transient_term;
 
+  MooseArray<typename Moose::RealType<compute_stage>::type> _tau;
+  typename Moose::RealType<compute_stage>::type _hmax;
+
   usingKernelMembers;
 };
 
@@ -118,6 +121,8 @@ protected:
   using INSADBase<compute_stage>::_transient_term;                                                 \
   using INSADBase<compute_stage>::_convective_term;                                                \
   using INSADBase<compute_stage>::_rho;                                                            \
-  using INSADBase<compute_stage>::_mu
+  using INSADBase<compute_stage>::_mu;                                                             \
+  using INSADBase<compute_stage>::_gravity;                                                        \
+  using INSADBase<compute_stage>::_grad_p
 
 #endif

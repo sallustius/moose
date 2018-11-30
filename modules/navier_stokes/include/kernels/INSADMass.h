@@ -32,14 +32,21 @@ public:
   virtual ~INSADMass() {}
 
 protected:
-  virtual ADResidual computeQpResidual();
+  virtual ADResidual computeQpResidual() override;
 
-  virtual ADResidual computeQpPGResidual();
+  void computeQpStrongResidual();
+  void computeQpPGStrongResidual();
+
+  void beforeTestLoop() override;
+  void beforeQpLoop() override;
 
   bool _pspg;
   Function & _x_ffn;
   Function & _y_ffn;
   Function & _z_ffn;
+
+  typename Moose::RealType<compute_stage>::type _strong_residual;
+  VectorValue<typename Moose::RealType<compute_stage>::type> _strong_pg_residual;
 
   usingINSBaseMembers;
 };

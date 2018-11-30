@@ -78,6 +78,12 @@ INSADBase<compute_stage>::INSADBase(const InputParameters & parameters)
 }
 
 template <ComputeStage compute_stage>
+INSADBase<compute_stage>::~INSADBase()
+{
+  _tau.release();
+}
+
+template <ComputeStage compute_stage>
 INSVectorValue<compute_stage>
 INSADBase<compute_stage>::convectiveTerm()
 {
@@ -185,17 +191,17 @@ INSADBase<compute_stage>::timeDerivativeTerm()
 }
 
 template <ComputeStage compute_stage>
-typename Moose::RealType<compute_stage>::type
-INSADBase<compute_stage>::hmax_helper()
+void
+INSADBase<compute_stage>::computeHMax()
 {
-  return _current_elem->hmax();
+  _hmax = _current_elem->hmax();
 }
 
 template <>
-ADReal
-INSADBase<JACOBIAN>::hmax_helper()
+void
+INSADBase<JACOBIAN>::computeHMax()
 {
-  ADReal h_max;
+  _hmax = 0;
 
   for (unsigned int n_outer = 0; n_outer < _current_elem->n_vertices(); n_outer++)
     for (unsigned int n_inner = n_outer + 1; n_inner < _current_elem->n_vertices(); n_inner++)
@@ -208,10 +214,10 @@ INSADBase<JACOBIAN>::hmax_helper()
         diff(dimension++).derivatives()[disp_num * _sys.getMaxVarNDofsPerElem() + n_inner] = -1.;
       }
 
-      h_max = std::max(h_max, diff.norm_sq());
+      _hmax = std::max(_hmax, diff.norm_sq());
     }
 
-  return std::sqrt(h_max);
+  _hmax = std::sqrt(_hmax);
 }
 
 template <ComputeStage compute_stage>
@@ -220,10 +226,9 @@ INSADBase<compute_stage>::tau()
 {
   auto && nu = _mu[_qp] / _rho[_qp];
   INSVectorValue<compute_stage> U(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
-  auto && h = hmax_helper();
   auto && transient_part = _transient_term ? 4. / (_dt * _dt) : 0.;
-  return _alpha / std::sqrt(transient_part + (2. * U.norm() / h) * (2. * U.norm() / h) +
-                            9. * (4. * nu / (h * h)) * (4. * nu / (h * h)));
+  return _alpha / std::sqrt(transient_part + (2. * U.norm() / _hmax) * (2. * U.norm() / _hmax) +
+                            9. * (4. * nu / (_hmax * _hmax)) * (4. * nu / (_hmax * _hmax)));
 }
 
 template <ComputeStage compute_stage>
