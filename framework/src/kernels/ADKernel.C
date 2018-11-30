@@ -92,9 +92,13 @@ ADKernelTempl<T, compute_stage>::computeResidual()
 {
   prepareVectorTag(_assembly, _var.number());
 
-  for (_i = 0; _i < _test.size(); _i++)
-    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+  beforeQpLoop();
+  for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+  {
+    beforeTestLoop();
+    for (_i = 0; _i < _test.size(); _i++)
       _local_re(_i) += _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
+  }
 
   accumulateTaggedLocalResidual();
 
@@ -126,14 +130,15 @@ ADKernelTempl<T, compute_stage>::computeJacobian()
 
   size_t ad_offset = _var.number() * _sys.getMaxVarNDofsPerElem();
 
-  for (_i = 0; _i < _test.size(); _i++)
+  beforeQpLoop();
+  for (_qp = 0; _qp < _qrule->n_points(); _qp++)
   {
-    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+    beforeTestLoop();
+    for (_i = 0; _i < _test.size(); _i++)
     {
-      ADReal residual =
-          computeQpResidual(); // This will also compute the derivative with respect to all dofs
+      ADReal residual = _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
       for (_j = 0; _j < _var.phiSize(); _j++)
-        _local_ke(_i, _j) += (_ad_JxW[_qp] * _coord[_qp] * residual).derivatives()[ad_offset + _j];
+        _local_ke(_i, _j) += residual.derivatives()[ad_offset + _j];
     }
   }
 
@@ -175,9 +180,13 @@ ADKernelTempl<T, compute_stage>::computeADOffDiagJacobian()
 {
   std::vector<ADReal> residuals(_test.size());
 
-  for (_i = 0; _i < _test.size(); _i++)
-    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+  beforeQpLoop();
+  for (_qp = 0; _qp < _qrule->n_points(); _qp++)
+  {
+    beforeTestLoop();
+    for (_i = 0; _i < _test.size(); _i++)
       residuals[_i] += _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
+  }
 
   std::vector<std::pair<MooseVariableFEBase *, MooseVariableFEBase *>> & ce =
       _assembly.couplingEntries();

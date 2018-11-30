@@ -26,6 +26,8 @@ public:
   virtual void computeOffDiagJacobian(MooseVariableFEBase & jvar) override;
   virtual void computeADOffDiagJacobian() override;
   virtual void computeOffDiagJacobianScalar(unsigned int jvar) override;
+  virtual void beforeTestLoop() {}
+  virtual void beforeQpLoop() {}
 
   virtual MooseVariableFE<T> & variable() override { return _var; }
 
@@ -72,7 +74,9 @@ declareADValidParams(ADVectorKernel);
   using ADKernelTempl<type, compute_stage>::_current_elem;                                         \
   using ADKernelTempl<type, compute_stage>::_t;                                                    \
   using ADKernelTempl<type, compute_stage>::_q_point;                                              \
-  using ADKernelTempl<type, compute_stage>::_displacements
+  using ADKernelTempl<type, compute_stage>::_displacements;                                        \
+  using ADKernelTempl<type, compute_stage>::beforeTestLoop;                                        \
+  using ADKernelTempl<type, compute_stage>::beforeQpLoop
 
 #define usingKernelMembers usingTemplKernelMembers(Real)
 #define usingVectorKernelMembers usingTemplKernelMembers(RealVectorValue)
