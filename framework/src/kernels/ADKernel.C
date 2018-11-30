@@ -173,12 +173,11 @@ template <typename T, ComputeStage compute_stage>
 void
 ADKernelTempl<T, compute_stage>::computeADOffDiagJacobian()
 {
-  std::vector<std::vector<ADReal>> residuals;
-  residuals.resize(_test.size());
+  std::vector<ADReal> residuals(_test.size());
 
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      residuals[_i].push_back(_ad_JxW[_qp] * _coord[_qp] * computeQpResidual());
+      residuals[_i] += _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
 
   std::vector<std::pair<MooseVariableFEBase *, MooseVariableFEBase *>> & ce =
       _assembly.couplingEntries();
@@ -200,10 +199,9 @@ ADKernelTempl<T, compute_stage>::computeADOffDiagJacobian()
     if (_local_ke.m() != _test.size() || _local_ke.n() != jvariable.phiSize())
       continue;
 
-    for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      for (_i = 0; _i < _test.size(); _i++)
-        for (_j = 0; _j < jvariable.phiSize(); _j++)
-          _local_ke(_i, _j) += residuals[_i][_qp].derivatives()[ad_offset + _j];
+    for (_i = 0; _i < _test.size(); _i++)
+      for (_j = 0; _j < jvariable.phiSize(); _j++)
+        _local_ke(_i, _j) += residuals[_i].derivatives()[ad_offset + _j];
 
     accumulateTaggedLocalMatrix();
   }
