@@ -57,14 +57,14 @@ template <ComputeStage compute_stage>
 ADResidual
 INSADMass<compute_stage>::computeQpPGResidual()
 {
-  const auto & viscous_term =
-      _laplace ? this->strongViscousTermLaplace() : this->strongViscousTermTraction();
+  // const auto & viscous_term =
+  //     _laplace ? this->strongViscousTermLaplace() : this->strongViscousTermTraction();
   const auto & transient_term =
       _transient_term ? this->timeDerivativeTerm() : INSVectorValue<compute_stage>(0, 0, 0);
   const auto & convective_term =
       _convective_term ? this->convectiveTerm() : INSVectorValue<compute_stage>(0, 0, 0);
   auto r = -1. / _rho[_qp] * this->tau() * _grad_test[_i][_qp] *
-           (this->strongPressureTerm() + this->gravityTerm() + viscous_term + convective_term +
+           (this->strongPressureTerm() + this->gravityTerm() + /*viscous_term +*/ convective_term +
             transient_term -
             RealVectorValue(_x_ffn.value(_t, _q_point[_qp]),
                             _y_ffn.value(_t, _q_point[_qp]),
