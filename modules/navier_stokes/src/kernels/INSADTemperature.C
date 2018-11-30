@@ -45,27 +45,51 @@ INSADTemperature<compute_stage>::INSADTemperature(const InputParameters & parame
 }
 
 template <ComputeStage compute_stage>
+void
+INSADTemperature<compute_stage>::beforeQpLoop()
+{
+  if (_supg)
+    this->computeHMax();
+}
+
+template <ComputeStage compute_stage>
+void
+INSADTemperature<compute_stage>::beforeTestLoop()
+{
+  _U(0) = _u_vel[_qp];
+  _U(1) = _v_vel[_qp];
+  _U(2) = _w_vel[_qp];
+  computeTestTerms();
+  computeGradTestTerms();
+}
+
+template <ComputeStage compute_stage>
+void
+INSADTemperature<compute_stage>::computeTestTerms()
+{
+  _strong_convective_part = _rho[_qp] * _cp[_qp] * _U * _grad_u[_qp];
+  _test_terms = _strong_convective_part;
+}
+
+template <ComputeStage compute_stage>
+void
+INSADTemperature<compute_stage>::computeGradTestTerms()
+{
+  _grad_test_terms = _k[_qp] * _grad_u[_qp];
+  if (_supg)
+  {
+    auto tau = this->tau();
+    _grad_test_terms += _strong_convective_part * tau * _U;
+    if (_transient_term)
+      _grad_test_terms += _rho[_qp] * _cp[_qp] * _u_dot[_qp] * tau * _U;
+  }
+}
+
+template <ComputeStage compute_stage>
 ADResidual
 INSADTemperature<compute_stage>::computeQpResidual()
 {
-  INSVectorValue<compute_stage> U(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
-
-  auto strong_convective_part = _rho[_qp] * _cp[_qp] * U * _grad_u[_qp];
-
-  auto residual =
-      strong_convective_part * _test[_i][_qp] + _k[_qp] * _grad_u[_qp] * _grad_test[_i][_qp];
-
-  if (_supg)
-  {
-    residual += strong_convective_part * this->tau() * U * _grad_test[_i][_qp];
-    // residual += -(_grad_k[_qp] * _grad_u[_qp] + _k[_qp] * _second_u[_qp].tr()) * this->tau() * U
-    // *
-    //             _grad_test[_i][_qp];
-    if (_transient_term)
-      residual += _rho[_qp] * _cp[_qp] * _u_dot[_qp] * this->tau() * U * _grad_test[_i][_qp];
-  }
-
-  return residual;
+  return _test[_i][_qp] * _test_terms + _grad_test[_i][_qp] * _grad_test_terms;
 }
 
 template class INSADTemperature<RESIDUAL>;

@@ -32,6 +32,10 @@ public:
 
 protected:
   virtual ADResidual computeQpResidual() override;
+  void beforeQpLoop() override;
+  void beforeTestLoop() override;
+  void computeTestTerms();
+  void computeGradTestTerms();
 
   // Required parameters
   const ADMaterialProperty(Real) & _k;
@@ -42,6 +46,11 @@ protected:
   const ADVariableValue & _u_dot;
 
   const bool _supg;
+
+  typename Moose::RealType<compute_stage>::type _test_terms;
+  VectorValue<typename Moose::RealType<compute_stage>::type> _grad_test_terms;
+  VectorValue<typename Moose::RealType<compute_stage>::type> _U;
+  typename Moose::RealType<compute_stage>::type _strong_convective_part;
 
   usingINSBaseMembers;
 };
