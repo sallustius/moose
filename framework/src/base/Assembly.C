@@ -1066,7 +1066,11 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
       _ad_dxyzdxi_map.resize(n_qp);
 
       for (unsigned int p = 0; p < n_qp; p++)
+      {
         _ad_dxyzdxi_map[p].zero();
+        if (_calculate_face_xyz)
+          _ad_q_points_face[p].zero();
+      }
 
       const auto n_mapping_shape_functions =
           FE<2, LAGRANGE>::n_shape_functions(side->type(), side->default_order());
@@ -1082,7 +1086,11 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
               .derivatives()[disp_num * _sys.getMaxVarNDofsPerElem() + element_node_number] = 1.;
 
         for (unsigned int p = 0; p < n_qp; p++)
+        {
           _ad_dxyzdxi_map[p].add_scaled(side_point, dpsidxi_map[i][p]);
+          if (_calculate_face_xyz)
+            _ad_q_points_face[p].add_scaled(side_point, psi_map[i][p]);
+        }
       }
 
       for (unsigned int p = 0; p < n_qp; p++)
@@ -1105,6 +1113,8 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
       {
         _ad_dxyzdxi_map[p].zero();
         _ad_dxyzdeta_map[p].zero();
+        if (_calculate_face_xyz)
+          _ad_q_points_face[p].zero();
       }
 
       const unsigned int n_mapping_shape_functions =
@@ -1124,6 +1134,8 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
         {
           _ad_dxyzdxi_map[p].add_scaled(side_point, dpsidxi_map[i][p]);
           _ad_dxyzdeta_map[p].add_scaled(side_point, dpsideta_map[i][p]);
+          if (_calculate_face_xyz)
+            _ad_q_points_face[p].add_scaled(side_point, psi_map[i][p]);
         }
       }
 
