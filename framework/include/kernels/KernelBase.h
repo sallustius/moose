@@ -177,6 +177,8 @@ protected:
   bool _has_diag_save_in;
   std::vector<MooseVariableFEBase *> _diag_save_in;
   std::vector<AuxVariableName> _diag_save_in_strings;
+
+  std::vector<unsigned int> _displacements;
 };
 
 #endif /* KERNELBASE_H */

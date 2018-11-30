@@ -71,7 +71,8 @@ declareADValidParams(ADVectorKernel);
   using ADKernelTempl<type, compute_stage>::_dt;                                                   \
   using ADKernelTempl<type, compute_stage>::_current_elem;                                         \
   using ADKernelTempl<type, compute_stage>::_t;                                                    \
-  using ADKernelTempl<type, compute_stage>::_q_point
+  using ADKernelTempl<type, compute_stage>::_q_point;                                              \
+  using ADKernelTempl<type, compute_stage>::_displacements
 
 #define usingKernelMembers usingTemplKernelMembers(Real)
 #define usingVectorKernelMembers usingTemplKernelMembers(RealVectorValue)
