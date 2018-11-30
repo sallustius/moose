@@ -67,7 +67,7 @@
 
   # x-momentum, space
   [./x_momentum_space]
-    type = INSADMomentumLaplaceForm
+    type = INSADMomentumBase
     variable = vel_x
     u = vel_x
     v = vel_y
@@ -83,7 +83,7 @@
 
   # y-momentum, space
   [./y_momentum_space]
-    type = INSADMomentumLaplaceForm
+    type = INSADMomentumBase
     variable = vel_y
     u = vel_x
     v = vel_y
