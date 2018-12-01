@@ -20,6 +20,9 @@
 #include "metaphysicl/dualnumber_decl.h"
 #include "libmesh/point.h"
 
+// Apparently we implicitly instantiate everything when calling std::map<>operator[]
+#include "metaphysicl/numberarray.h"
+
 // libMesh forward declarations
 namespace libMesh
 {
