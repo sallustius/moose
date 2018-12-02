@@ -225,13 +225,21 @@ dataStore(std::ostream & stream, MooseADWrapper<T> & dn_wrapper, void * context)
   dataStore(stream, dn_wrapper.dn(false), context);
 }
 
-template void dataStore(std::ostream & stream, MooseADWrapper<Real> & dn_wrapper, void * context);
-template void dataStore(std::ostream & stream,
-                        MooseADWrapper<libMesh::VectorValue<Real>> & dn_wrapper,
-                        void * context);
-template void dataStore(std::ostream & stream,
-                        MooseADWrapper<libMesh::TensorValue<Real>> & dn_wrapper,
-                        void * context);
+#define ADStoreWrapperInstantiate(Type)                                                            \
+  template void dataStore(std::ostream & stream, MooseADWrapper<Type> & dn_wrapper, void * context)
+
+ADStoreWrapperInstantiate(Real);
+ADStoreWrapperInstantiate(VectorValue<Real>);
+ADStoreWrapperInstantiate(TensorValue<Real>);
+ADStoreWrapperInstantiate(RankFourTensor);
+ADStoreWrapperInstantiate(std::vector<std::vector<TensorValue<Real>>>);
+ADStoreWrapperInstantiate(DenseMatrix<Real>);
+ADStoreWrapperInstantiate(std::vector<VectorValue<Real>>);
+ADStoreWrapperInstantiate(std::vector<Real>);
+ADStoreWrapperInstantiate(RankTwoTensor);
+ADStoreWrapperInstantiate(unsigned int);
+ADStoreWrapperInstantiate(int);
+ADStoreWrapperInstantiate(std::vector<TensorValue<Real>>);
 
 // global load functions
 
@@ -467,10 +475,18 @@ dataLoad(std::istream & stream, MooseADWrapper<T> & dn_wrapper, void * context)
   dataLoad(stream, dn_wrapper.dn(false), context);
 }
 
-template void dataLoad(std::istream & stream, MooseADWrapper<Real> & dn_wrapper, void * context);
-template void dataLoad(std::istream & stream,
-                       MooseADWrapper<libMesh::VectorValue<Real>> & dn_wrapper,
-                       void * context);
-template void dataLoad(std::istream & stream,
-                       MooseADWrapper<libMesh::TensorValue<Real>> & dn_wrapper,
-                       void * context);
+#define ADLoadWrapperInstantiate(Type)                                                             \
+  template void dataLoad(std::istream & stream, MooseADWrapper<Type> & dn_wrapper, void * context)
+
+ADLoadWrapperInstantiate(Real);
+ADLoadWrapperInstantiate(VectorValue<Real>);
+ADLoadWrapperInstantiate(TensorValue<Real>);
+ADLoadWrapperInstantiate(RankFourTensor);
+ADLoadWrapperInstantiate(std::vector<std::vector<TensorValue<Real>>>);
+ADLoadWrapperInstantiate(DenseMatrix<Real>);
+ADLoadWrapperInstantiate(std::vector<VectorValue<Real>>);
+ADLoadWrapperInstantiate(std::vector<Real>);
+ADLoadWrapperInstantiate(RankTwoTensor);
+ADLoadWrapperInstantiate(unsigned int);
+ADLoadWrapperInstantiate(int);
+ADLoadWrapperInstantiate(std::vector<TensorValue<Real>>);
