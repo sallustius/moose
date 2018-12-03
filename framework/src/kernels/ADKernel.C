@@ -178,7 +178,7 @@ template <typename T, ComputeStage compute_stage>
 void
 ADKernelTempl<T, compute_stage>::computeADOffDiagJacobian()
 {
-  std::vector<ADReal> residuals(_test.size());
+  std::vector<ADReal> residuals(_test.size(), 0);
 
   beforeQpLoop();
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)

@@ -189,6 +189,11 @@ Assembly::~Assembly()
 
   _coord.release();
   _coord_neighbor.release();
+
+  _ad_JxW.release();
+  _ad_JxW_face.release();
+  _ad_normals.release();
+  _ad_q_points_face.release();
 }
 
 void
