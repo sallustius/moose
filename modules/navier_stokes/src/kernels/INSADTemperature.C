@@ -38,7 +38,6 @@ INSADTemperature<compute_stage>::INSADTemperature(const InputParameters & parame
     _k(adGetADMaterialProperty<Real>("k_name")),
     _cp(adGetADMaterialProperty<Real>("cp_name")),
     _grad_k(adGetADMaterialProperty<RealVectorValue>("grad_k")),
-    _second_u(_var.template adSecondSln<compute_stage>()),
     _u_dot(_var.template adUDot<compute_stage>()),
     _supg(adGetParam<bool>("supg"))
 {

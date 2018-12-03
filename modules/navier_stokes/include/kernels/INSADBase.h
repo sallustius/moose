@@ -44,9 +44,6 @@ protected:
 
   virtual INSVectorValue<compute_stage> convectiveTerm();
 
-  virtual INSVectorValue<compute_stage> strongViscousTermLaplace();
-  virtual INSVectorValue<compute_stage> strongViscousTermTraction();
-
   virtual INSVectorValue<compute_stage> weakViscousTermLaplace(unsigned comp);
   virtual INSVectorValue<compute_stage> weakViscousTermTraction(unsigned comp);
 
@@ -75,11 +72,6 @@ protected:
   const ADVariableGradient & _grad_v_vel;
   const ADVariableGradient & _grad_w_vel;
   const ADVariableGradient & _grad_p;
-
-  // Seconds
-  const ADVariableSecond & _second_u_vel;
-  const ADVariableSecond & _second_v_vel;
-  const ADVariableSecond & _second_w_vel;
 
   // Time derivatives
   const ADVariableValue & _u_vel_dot;
@@ -111,9 +103,6 @@ protected:
   using INSADBase<compute_stage>::_grad_u_vel;                                                     \
   using INSADBase<compute_stage>::_grad_v_vel;                                                     \
   using INSADBase<compute_stage>::_grad_w_vel;                                                     \
-  using INSADBase<compute_stage>::_second_u_vel;                                                   \
-  using INSADBase<compute_stage>::_second_v_vel;                                                   \
-  using INSADBase<compute_stage>::_second_w_vel;                                                   \
   using INSADBase<compute_stage>::_u_vel_dot;                                                      \
   using INSADBase<compute_stage>::_v_vel_dot;                                                      \
   using INSADBase<compute_stage>::_w_vel_dot;                                                      \

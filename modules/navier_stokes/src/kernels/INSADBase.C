@@ -54,11 +54,6 @@ INSADBase<compute_stage>::INSADBase(const InputParameters & parameters)
     _grad_w_vel(adCoupledGradient("w")),
     _grad_p(adCoupledGradient("p")),
 
-    // second derivative tensors
-    _second_u_vel(adCoupledSecond("u")),
-    _second_v_vel(adCoupledSecond("v")),
-    _second_w_vel(adCoupledSecond("w")),
-
     // time derivatives
     _u_vel_dot(adCoupledDot("u")),
     _v_vel_dot(adCoupledDot("v")),
@@ -90,23 +85,6 @@ INSADBase<compute_stage>::convectiveTerm()
   INSVectorValue<compute_stage> U(_u_vel[_qp], _v_vel[_qp], _w_vel[_qp]);
   return _rho[_qp] * INSVectorValue<compute_stage>(
                          U * _grad_u_vel[_qp], U * _grad_v_vel[_qp], U * _grad_w_vel[_qp]);
-}
-
-template <ComputeStage compute_stage>
-INSVectorValue<compute_stage>
-INSADBase<compute_stage>::strongViscousTermLaplace()
-{
-  return -_mu[_qp] * INSVectorValue<compute_stage>(
-                         _second_u_vel[_qp].tr(), _second_v_vel[_qp].tr(), _second_w_vel[_qp].tr());
-}
-
-template <ComputeStage compute_stage>
-INSVectorValue<compute_stage>
-INSADBase<compute_stage>::strongViscousTermTraction()
-{
-  return strongViscousTermLaplace() -
-         _mu[_qp] *
-             (_second_u_vel[_qp].row(0) + _second_v_vel[_qp].row(1) + _second_w_vel[_qp].row(2));
 }
 
 template <ComputeStage compute_stage>

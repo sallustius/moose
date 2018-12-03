@@ -42,7 +42,6 @@ protected:
   const ADMaterialProperty(Real) & _cp;
   const ADMaterialProperty(RealVectorValue) & _grad_k;
 
-  const ADVariableSecond & _second_u;
   const ADVariableValue & _u_dot;
 
   const bool _supg;
