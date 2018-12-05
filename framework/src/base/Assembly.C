@@ -737,7 +737,7 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
 
       _ad_jac[p] = _ad_dxyzdxi_map[p].norm();
 
-      if (_ad_jac[p].value() <= 0.)
+      if (_ad_jac[p].value() <= -TOLERANCE * TOLERANCE)
       {
         static bool failing = false;
         if (!failing)
@@ -790,9 +790,9 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
 
       const auto g22 = (dx_deta * dx_deta + dy_deta * dy_deta + dz_deta * dz_deta);
 
-      const auto det = (g11 * g22 - g12 * g21);
+      auto det = (g11 * g22 - g12 * g21);
 
-      if (det <= 0.)
+      if (det.value() <= -TOLERANCE * TOLERANCE)
       {
         static bool failing = false;
         if (!failing)
@@ -805,6 +805,8 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
         else
           return;
       }
+      else if (det.value() <= 0.)
+        det.value() = TOLERANCE * TOLERANCE;
 
       const auto inv_det = 1. / det;
       _ad_jac[p] = std::sqrt(det);
@@ -856,7 +858,7 @@ Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & q
                     dy_dxi * (dz_deta * dx_dzeta - dx_deta * dz_dzeta) +
                     dz_dxi * (dx_deta * dy_dzeta - dy_deta * dx_dzeta));
 
-      if (_ad_jac[p].value() <= 0.)
+      if (_ad_jac[p].value() <= -TOLERANCE * TOLERANCE)
       {
         static bool failing = false;
         if (!failing)
