@@ -8,6 +8,7 @@ ifeq ($(ALL_MODULES),yes)
         FLUID_PROPERTIES            := yes
         FUNCTIONAL_EXPANSION_TOOLS  := yes
         HEAT_CONDUCTION             := yes
+	LASER_WELDING	            := yes
         LEVEL_SET                   := yes
         MISC                        := yes
         NAVIER_STOKES               := yes
@@ -85,6 +86,13 @@ ifeq ($(HEAT_CONDUCTION),yes)
   APPLICATION_DIR    := $(MOOSE_DIR)/modules/heat_conduction
   APPLICATION_NAME   := heat_conduction
   SUFFIX             := hc
+  include $(FRAMEWORK_DIR)/app.mk
+endif
+
+ifeq ($(LASER_WELDING),yes)
+  APPLICATION_DIR    := $(MOOSE_DIR)/modules/laser_welding
+  APPLICATION_NAME   := laser_welding
+  SUFFIX             := lw
   include $(FRAMEWORK_DIR)/app.mk
 endif
 
