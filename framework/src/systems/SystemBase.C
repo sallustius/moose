@@ -24,6 +24,8 @@
 #include "MooseMesh.h"
 #include "MooseUtils.h"
 
+#include "libmesh/dof_map.h"
+
 /// Free function used for a libMesh callback
 void
 extraSendList(std::vector<dof_id_type> & send_list, void * context)
@@ -92,7 +94,9 @@ SystemBase::SystemBase(SubProblem & subproblem,
     _saved_old(nullptr),
     _saved_older(nullptr),
     _var_kind(var_kind),
-    _max_var_n_dofs_per_elem(0)
+    _max_var_n_dofs_per_elem(0),
+    _max_var_n_dofs_per_node(0),
+    _time_integrator(nullptr)
 {
 }
 
@@ -101,7 +105,12 @@ SystemBase::getVariable(THREAD_ID tid, const std::string & var_name)
 {
   MooseVariableFEBase * var = dynamic_cast<MooseVariableFEBase *>(_vars[tid].getVariable(var_name));
   if (!var)
-    mooseError("Variable '" + var_name + "' does not exist in this system");
+  {
+    std::stringstream errMsg;
+    errMsg << "Variable '" << var_name << "' does not exist in this system" << std::endl;
+    throw std::runtime_error(errMsg.str().c_str());
+    // mooseError("Variable '" + var_name + "' does not exist in this system");
+  }
   return *var;
 }
 
@@ -111,7 +120,13 @@ SystemBase::getVariable(THREAD_ID tid, unsigned int var_number)
   MooseVariableFEBase * var =
       dynamic_cast<MooseVariableFEBase *>(_vars[tid].getVariable(var_number));
   if (!var)
-    mooseError("variable #" + Moose::stringify(var_number) + " does not exist in this system");
+  {
+    std::stringstream errMsg;
+    errMsg << "Variable '" << Moose::stringify(var_number) << "' does not exist in this system"
+           << std::endl;
+    throw std::runtime_error(errMsg.str().c_str());
+    // mooseError("variable #" + Moose::stringify(var_number) + " does not exist in this system");
+  }
   return *var;
 }
 
@@ -959,6 +974,18 @@ SystemBase::restoreSolutions()
   if (solutionPreviousNewton())
     *solutionPreviousNewton() = solutionOld();
   system().update();
+}
+
+void
+SystemBase::removeVector(const std::string & name)
+{
+  system().remove_vector(name);
+}
+
+const std::string &
+SystemBase::name() const
+{
+  return system().name();
 }
 
 template MooseVariableFE<Real> & SystemBase::getFieldVariable<Real>(THREAD_ID tid,

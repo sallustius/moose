@@ -12,8 +12,14 @@
 
 #include "MooseVariableBase.h"
 
-#include "libmesh/dense_vector.h"
-#include "libmesh/numeric_vector.h"
+namespace libMesh
+{
+template <typename>
+class DenseVector;
+template <typename>
+class NumericVector;
+class Point;
+}
 
 class Assembly;
 

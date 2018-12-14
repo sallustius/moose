@@ -39,6 +39,13 @@ CrankNicolson::computeTimeDerivatives()
 }
 
 void
+CrankNicolson::computeADTimeDerivatives(ADReal & ad_u_dot, const dof_id_type & dof)
+{
+  ad_u_dot -= _solution_old(dof);
+  ad_u_dot *= 2. / _dt;
+}
+
+void
 CrankNicolson::init()
 {
   // time derivative is assumed to be zero on initial

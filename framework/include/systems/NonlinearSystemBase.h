@@ -114,8 +114,10 @@ public:
    * @param name The name of the integrator
    * @param parameters Integrator params
    */
-  void
-  addTimeIntegrator(const std::string & type, const std::string & name, InputParameters parameters);
+  void addTimeIntegrator(const std::string & type,
+                         const std::string & name,
+                         InputParameters parameters) override;
+  using SystemBase::addTimeIntegrator;
 
   /**
    * Adds a kernel
@@ -491,8 +493,6 @@ public:
   void setPredictor(std::shared_ptr<Predictor> predictor);
   Predictor * getPredictor() { return _predictor.get(); }
 
-  TimeIntegrator * getTimeIntegrator() { return _time_integrator.get(); }
-
   void setPCSide(MooseEnum pcs);
 
   Moose::PCSideType getPCSide() { return _pc_side; }
@@ -523,6 +523,10 @@ public:
    * Access functions to Warehouses from outside NonlinearSystemBase
    */
   MooseObjectTagWarehouse<KernelBase> & getKernelWarehouse() { return _kernels; }
+  MooseObjectTagWarehouse<KernelBase> & getADJacobianKernelWarehouse()
+  {
+    return _ad_jacobian_kernels;
+  }
   MooseObjectTagWarehouse<DGKernel> & getDGKernelWarehouse() { return _dg_kernels; }
   MooseObjectTagWarehouse<InterfaceKernel> & getInterfaceKernelWarehouse()
   {
@@ -636,9 +640,6 @@ protected:
   /// Copy of the residual vector
   NumericVector<Number> & _residual_copy;
 
-  /// Time integrator
-  std::shared_ptr<TimeIntegrator> _time_integrator;
-
   /// solution vector for u^dot
   NumericVector<Number> * _u_dot;
   /// \f$ {du^dot}\over{du} \f$
@@ -673,6 +674,7 @@ protected:
   ///@{
   /// Kernel Storage
   MooseObjectTagWarehouse<KernelBase> _kernels;
+  MooseObjectTagWarehouse<KernelBase> _ad_jacobian_kernels;
   MooseObjectTagWarehouse<ScalarKernel> _scalar_kernels;
   MooseObjectTagWarehouse<DGKernel> _dg_kernels;
   MooseObjectTagWarehouse<InterfaceKernel> _interface_kernels;

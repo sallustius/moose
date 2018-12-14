@@ -1,12 +1,15 @@
 #ifndef MOOSEADWRAPPER_H
 #define MOOSEADWRAPPER_H
 
-#include "MooseTypes.h"
-#include "MooseError.h"
+#include "metaphysicl/dualnumber.h"
+#include "metaphysicl/numberarray.h"
 
 #include "libmesh/dense_matrix.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
+
+#include "MooseError.h"
+#include "ADReal.h"
 
 #include <typeinfo>
 
@@ -53,7 +56,7 @@ template <>
 class MooseADWrapper<Real>
 {
 public:
-  MooseADWrapper() : _val(), _dual_number() {}
+  MooseADWrapper() : _val(), _dual_number(0) {}
 
   typedef ADReal DNType;
 
@@ -77,7 +80,7 @@ template <>
 class MooseADWrapper<libMesh::VectorValue<Real>>
 {
 public:
-  MooseADWrapper() : _val(), _dual_number() {}
+  MooseADWrapper() : _val(), _dual_number(0) {}
 
   typedef libMesh::VectorValue<ADReal> DNType;
 
@@ -109,7 +112,7 @@ template <>
 class MooseADWrapper<libMesh::TensorValue<Real>>
 {
 public:
-  MooseADWrapper() : _val(), _dual_number() {}
+  MooseADWrapper() : _val(), _dual_number(0) {}
 
   typedef libMesh::TensorValue<ADReal> DNType;
 

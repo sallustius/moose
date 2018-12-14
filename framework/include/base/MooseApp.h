@@ -25,6 +25,10 @@
 #include "libmesh/parallel_object.h"
 #include "libmesh/mesh_base.h"
 
+// have to wrap DualNumber around Point because we may try to instantiate a TypeVector<ADReal> later
+#include "metaphysicl/dualnumber_decl.h"
+#include "libmesh/point.h"
+
 // C++ includes
 #include <list>
 #include <map>
