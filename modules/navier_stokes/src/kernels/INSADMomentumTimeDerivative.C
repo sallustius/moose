@@ -16,6 +16,10 @@ defineADValidParams(
     ADTimeKernel,
     params.addClassDescription("This class computes the time derivative for the incompressible "
                                "Navier-Stokes momentum equation.");
+    params.addCoupledVar("temperature",
+                         "The temperature on which material properties may depend. If properties "
+                         "do depend on temperature, this variable must be coupled in in order to "
+                         "correctly resize the element matrix");
     params.addParam<MaterialPropertyName>("rho_name", "rho", "density name"););
 
 template <ComputeStage compute_stage>

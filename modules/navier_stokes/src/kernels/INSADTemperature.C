@@ -16,13 +16,7 @@ defineADValidParams(INSADTemperature,
                     params.addClassDescription(
                         "This class computes the residual and Jacobian contributions for the "
                         "incompressible Navier-Stokes temperature (energy) equation.");
-                    // Coupled variables
-                    params.addRequiredCoupledVar("u", "x-velocity");
-                    params.addCoupledVar("v", 0, "y-velocity"); // only required in 2D and 3D
-                    params.addCoupledVar("w", 0, "z-velocity"); // only required in 3D
 
-                    // Optional parameters
-                    params.addParam<MaterialPropertyName>("rho_name", "rho", "density name");
                     params.addParam<MaterialPropertyName>("k_name",
                                                           "k",
                                                           "thermal conductivity name");

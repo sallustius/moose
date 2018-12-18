@@ -21,6 +21,10 @@ defineADValidParams(
     params.addCoupledVar("v", 0, "y-velocity"); // only required in 2D and 3D
     params.addCoupledVar("w", 0, "z-velocity"); // only required in 3D
     params.addRequiredCoupledVar("p", "pressure");
+    params.addCoupledVar("temperature",
+                         "The temperature on which material properties may depend. If properties "
+                         "do depend on temperature, this variable must be coupled in in order to "
+                         "correctly resize the element matrix");
 
     params.addParam<RealVectorValue>("gravity",
                                      RealVectorValue(0, 0, 0),
