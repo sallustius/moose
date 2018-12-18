@@ -246,6 +246,9 @@ public:
     return _current_JxW_face;
   }
 
+  template <ComputeStage compute_stage>
+  const MooseArray<typename Moose::RealType<compute_stage>::type> & adCurvatures() const;
+
   /**
    * Returns the reference to the coordinate transformation coefficients
    * @return A _reference_.  Make sure to store this as a reference!
@@ -1421,9 +1424,12 @@ protected:
   std::vector<std::vector<numeric_index_type>> _cached_jacobian_contribution_cols;
 
   /// AD quantities
-  std::vector<libMesh::VectorValue<ADReal>> _ad_dxyzdxi_map;
-  std::vector<libMesh::VectorValue<ADReal>> _ad_dxyzdeta_map;
-  std::vector<libMesh::VectorValue<ADReal>> _ad_dxyzdzeta_map;
+  std::vector<VectorValue<ADReal>> _ad_dxyzdxi_map;
+  std::vector<VectorValue<ADReal>> _ad_dxyzdeta_map;
+  std::vector<VectorValue<ADReal>> _ad_dxyzdzeta_map;
+  std::vector<VectorValue<ADReal>> _ad_d2xyzdxi2_map;
+  std::vector<VectorValue<ADReal>> _ad_d2xyzdxideta_map;
+  std::vector<VectorValue<ADReal>> _ad_d2xyzdeta2_map;
   std::vector<ADReal> _ad_jac;
   MooseArray<ADReal> _ad_JxW;
   std::vector<ADReal> _ad_dxidx_map;
@@ -1439,11 +1445,68 @@ protected:
   MooseArray<ADReal> _ad_JxW_face;
   MooseArray<VectorValue<ADReal>> _ad_normals;
   MooseArray<VectorValue<ADReal>> _ad_q_points_face;
+  MooseArray<Real> _curvatures;
+  MooseArray<ADReal> _ad_curvatures;
 
   std::vector<unsigned> _displacements;
 
   bool _calculate_face_xyz;
+  mutable bool _calculate_curvatures;
 };
+
+template <>
+inline const typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &
+Assembly::feADGradPhi<RealVectorValue>(FEType type)
+{
+  return _ad_vector_grad_phi_data[type];
+}
+
+template <>
+inline const typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &
+Assembly::feADGradPhiFace<RealVectorValue>(FEType type)
+{
+  return _ad_vector_grad_phi_data_face[type];
+}
+
+template <>
+inline void
+Assembly::computeGradPhiAD<RealVectorValue>(
+    const Elem *,
+    unsigned int,
+    typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &,
+    FEGenericBase<RealVectorValue> *)
+{
+  mooseError("Not implemented");
+}
+
+template <>
+inline const MooseArray<typename Moose::RealType<ComputeStage::JACOBIAN>::type> &
+Assembly::adCurvatures<ComputeStage::JACOBIAN>() const
+{
+  _calculate_curvatures = true;
+  return _ad_curvatures;
+}
+
+template <>
+inline const MooseArray<VectorValue<ADReal>> &
+Assembly::adNormals<ComputeStage::JACOBIAN>() const
+{
+  return _ad_normals;
+}
+
+template <>
+inline const typename PointType<ComputeStage::JACOBIAN>::type &
+Assembly::adQPointsFace<ComputeStage::JACOBIAN>() const
+{
+  return _ad_q_points_face;
+}
+
+template <>
+inline const MooseArray<ADReal> &
+Assembly::adJxWFace<ComputeStage::JACOBIAN>() const
+{
+  return _ad_JxW_face;
+}
 
 template <>
 const typename OutputTools<VectorValue<Real>>::VariablePhiValue &
@@ -1519,51 +1582,5 @@ Assembly::adGradPhi<ComputeStage::JACOBIAN>(const MooseVariableFE<RealVectorValu
 
 template <>
 const MooseArray<typename Moose::RealType<RESIDUAL>::type> & Assembly::adJxW<RESIDUAL>() const;
-
-template <>
-inline const typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &
-Assembly::feADGradPhi<RealVectorValue>(FEType type)
-{
-  return _ad_vector_grad_phi_data[type];
-}
-
-template <>
-inline const typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &
-Assembly::feADGradPhiFace<RealVectorValue>(FEType type)
-{
-  return _ad_vector_grad_phi_data_face[type];
-}
-
-template <>
-inline void
-Assembly::computeGradPhiAD<RealVectorValue>(
-    const Elem *,
-    unsigned int,
-    typename VariableTestGradientType<ComputeStage::JACOBIAN, RealVectorValue>::type &,
-    FEGenericBase<RealVectorValue> *)
-{
-  mooseError("Not implemented");
-}
-
-template <>
-inline const MooseArray<VectorValue<ADReal>> &
-Assembly::adNormals<ComputeStage::JACOBIAN>() const
-{
-  return _ad_normals;
-}
-
-template <>
-inline const typename PointType<ComputeStage::JACOBIAN>::type &
-Assembly::adQPointsFace<ComputeStage::JACOBIAN>() const
-{
-  return _ad_q_points_face;
-}
-
-template <>
-inline const MooseArray<ADReal> &
-Assembly::adJxWFace<ComputeStage::JACOBIAN>() const
-{
-  return _ad_JxW_face;
-}
 
 #endif /* ASSEMBLY_H */

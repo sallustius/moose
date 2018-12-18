@@ -73,7 +73,8 @@ Assembly::Assembly(SystemBase & sys, THREAD_ID tid)
     _max_cached_residuals(0),
     _max_cached_jacobians(0),
     _block_diagonal_matrix(false),
-    _calculate_face_xyz(true)
+    _calculate_face_xyz(true),
+    _calculate_curvatures(false)
 {
   // Build fe's for the helpers
   buildFE(FEType(FIRST, LAGRANGE));
@@ -194,6 +195,7 @@ Assembly::~Assembly()
   _ad_JxW_face.release();
   _ad_normals.release();
   _ad_q_points_face.release();
+  _ad_curvatures.release();
 }
 
 void
@@ -947,6 +949,9 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
       const_cast<std::vector<Real> &>((*_holder_fe_face_helper[dim])->get_JxW()));
   _current_normals.shallowCopy(
       const_cast<std::vector<Point> &>((*_holder_fe_face_helper[dim])->get_normals()));
+  if (_calculate_curvatures)
+    _curvatures.shallowCopy(
+        const_cast<std::vector<Real> &>((*_holder_fe_face_helper[dim])->get_curvatures()));
 
   if (_computing_jacobian)
   {
@@ -955,7 +960,10 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
     auto n_qp = _current_qrule_face->n_points();
     _ad_normals.resize(n_qp);
     _ad_JxW_face.resize(n_qp);
-    _ad_q_points_face.resize(n_qp);
+    if (_calculate_face_xyz)
+      _ad_q_points_face.resize(n_qp);
+    if (_calculate_curvatures)
+      _ad_curvatures.resize(n_qp);
 
     if (_displaced)
     {
@@ -971,6 +979,8 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
         _ad_JxW_face[qp] = _current_JxW_face[qp];
         _ad_q_points_face[qp] = _current_q_points_face[qp];
         _ad_normals[qp] = _current_normals[qp];
+        if (_calculate_curvatures)
+          _ad_curvatures[qp] = _curvatures[qp];
       }
 
     for (const auto & it : _fe_face[dim])
@@ -1028,6 +1038,15 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
   const auto & dpsidxi_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_dpsidxi();
   const auto & dpsideta_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_dpsideta();
   const auto & psi_map = (*_holder_fe_face_helper[dim])->get_fe_map().get_psi();
+  std::vector<std::vector<Real>> const * d2psidxi2_map = nullptr;
+  std::vector<std::vector<Real>> const * d2psidxideta_map = nullptr;
+  std::vector<std::vector<Real>> const * d2psideta2_map = nullptr;
+  if (_calculate_curvatures)
+  {
+    d2psidxi2_map = &(*_holder_fe_face_helper[dim])->get_fe_map().get_d2psidxi2();
+    d2psidxideta_map = &(*_holder_fe_face_helper[dim])->get_fe_map().get_d2psidxideta();
+    d2psideta2_map = &(*_holder_fe_face_helper[dim])->get_fe_map().get_d2psideta2();
+  }
 
   switch (dim)
   {
@@ -1071,12 +1090,16 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
     case 2:
     {
       _ad_dxyzdxi_map.resize(n_qp);
+      if (_calculate_curvatures)
+        _ad_d2xyzdxi2_map.resize(n_qp);
 
       for (unsigned int p = 0; p < n_qp; p++)
       {
         _ad_dxyzdxi_map[p].zero();
         if (_calculate_face_xyz)
           _ad_q_points_face[p].zero();
+        if (_calculate_curvatures)
+          _ad_d2xyzdxi2_map[p].zero();
       }
 
       const auto n_mapping_shape_functions =
@@ -1097,6 +1120,8 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
           _ad_dxyzdxi_map[p].add_scaled(side_point, dpsidxi_map[i][p]);
           if (_calculate_face_xyz)
             _ad_q_points_face[p].add_scaled(side_point, psi_map[i][p]);
+          if (_calculate_curvatures)
+            _ad_d2xyzdxi2_map[p].add_scaled(side_point, (*d2psidxi2_map)[i][p]);
         }
       }
 
@@ -1106,6 +1131,13 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
             (VectorValue<ADReal>(_ad_dxyzdxi_map[p](1), -_ad_dxyzdxi_map[p](0), 0.)).unit();
         const auto the_jac = _ad_dxyzdxi_map[p].norm();
         _ad_JxW_face[p] = the_jac * qw[p];
+        if (_calculate_curvatures)
+        {
+          const auto numerator = _ad_d2xyzdxi2_map[p] * _ad_normals[p];
+          const auto denominator = _ad_dxyzdxi_map[p].norm_sq();
+          libmesh_assert_not_equal_to(denominator, 0);
+          _ad_curvatures[p] = numerator / denominator;
+        }
       }
 
       break;
@@ -1115,6 +1147,12 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
     {
       _ad_dxyzdxi_map.resize(n_qp);
       _ad_dxyzdeta_map.resize(n_qp);
+      if (_calculate_curvatures)
+      {
+        _ad_d2xyzdxi2_map.resize(n_qp);
+        _ad_d2xyzdxideta_map.resize(n_qp);
+        _ad_d2xyzdeta2_map.resize(n_qp);
+      }
 
       for (unsigned int p = 0; p < n_qp; p++)
       {
@@ -1122,6 +1160,12 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
         _ad_dxyzdeta_map[p].zero();
         if (_calculate_face_xyz)
           _ad_q_points_face[p].zero();
+        if (_calculate_curvatures)
+        {
+          _ad_d2xyzdxi2_map[p].zero();
+          _ad_d2xyzdxideta_map[p].zero();
+          _ad_d2xyzdeta2_map[p].zero();
+        }
       }
 
       const unsigned int n_mapping_shape_functions =
@@ -1143,6 +1187,12 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
           _ad_dxyzdeta_map[p].add_scaled(side_point, dpsideta_map[i][p]);
           if (_calculate_face_xyz)
             _ad_q_points_face[p].add_scaled(side_point, psi_map[i][p]);
+          if (_calculate_curvatures)
+          {
+            _ad_d2xyzdxi2_map[p].add_scaled(side_point, (*d2psidxi2_map)[i][p]);
+            _ad_d2xyzdxideta_map[p].add_scaled(side_point, (*d2psidxideta_map)[i][p]);
+            _ad_d2xyzdeta2_map[p].add_scaled(side_point, (*d2psideta2_map)[i][p]);
+          }
         }
       }
 
@@ -1165,6 +1215,21 @@ Assembly::computeFaceMap(unsigned dim, const std::vector<Real> & qw, const Elem 
         const auto the_jac = std::sqrt(g11 * g22 - g12 * g21);
 
         _ad_JxW_face[p] = the_jac * qw[p];
+
+        if (_calculate_curvatures)
+        {
+          const auto L = -_ad_d2xyzdxi2_map[p] * _ad_normals[p];
+          const auto M = -_ad_d2xyzdxideta_map[p] * _ad_normals[p];
+          const auto N = -_ad_d2xyzdeta2_map[p] * _ad_normals[p];
+          const auto E = _ad_dxyzdxi_map[p].norm_sq();
+          const auto F = _ad_dxyzdxi_map[p] * _ad_dxyzdeta_map[p];
+          const auto G = _ad_dxyzdeta_map[p].norm_sq();
+
+          const auto numerator = E * N - 2. * F * M + G * L;
+          const auto denominator = E * G - F * F;
+          libmesh_assert_not_equal_to(denominator, 0.);
+          _ad_curvatures[p] = 0.5 * numerator / denominator;
+        }
       }
 
       break;
@@ -3062,6 +3127,19 @@ Assembly::adJxW<RESIDUAL>() const
 {
   return _current_JxW;
 }
+
+template <ComputeStage compute_stage>
+const MooseArray<typename Moose::RealType<compute_stage>::type> &
+Assembly::adCurvatures() const
+{
+  _calculate_curvatures = true;
+  for (unsigned int dim = 0; dim <= _mesh_dimension; dim++)
+    (*_holder_fe_face_helper.at(dim))->get_curvatures();
+  return _curvatures;
+}
+
+template const MooseArray<typename Moose::RealType<RESIDUAL>::type> &
+Assembly::adCurvatures<RESIDUAL>() const;
 
 template void Assembly::computeGradPhiAD<Real>(
     const Elem * elem,
