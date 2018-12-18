@@ -28,7 +28,9 @@ protected:
 
   usingIntegratedBCMembers;
 
+  const ADVariableValue & _curvatures;
   const unsigned _component;
+  const ADMaterialProperty(Real) & _surface_tension;
   const ADMaterialProperty(RealVectorValue) & _grad_surface_tension;
 };
 
