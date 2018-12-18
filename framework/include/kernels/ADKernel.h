@@ -77,7 +77,8 @@ declareADValidParams(ADVectorKernel);
   using ADKernelTempl<type, compute_stage>::_displacements;                                        \
   using ADKernelTempl<type, compute_stage>::beforeTestLoop;                                        \
   using ADKernelTempl<type, compute_stage>::beforeQpLoop;                                          \
-  using ADKernelTempl<type, compute_stage>::getFunction
+  using ADKernelTempl<type, compute_stage>::getFunction;                                           \
+  using ADKernelTempl<type, compute_stage>::isCoupled
 
 #define usingKernelMembers usingTemplKernelMembers(Real)
 #define usingVectorKernelMembers usingTemplKernelMembers(RealVectorValue)

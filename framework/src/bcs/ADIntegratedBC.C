@@ -168,9 +168,11 @@ ADIntegratedBCTempl<T, compute_stage>::computeJacobianBlock(MooseVariableFEBase 
     computeJacobian();
   else
   {
-    size_t ad_offset = jvar_num * _sys.getMaxVarNDofsPerElem();
-
     DenseMatrix<Number> & ke = _assembly.jacobianBlock(_var.number(), jvar_num);
+    if (jvar.phiFaceSize() != ke.n())
+      return;
+
+    size_t ad_offset = jvar_num * _sys.getMaxVarNDofsPerElem();
 
     for (_i = 0; _i < _test.size(); _i++)
       for (_qp = 0; _qp < _qrule->n_points(); _qp++)
