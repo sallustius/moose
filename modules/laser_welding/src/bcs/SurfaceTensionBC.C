@@ -12,16 +12,16 @@
 
 registerADMooseObject("LaserWeldingApp", SurfaceTensionBC);
 
-defineADValidParams(SurfaceTensionBC,
-                    ADIntegratedBC,
-                    params.addClassDescription("Surface tension stresses.");
-                    params.addRequiredParam<unsigned>("component", "The velocity component");
-                    params.addParam<MaterialPropertyName>("surface_tension_name",
-                                                          "surface_tension",
-                                                          "The surface tension");
-                    params.addParam<MaterialPropertyName>("grad_surface_tension_name",
-                                                          "grad_surface_tension",
-                                                          "The gradient of the surface tension"););
+defineADValidParams(
+    SurfaceTensionBC, ADIntegratedBC, params.addClassDescription("Surface tension stresses.");
+    params.addRequiredParam<unsigned>("component", "The velocity component");
+    params.addParam<MaterialPropertyName>("surface_tension_name",
+                                          "surface_tension",
+                                          "The surface tension");
+    params.addParam<MaterialPropertyName>("grad_surface_tension_name",
+                                          "grad_surface_tension",
+                                          "The gradient of the surface tension");
+    params.addCoupledVar("temperature", "The temperature for dependence of surface tension"););
 
 template <ComputeStage compute_stage>
 SurfaceTensionBC<compute_stage>::SurfaceTensionBC(const InputParameters & parameters)

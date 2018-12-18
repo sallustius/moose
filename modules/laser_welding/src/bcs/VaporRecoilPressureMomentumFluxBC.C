@@ -11,13 +11,13 @@
 
 registerADMooseObject("LaserWeldingApp", VaporRecoilPressureMomentumFluxBC);
 
-defineADValidParams(VaporRecoilPressureMomentumFluxBC,
-                    ADIntegratedBC,
-                    params.addClassDescription("Vapor recoil pressure momentum flux");
-                    params.addRequiredParam<unsigned>("component", "The velocity component");
-                    params.addParam<MaterialPropertyName>("rc_pressure_name",
-                                                          "rc_pressure",
-                                                          "The recoil pressure"););
+defineADValidParams(
+    VaporRecoilPressureMomentumFluxBC,
+    ADIntegratedBC,
+    params.addClassDescription("Vapor recoil pressure momentum flux");
+    params.addRequiredParam<unsigned>("component", "The velocity component");
+    params.addParam<MaterialPropertyName>("rc_pressure_name", "rc_pressure", "The recoil pressure");
+    params.addCoupledVar("temperature", "The temperature on which the recoil pressure depends"););
 
 template <ComputeStage compute_stage>
 VaporRecoilPressureMomentumFluxBC<compute_stage>::VaporRecoilPressureMomentumFluxBC(
