@@ -28,10 +28,10 @@ protected:
 
   usingIntegratedBCMembers;
 
-  const ADVariableValue & _curvatures;
   const unsigned _component;
-  const ADMaterialProperty(Real) & _surface_tension;
-  const ADMaterialProperty(RealVectorValue) & _grad_surface_tension;
+  const ADMaterialProperty(RealVectorValue) & _surface_term_curvature;
+  const ADMaterialProperty(RealVectorValue) & _surface_term_gradient1;
+  const ADMaterialProperty(RealVectorValue) & _surface_term_gradient2;
 };
 
 #endif /* SURFACETENSIONBC_H */
