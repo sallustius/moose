@@ -76,35 +76,36 @@ Assembly::Assembly(SystemBase & sys, THREAD_ID tid)
     _calculate_face_xyz(true),
     _calculate_curvatures(false)
 {
+  Order helper_order = _mesh.hasSecondOrderElements() ? SECOND : FIRST;
   // Build fe's for the helpers
-  buildFE(FEType(FIRST, LAGRANGE));
-  buildFaceFE(FEType(FIRST, LAGRANGE));
-  buildNeighborFE(FEType(FIRST, LAGRANGE));
-  buildFaceNeighborFE(FEType(FIRST, LAGRANGE));
+  buildFE(FEType(helper_order, LAGRANGE));
+  buildFaceFE(FEType(helper_order, LAGRANGE));
+  buildNeighborFE(FEType(helper_order, LAGRANGE));
+  buildFaceNeighborFE(FEType(helper_order, LAGRANGE));
 
   // Build an FE helper object for this type for each dimension up to the dimension of the current
   // mesh
   for (unsigned int dim = 0; dim <= _mesh_dimension; dim++)
   {
-    _holder_fe_helper[dim] = &_fe[dim][FEType(FIRST, LAGRANGE)];
+    _holder_fe_helper[dim] = &_fe[dim][FEType(helper_order, LAGRANGE)];
     (*_holder_fe_helper[dim])->get_phi();
     (*_holder_fe_helper[dim])->get_dphi();
     (*_holder_fe_helper[dim])->get_xyz();
     (*_holder_fe_helper[dim])->get_JxW();
 
-    _holder_fe_face_helper[dim] = &_fe_face[dim][FEType(FIRST, LAGRANGE)];
+    _holder_fe_face_helper[dim] = &_fe_face[dim][FEType(helper_order, LAGRANGE)];
     (*_holder_fe_face_helper[dim])->get_phi();
     (*_holder_fe_face_helper[dim])->get_dphi();
     (*_holder_fe_face_helper[dim])->get_xyz();
     (*_holder_fe_face_helper[dim])->get_JxW();
     (*_holder_fe_face_helper[dim])->get_normals();
 
-    _holder_fe_face_neighbor_helper[dim] = &_fe_face_neighbor[dim][FEType(FIRST, LAGRANGE)];
+    _holder_fe_face_neighbor_helper[dim] = &_fe_face_neighbor[dim][FEType(helper_order, LAGRANGE)];
     (*_holder_fe_face_neighbor_helper[dim])->get_xyz();
     (*_holder_fe_face_neighbor_helper[dim])->get_JxW();
     (*_holder_fe_face_neighbor_helper[dim])->get_normals();
 
-    _holder_fe_neighbor_helper[dim] = &_fe_neighbor[dim][FEType(FIRST, LAGRANGE)];
+    _holder_fe_neighbor_helper[dim] = &_fe_neighbor[dim][FEType(helper_order, LAGRANGE)];
     (*_holder_fe_neighbor_helper[dim])->get_xyz();
     (*_holder_fe_neighbor_helper[dim])->get_JxW();
   }
