@@ -509,15 +509,16 @@ Assembly::reinitFE(const Elem * elem)
   {
     auto n_qp = _current_qrule->n_points();
     resizeMappingObjects(n_qp, dim);
+    _ad_JxW.resize(n_qp);
     if (_displaced)
     {
       const auto & qw = _current_qrule->get_weights();
       if (elem->has_affine_map())
-        computeAffineMapAD(elem, qw, n_qp);
+        computeAffineMapAD(elem, qw, n_qp, *_holder_fe_helper[dim]);
       else
       {
         for (unsigned int qp = 0; qp != n_qp; qp++)
-          computeSinglePointMapAD(elem, qw, qp);
+          computeSinglePointMapAD(elem, qw, qp, *_holder_fe_helper[dim]);
       }
     }
     else
@@ -668,13 +669,15 @@ Assembly::resizeMappingObjects(unsigned int n_qp, unsigned int dim)
   }
 
   _ad_jac.resize(n_qp);
-  _ad_JxW.resize(n_qp);
 }
 
 void
-Assembly::computeAffineMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned int n_qp)
+Assembly::computeAffineMapAD(const Elem * elem,
+                             const std::vector<Real> & qw,
+                             unsigned int n_qp,
+                             FEBase * fe)
 {
-  computeSinglePointMapAD(elem, qw, 0);
+  computeSinglePointMapAD(elem, qw, 0, fe);
 
   for (unsigned int p = 1; p < n_qp; p++) // for each extra quadrature point
   {
@@ -704,14 +707,17 @@ Assembly::computeAffineMapAD(const Elem * elem, const std::vector<Real> & qw, un
 }
 
 void
-Assembly::computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned p)
+Assembly::computeSinglePointMapAD(const Elem * elem,
+                                  const std::vector<Real> & qw,
+                                  unsigned p,
+                                  FEBase * fe)
 {
   auto dim = elem->dim();
   const auto & elem_nodes = elem->get_nodes();
-  auto num_shapes = (*_holder_fe_helper[dim])->n_shape_functions();
-  const auto & dphidxi_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphidxi_map();
-  const auto & dphideta_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphideta_map();
-  const auto & dphidzeta_map = (*_holder_fe_helper[dim])->get_fe_map().get_dphidzeta_map();
+  auto num_shapes = fe->n_shape_functions();
+  const auto & dphidxi_map = fe->get_fe_map().get_dphidxi_map();
+  const auto & dphideta_map = fe->get_fe_map().get_dphideta_map();
+  const auto & dphidzeta_map = fe->get_fe_map().get_dphidzeta_map();
 
   switch (dim)
   {
@@ -958,6 +964,7 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
     const std::unique_ptr<const Elem> side_elem(elem->build_side_ptr(side));
 
     auto n_qp = _current_qrule_face->n_points();
+    resizeMappingObjects(n_qp, dim);
     _ad_normals.resize(n_qp);
     _ad_JxW_face.resize(n_qp);
     if (_calculate_face_xyz)
@@ -969,6 +976,13 @@ Assembly::reinitFEFace(const Elem * elem, unsigned int side)
     {
       const auto & qw = _current_qrule_face->get_weights();
       computeFaceMap(dim, qw, side_elem.get());
+      std::vector<Real> dummy_qw(n_qp, 1.);
+      if (elem->has_affine_map())
+        computeAffineMapAD(elem, dummy_qw, n_qp, *_holder_fe_face_helper[dim]);
+      else
+        for (unsigned int qp = 0; qp != n_qp; qp++)
+          computeSinglePointMapAD(elem, dummy_qw, qp, *_holder_fe_face_helper[dim]);
+
       if (!_calculate_face_xyz)
         for (unsigned qp = 0; qp < n_qp; ++qp)
           _ad_q_points_face[qp] = _current_q_points_face[qp];

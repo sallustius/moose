@@ -1113,8 +1113,12 @@ protected:
       typename VariableTestGradientType<ComputeStage::JACOBIAN, OutputType>::type & grad_phi,
       FEGenericBase<OutputType> * fe);
   void resizeMappingObjects(unsigned int n_qp, unsigned int dim);
-  void computeAffineMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned int n_qp);
-  void computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned p);
+  void computeAffineMapAD(const Elem * elem,
+                          const std::vector<Real> & qw,
+                          unsigned int n_qp,
+                          FEBase * fe);
+  void
+  computeSinglePointMapAD(const Elem * elem, const std::vector<Real> & qw, unsigned p, FEBase * fe);
 
 protected:
   SystemBase & _sys;
