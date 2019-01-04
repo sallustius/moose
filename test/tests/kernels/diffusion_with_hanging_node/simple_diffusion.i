@@ -33,8 +33,8 @@
 []
 
 [Preconditioning]
-  [./fdp]
-    type = FDP
+  [./pre]
+    type = SMP
     full = true
   [../]
 []
@@ -42,7 +42,7 @@
 [Executioner]
   type = Steady
   solve_type = 'NEWTON'
-  petsc_options = '-pc_svd_monitor -ksp_view_pmat -snes_fd'
+  petsc_options = '-pc_svd_monitor -ksp_view_pmat'
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'svd'
 []
@@ -51,41 +51,12 @@
   exodus = true
 []
 
-[AuxVariables]
-  [./random]
-  [../]
-[]
-
-[ICs]
-  [./random]
-    type = RandomIC
-    variable = random
-  [../]
-[]
-
 [Adaptivity]
   marker = box
   max_h_level = 1
   initial_steps = 1
 
-  [./Indicators]
-    [./random_indicator]
-      type = ElementIntegralIndicator
-      variable = random
-    [../]
-  [../]
-
   [./Markers]
-    [./errorfrac_random]
-      type = ErrorFractionMarker
-      refine = 0.1
-      coarsen = 0
-      indicator = random_indicator
-    [../]
-    [./uniform]
-      type = UniformMarker
-      mark = 'refine'
-    [../]
     [./box]
       type = BoxMarker
       bottom_left = '0.5 0 0'
