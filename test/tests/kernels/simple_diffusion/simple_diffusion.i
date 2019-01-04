@@ -42,7 +42,7 @@
 [Executioner]
   type = Steady
   solve_type = 'NEWTON'
-  petsc_options = '-pc_svd_monitor -ksp_view_pmat'
+  petsc_options = '-pc_svd_monitor -ksp_view_pmat -snes_fd'
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'svd'
 []
