@@ -108,8 +108,7 @@
   l_tol = 1.0e-6
 
   nl_max_its = 15
-  nl_rel_tol = 1.0e-7
-  nl_abs_tol = 1.0e-10
+  nl_rel_tol = 1.0e-12
 
   num_steps = 2
   dt = 1

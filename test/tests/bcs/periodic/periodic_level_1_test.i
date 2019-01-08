@@ -69,6 +69,7 @@
   type = Transient
   dt = 2
   num_steps = 7
+  nl_rel_tol = 1e-12
 
   [./Adaptivity]
     refine_fraction = .80
