@@ -30,4 +30,10 @@
     prereq = 'test_fd_standard'
     cli_args = "-snes_mf_operator -pc_type asm"
   [../]
+  [./test_smp_jacobian]
+    type = PetscJacobianTester
+    input = 'simple_diffusion.i'
+    run_sim = True
+    cli_args = 'Outputs/exodus=false -snes_test_jacobian_view'
+  [../]
 []
