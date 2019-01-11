@@ -1,8 +1,8 @@
 #ifndef MOOSEADWRAPPER_H
 #define MOOSEADWRAPPER_H
 
-#include "metaphysicl/dualnumber.h"
 #include "metaphysicl/numberarray.h"
+#include "metaphysicl/dualnumber.h"
 
 #include "libmesh/dense_matrix.h"
 #include "libmesh/vector_value.h"
