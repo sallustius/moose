@@ -25,7 +25,7 @@ using libMesh::Real;
 using MetaPhysicL::DualNumber;
 using MetaPhysicL::NumberArray;
 
-#define AD_MAX_DOFS_PER_ELEM 216
+#define AD_MAX_DOFS_PER_ELEM 243
 
 typedef DualNumber<Real, NumberArray<AD_MAX_DOFS_PER_ELEM, Real>> ADReal;
 
