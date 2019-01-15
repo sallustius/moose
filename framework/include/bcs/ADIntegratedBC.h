@@ -38,12 +38,6 @@ protected:
   /// The variable that this IntegratedBC operates on
   MooseVariableFE<T> & _var;
 
-  /// normals at quadrature points
-  const typename PointType<compute_stage>::type & _normals;
-
-  /// (physical) quadrature points
-  const typename PointType<compute_stage>::type & _ad_q_points;
-
   // test functions
 
   /// test function values (in QPs)
@@ -55,9 +49,6 @@ protected:
   const ADTemplateVariableValue & _u;
   /// the gradient of the unknown variable this BC is acting on
   const ADTemplateVariableGradient & _grad_u;
-
-  /// The ad version of JxW
-  const MooseArray<typename Moose::RealType<compute_stage>::type> & _ad_JxW;
 };
 
 template <ComputeStage compute_stage>

@@ -100,9 +100,6 @@ protected:
 
   /// Holds the solution gradient at the current quadrature points
   const ADTemplateVariableGradient & _grad_u;
-
-  /// The ad version of JxW
-  const MooseArray<typename Moose::RealType<compute_stage>::type> & _ad_JxW;
 };
 
 #endif /* ADKERNEL_H */

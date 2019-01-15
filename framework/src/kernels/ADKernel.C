@@ -33,8 +33,7 @@ ADKernelTempl<T, compute_stage>::ADKernelTempl(const InputParameters & parameter
     _test(_var.phi()),
     _grad_test(_var.template adGradPhi<compute_stage>()),
     _u(_var.template adSln<compute_stage>()),
-    _grad_u(_var.template adGradSln<compute_stage>()),
-    _ad_JxW(_assembly.adJxW<compute_stage>())
+    _grad_u(_var.template adGradSln<compute_stage>())
 {
   addMooseVariableDependency(this->mooseVariable());
   _save_in.resize(_save_in_strings.size());
@@ -95,7 +94,7 @@ ADKernelTempl<T, compute_stage>::computeResidual()
   precalculateResidual();
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-      _local_re(_i) += _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
+      _local_re(_i) += _JxW[_qp] * _coord[_qp] * computeQpResidual();
 
   accumulateTaggedLocalResidual();
 
@@ -131,7 +130,7 @@ ADKernelTempl<T, compute_stage>::computeJacobian()
   for (_i = 0; _i < _test.size(); _i++)
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     {
-      ADReal residual = _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
+      ADReal residual = _JxW[_qp] * _coord[_qp] * computeQpResidual();
       for (_j = 0; _j < _var.phiSize(); _j++)
         _local_ke(_i, _j) += residual.derivatives()[ad_offset + _j];
     }
@@ -176,7 +175,7 @@ ADKernelTempl<T, compute_stage>::computeADOffDiagJacobian()
 
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     for (_i = 0; _i < _test.size(); _i++)
-      residuals[_i] += _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
+      residuals[_i] += _JxW[_qp] * _coord[_qp] * computeQpResidual();
 
   std::vector<std::pair<MooseVariableFEBase *, MooseVariableFEBase *>> & ce =
       _assembly.couplingEntries();
