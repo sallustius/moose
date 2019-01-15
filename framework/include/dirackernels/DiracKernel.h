@@ -10,6 +10,8 @@
 #ifndef DIRACKERNEL_H
 #define DIRACKERNEL_H
 
+#include "metaphysicl/dualnumber_decl.h"
+
 // MOOSE includes
 #include "DiracKernelInfo.h"
 #include "MooseObject.h"
