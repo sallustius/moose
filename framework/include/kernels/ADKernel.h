@@ -12,54 +12,75 @@
 
 #include "KernelBase.h"
 
-#define usingKernelMembers                                                                         \
-  using ADKernel<compute_stage>::_test;                                                            \
-  using ADKernel<compute_stage>::_qp;                                                              \
-  using ADKernel<compute_stage>::_i;                                                               \
-  using ADKernel<compute_stage>::_u;                                                               \
-  using ADKernel<compute_stage>::_var;                                                             \
-  using ADKernel<compute_stage>::_grad_test;                                                       \
-  using ADKernel<compute_stage>::_grad_u
-
-template <ComputeStage compute_stage>
-class ADKernel;
-
-declareADValidParams(ADKernel);
-
-template <ComputeStage compute_stage>
-class ADKernel : public KernelBase, public MooseVariableInterface<Real>
+template <typename T, ComputeStage compute_stage>
+class ADKernelTempl : public KernelBase, public MooseVariableInterface<T>
 {
 public:
-  ADKernel(const InputParameters & parameters);
+  ADKernelTempl(const InputParameters & parameters);
 
-  virtual ~ADKernel();
+  virtual ~ADKernelTempl();
 
   // See KernelBase base for documentation of these overridden methods
   virtual void computeResidual() override;
   virtual void computeJacobian() override;
   virtual void computeOffDiagJacobian(MooseVariableFEBase & jvar) override;
+  virtual void computeADOffDiagJacobian() override;
   virtual void computeOffDiagJacobianScalar(unsigned int jvar) override;
+  virtual void beforeTestLoop() {}
+  virtual void beforeQpLoop() {}
 
-  virtual MooseVariable & variable() override { return _var; }
+  virtual MooseVariableFE<T> & variable() override { return _var; }
 
 protected:
   /// Compute this Kernel's contribution to the residual at the current quadrature point
   virtual ADResidual computeQpResidual() = 0;
 
   /// This is a regular kernel so we cast to a regular MooseVariable
-  MooseVariable & _var;
+  MooseVariableFE<T> & _var;
 
   /// the current test function
-  const ADVariableTestValue & _test;
+  const ADTemplateVariableTestValue & _test;
 
   /// gradient of the test function
-  const ADVariableTestGradient & _grad_test;
+  const typename VariableTestGradientType<compute_stage, T>::type & _grad_test;
 
   /// Holds the solution at current quadrature points
-  const ADVariableValue & _u;
+  const ADTemplateVariableValue & _u;
 
   /// Holds the solution gradient at the current quadrature points
-  const ADVariableGradient & _grad_u;
+  const ADTemplateVariableGradient & _grad_u;
+
+  /// The ad version of JxW
+  const MooseArray<typename Moose::RealType<compute_stage>::type> & _ad_JxW;
 };
+
+template <ComputeStage compute_stage>
+using ADKernel = ADKernelTempl<Real, compute_stage>;
+template <ComputeStage compute_stage>
+using ADVectorKernel = ADKernelTempl<RealVectorValue, compute_stage>;
+
+declareADValidParams(ADKernel);
+declareADValidParams(ADVectorKernel);
+
+#define usingTemplKernelMembers(type)                                                              \
+  using ADKernelTempl<type, compute_stage>::_test;                                                 \
+  using ADKernelTempl<type, compute_stage>::_qp;                                                   \
+  using ADKernelTempl<type, compute_stage>::_i;                                                    \
+  using ADKernelTempl<type, compute_stage>::_u;                                                    \
+  using ADKernelTempl<type, compute_stage>::_var;                                                  \
+  using ADKernelTempl<type, compute_stage>::_grad_test;                                            \
+  using ADKernelTempl<type, compute_stage>::_grad_u;                                               \
+  using ADKernelTempl<type, compute_stage>::_dt;                                                   \
+  using ADKernelTempl<type, compute_stage>::_current_elem;                                         \
+  using ADKernelTempl<type, compute_stage>::_t;                                                    \
+  using ADKernelTempl<type, compute_stage>::_q_point;                                              \
+  using ADKernelTempl<type, compute_stage>::_displacements;                                        \
+  using ADKernelTempl<type, compute_stage>::beforeTestLoop;                                        \
+  using ADKernelTempl<type, compute_stage>::beforeQpLoop;                                          \
+  using ADKernelTempl<type, compute_stage>::getFunction;                                           \
+  using ADKernelTempl<type, compute_stage>::isCoupled
+
+#define usingKernelMembers usingTemplKernelMembers(Real)
+#define usingVectorKernelMembers usingTemplKernelMembers(RealVectorValue)
 
 #endif /* ADKERNEL_H */
