@@ -174,13 +174,9 @@ ADKernelTempl<T, compute_stage>::computeADOffDiagJacobian()
 {
   std::vector<ADReal> residuals(_test.size(), 0);
 
-  beforeQpLoop();
   for (_qp = 0; _qp < _qrule->n_points(); _qp++)
-  {
-    beforeTestLoop();
     for (_i = 0; _i < _test.size(); _i++)
       residuals[_i] += _ad_JxW[_qp] * _coord[_qp] * computeQpResidual();
-  }
 
   std::vector<std::pair<MooseVariableFEBase *, MooseVariableFEBase *>> & ce =
       _assembly.couplingEntries();
