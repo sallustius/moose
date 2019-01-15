@@ -13,6 +13,8 @@
 #include "PenetrationInfo.h"
 
 // libMesh
+#include "metaphysicl/dualnumber_decl.h"
+#include "libmesh/fe_base.h"
 #include "libmesh/boundary_info.h"
 #include "libmesh/elem.h"
 #include "libmesh/plane.h"

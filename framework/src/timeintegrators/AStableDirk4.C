@@ -91,6 +91,14 @@ AStableDirk4::computeTimeDerivatives()
 }
 
 void
+AStableDirk4::computeADTimeDerivatives(ADReal & ad_u_dot, const dof_id_type & dof)
+{
+  const auto & local_old = _solution_old(dof);
+  ad_u_dot -= local_old;
+  ad_u_dot *= 1. / _dt;
+}
+
+void
 AStableDirk4::solve()
 {
   // Reset iteration counts

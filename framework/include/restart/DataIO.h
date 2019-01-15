@@ -11,20 +11,16 @@
 #define DATAIO_H
 
 // MOOSE includes
+#include "ADReal.h"
 #include "MooseTypes.h"
-#include "MooseADWrapper.h"
 #include "HashMap.h"
 #include "MooseError.h"
 #include "Backup.h"
 
-#include "libmesh/vector_value.h"
-#include "libmesh/tensor_value.h"
 #include "libmesh/parallel.h"
 #ifdef LIBMESH_HAVE_CXX11_TYPE_TRAITS
 #include <type_traits>
 #endif
-#include "metaphysicl/dualnumber.h"
-#include "metaphysicl/numberarray.h"
 
 // C++ includes
 #include <string>
@@ -39,6 +35,9 @@
 class ColumnMajorMatrix;
 class RankTwoTensor;
 class RankFourTensor;
+template <typename>
+class MooseADWrapper;
+
 namespace libMesh
 {
 template <typename T>
@@ -47,7 +46,12 @@ template <typename T>
 class DenseMatrix;
 template <typename T>
 class DenseVector;
+template <typename T>
+class VectorValue;
+template <typename T>
+class TensorValue;
 class Elem;
+class Point;
 }
 
 /**
@@ -160,7 +164,7 @@ dataStore(std::ostream & stream, T & v, void * /*context*/)
                 "Cannot serialize a class that has virtual "
                 "members!\nWrite a custom dataStore() "
                 "template specialization!\n\n");
-  static_assert(std::is_trivially_copyable<T>::value || std::is_same<T, Point>::value,
+  static_assert(std::is_trivially_copyable<T>::value,
                 "Cannot serialize a class that is not trivially copyable!\nWrite a custom "
                 "dataStore() template specialization!\n\n");
 #endif
@@ -177,6 +181,8 @@ dataStore(std::ostream & /*stream*/, T *& /*v*/, void * /*context*/)
              demangle(typeid(T).name()),
              " *\" as restartable data!\nWrite a custom dataStore() template specialization!\n\n");
 }
+
+void dataStore(std::ostream & stream, Point & p, void * context);
 
 template <typename T, typename U>
 inline void
@@ -339,13 +345,7 @@ void dataStore(std::ostream & stream, RankTwoTensor &, void *);
 template <>
 void dataStore(std::ostream & stream, RankFourTensor &, void *);
 
-inline void
-dataStore(std::ostream & stream, ADReal & dn, void * context)
-{
-  dataStore(stream, dn.value(), context);
-  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
-    dataStore(stream, dn.derivatives()[i], context);
-}
+void dataStore(std::ostream & stream, ADReal & dn, void * context);
 
 template <typename T>
 void
@@ -379,37 +379,13 @@ template <>
 void dataStore(std::ostream & stream, DenseMatrix<Real> & v, void * context);
 
 template <typename T>
-void
-dataStore(std::ostream & stream, TensorValue<T> & v, void * context)
-{
-  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
-    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
-    {
-      T r = v(i, j);
-      dataStore(stream, r, context);
-    }
-}
+void dataStore(std::ostream & stream, TensorValue<T> & v, void * context);
 
 template <typename T>
-void
-dataStore(std::ostream & stream, VectorValue<T> & v, void * context)
-{
-  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
-  // won't work.
-  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
-  {
-    T r = v(i);
-    dataStore(stream, r, context);
-  }
-}
+void dataStore(std::ostream & stream, VectorValue<T> & v, void * context);
 
 template <typename T>
-inline void
-dataStore(std::ostream & stream, MooseADWrapper<T> & dn_wrapper, void * context)
-{
-  dataStore(stream, dn_wrapper.value(), context);
-  dataStore(stream, dn_wrapper.dn(false), context);
-}
+void dataStore(std::ostream & stream, MooseADWrapper<T> & dn_wrapper, void * context);
 
 // DO NOT MODIFY THE NEXT LINE - It is used by MOOSEDocs
 // *************** Global Load Declarations *****************
@@ -583,14 +559,7 @@ void dataLoad(std::istream & stream, RankTwoTensor &, void *);
 template <>
 void dataLoad(std::istream & stream, RankFourTensor &, void *);
 
-inline void
-dataLoad(std::istream & stream, ADReal & dn, void * context)
-{
-  dataLoad(stream, dn.value(), context);
-
-  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
-    dataLoad(stream, dn.derivatives()[i], context);
-}
+inline void dataLoad(std::istream & stream, ADReal & dn, void * context);
 
 template <typename T>
 void
@@ -625,41 +594,13 @@ template <>
 void dataLoad(std::istream & stream, DenseMatrix<Real> & v, void * context);
 
 template <typename T>
-void
-dataLoad(std::istream & stream, TensorValue<T> & v, void * context)
-{
-  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
-  // won't work.
-  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
-    for (unsigned int j = 0; i < LIBMESH_DIM; i++)
-    {
-      T r = 0;
-      dataLoad(stream, r, context);
-      v(i, j) = r;
-    }
-}
+void dataLoad(std::istream & stream, TensorValue<T> & v, void * context);
 
 template <typename T>
-void
-dataLoad(std::istream & stream, VectorValue<T> & v, void * context)
-{
-  // Obviously if someone loads data with different LIBMESH_DIM than was used for saving them, it
-  // won't work.
-  for (unsigned int i = 0; i < LIBMESH_DIM; i++)
-  {
-    T r = 0;
-    dataLoad(stream, r, context);
-    v(i) = r;
-  }
-}
+void dataLoad(std::istream & stream, VectorValue<T> & v, void * context);
 
 template <typename T>
-inline void
-dataLoad(std::istream & stream, MooseADWrapper<T> & dn_wrapper, void * context)
-{
-  dataLoad(stream, dn_wrapper.value(), context);
-  dataLoad(stream, dn_wrapper.dn(false), context);
-}
+void dataLoad(std::istream & stream, MooseADWrapper<T> & dn_wrapper, void * context);
 
 // Scalar Helper Function
 template <typename P>
@@ -809,6 +750,8 @@ dataLoad(std::istream & stream, Backup *& backup, void * context)
   for (unsigned int i = 0; i < backup->_restartable_data.size(); i++)
     dataLoad(stream, backup->_restartable_data[i], context);
 }
+
+void dataLoad(std::istream & stream, Point & p, void * context);
 
 /**
  * The following methods are specializations for using the libMesh::Parallel::packed_range_*
