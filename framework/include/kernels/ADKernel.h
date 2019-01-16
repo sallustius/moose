@@ -15,6 +15,8 @@
 #include "metaphysicl/numberarray.h"
 #include "metaphysicl/dualnumber.h"
 
+#include "libmesh/compare_types.h"
+
 #define usingKernelMembers                                                                         \
   using ADKernel<compute_stage>::_test;                                                            \
   using ADKernel<compute_stage>::_qp;                                                              \

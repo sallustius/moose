@@ -15,6 +15,7 @@
 
 #include "libmesh/libmesh.h"
 #include "libmesh/tuple_of.h"
+#include "libmesh/compare_types.h"
 
 #include <petscsys.h>
 

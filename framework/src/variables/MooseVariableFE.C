@@ -10,6 +10,9 @@
 #include "MooseVariableFE.h"
 #include <typeinfo>
 
+#include "metaphysicl/numberarray.h"
+#include "metaphysicl/dualnumber.h"
+
 template <typename OutputType>
 MooseVariableFE<OutputType>::MooseVariableFE(unsigned int var_num,
                                              const FEType & fe_type,

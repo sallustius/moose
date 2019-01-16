@@ -10,8 +10,7 @@
 #ifndef ADREAL_H
 #define ADREAL_H
 
-#include "libmesh/libmesh_common.h"
-#include "libmesh/compare_types.h"
+#include "libmesh/libmesh_config.h"
 
 namespace MetaPhysicL
 {
@@ -21,47 +20,13 @@ template <std::size_t, typename>
 class NumberArray;
 }
 
-using libMesh::Real;
 using MetaPhysicL::DualNumber;
 using MetaPhysicL::NumberArray;
 
 #define AD_MAX_DOFS_PER_ELEM 50
 
-typedef DualNumber<Real, NumberArray<AD_MAX_DOFS_PER_ELEM, Real>> ADReal;
-
-namespace libMesh
-{
-template <typename T, typename T2, typename D>
-struct CompareTypes<T, DualNumber<T2, D>>
-{
-  typedef DualNumber<typename CompareTypes<T, T2>::supertype,
-                     typename D::template rebind<typename CompareTypes<T, T2>::supertype>::other>
-      supertype;
-};
-template <typename T, typename D, typename T2>
-struct CompareTypes<DualNumber<T, D>, T2>
-{
-  typedef DualNumber<typename CompareTypes<T, T2>::supertype,
-                     typename D::template rebind<typename CompareTypes<T, T2>::supertype>::other>
-      supertype;
-};
-template <typename T, typename D, typename T2, typename D2>
-struct CompareTypes<DualNumber<T, D>, DualNumber<T2, D2>>
-{
-  typedef DualNumber<typename CompareTypes<T, T2>::supertype,
-                     typename D::template rebind<typename CompareTypes<T, T2>::supertype>::other>
-      supertype;
-};
-template <typename T, typename D>
-struct CompareTypes<DualNumber<T, D>, DualNumber<T, D>>
-{
-  typedef DualNumber<T, D> supertype;
-};
-template <typename T, typename D>
-struct ScalarTraits<DualNumber<T, D>>
-{
-  static const bool value = ScalarTraits<T>::value;
-};
-}
+typedef DualNumber<LIBMESH_DEFAULT_SCALAR_TYPE,
+                   NumberArray<AD_MAX_DOFS_PER_ELEM, LIBMESH_DEFAULT_SCALAR_TYPE>>
+    ADReal;
 
 #endif

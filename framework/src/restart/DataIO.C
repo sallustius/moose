@@ -15,6 +15,9 @@
 #include "libmesh/dense_matrix.h"
 #include "libmesh/elem.h"
 
+#include "metaphysicl/numberarray.h"
+#include "metaphysicl/dualnumber.h"
+
 template <>
 void
 dataStore(std::ostream & stream, Real & v, void * /*context*/)
@@ -131,6 +134,15 @@ void
 dataStore(std::ostream & stream, std::stringstream *& s, void * context)
 {
   dataStore(stream, *s, context);
+}
+
+template <>
+void
+dataStore(std::ostream & stream, ADReal & dn, void * context)
+{
+  dataStore(stream, dn.value(), context);
+  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
+    dataStore(stream, dn.derivatives()[i], context);
 }
 
 template <>
@@ -287,6 +299,16 @@ void
 dataLoad(std::istream & stream, std::stringstream *& s, void * context)
 {
   dataLoad(stream, *s, context);
+}
+
+template <>
+void
+dataLoad(std::istream & stream, ADReal & dn, void * context)
+{
+  dataLoad(stream, dn.value(), context);
+
+  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
+    dataLoad(stream, dn.derivatives()[i], context);
 }
 
 template <>

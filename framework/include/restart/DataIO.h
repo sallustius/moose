@@ -25,8 +25,6 @@
 #ifdef LIBMESH_HAVE_CXX11_TYPE_TRAITS
 #include <type_traits>
 #endif
-#include "metaphysicl/numberarray.h"
-#include "metaphysicl/dualnumber.h"
 
 // C++ includes
 #include <string>
@@ -336,14 +334,8 @@ template <>
 void dataStore(std::ostream & stream, std::stringstream & s, void * context);
 template <>
 void dataStore(std::ostream & stream, std::stringstream *& s, void * context);
-
-inline void
-dataStore(std::ostream & stream, ADReal & dn, void * context)
-{
-  dataStore(stream, dn.value(), context);
-  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
-    dataStore(stream, dn.derivatives()[i], context);
-}
+template <>
+void dataStore(std::ostream & stream, ADReal & dn, void * context);
 
 template <std::size_t N>
 inline void
@@ -608,15 +600,8 @@ template <>
 void dataLoad(std::istream & stream, std::stringstream & s, void * context);
 template <>
 void dataLoad(std::istream & stream, std::stringstream *& s, void * context);
-
-inline void
-dataLoad(std::istream & stream, ADReal & dn, void * context)
-{
-  dataLoad(stream, dn.value(), context);
-
-  for (auto i = beginIndex(dn.derivatives()); i < dn.derivatives().size(); ++i)
-    dataLoad(stream, dn.derivatives()[i], context);
-}
+template <>
+void dataLoad(std::istream & stream, ADReal & dn, void * context);
 
 template <typename T>
 void

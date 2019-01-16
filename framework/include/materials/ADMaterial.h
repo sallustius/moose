@@ -16,6 +16,8 @@
 #include "metaphysicl/numberarray.h"
 #include "metaphysicl/dualnumber.h"
 
+#include "libmesh/compare_types.h"
+
 #define usingMaterialMembers                                                                       \
   using ADMaterial<compute_stage>::_qp;                                                            \
   using ADMaterial<compute_stage>::_ad_grad_zero;                                                  \
