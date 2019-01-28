@@ -15,6 +15,7 @@
 #include "MooseEnum.h"
 
 #include "libmesh/bounding_box.h"
+#include "libmesh/fe_base.h"
 
 // Forward declarations
 class MultiAppTransfer;

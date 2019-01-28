@@ -31,6 +31,7 @@
 #include "MeshChangedInterface.h"
 #include "OutputInterface.h"
 #include "RandomInterface.h"
+#include "Assembly.h"
 
 // forward declarations
 class Material;

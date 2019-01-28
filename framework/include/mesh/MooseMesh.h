@@ -24,6 +24,7 @@
 #include "libmesh/mesh_base.h"
 #include "libmesh/node_range.h"
 #include "libmesh/nanoflann.hpp"
+#include "libmesh/node.h"
 
 // have to wrap DualNumber around TypeVector because we may try to instantiate a TypeVector<ADReal>
 // later

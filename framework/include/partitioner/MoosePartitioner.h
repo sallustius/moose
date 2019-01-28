@@ -15,6 +15,7 @@
 #include "Restartable.h"
 
 #include "libmesh/partitioner.h"
+#include "libmesh/elem.h"
 
 // Forward declarations
 class MoosePartitioner;
