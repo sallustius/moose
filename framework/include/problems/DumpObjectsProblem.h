@@ -77,9 +77,9 @@ public:
   void addInitialCondition(const std::string & type,
                            const std::string & name,
                            InputParameters parameters) override;
-  void addMaterial(const std::string & type,
-                   const std::string & name,
-                   InputParameters parameters) override;
+  void addResidualMaterial(const std::string & type,
+                           const std::string & name,
+                           InputParameters parameters) override;
 
   /// output input blocks for a given action path
   void dumpGeneratedSyntax(const std::string path);

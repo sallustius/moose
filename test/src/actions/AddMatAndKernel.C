@@ -61,6 +61,7 @@ AddMatAndKernel::act()
     InputParameters params = _factory.getValidParams("GenericConstantMaterial");
     params.set<std::vector<std::string>>("prop_names") = {"prop1"};
     params.set<std::vector<Real>>("prop_values") = {42};
-    _problem->addMaterial("GenericConstantMaterial", "mat1", params);
+    _problem->addResidualMaterial("GenericConstantMaterial", "mat1_residual", params);
+    _problem->addJacobianMaterial("GenericConstantMaterial", "mat1_jacobian", params);
   }
 }

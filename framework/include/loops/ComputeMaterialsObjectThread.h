@@ -56,7 +56,6 @@ protected:
 
   /// Reference to the Material object warehouses
   const MaterialWarehouse & _materials;
-  const MaterialWarehouse & _ad_materials;
   const MaterialWarehouse & _discrete_materials;
 
   std::vector<std::unique_ptr<Assembly>> & _assembly;

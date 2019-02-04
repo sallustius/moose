@@ -27,10 +27,10 @@ AddADMaterialAction::AddADMaterialAction(InputParameters params) : MooseADObject
 void
 AddADMaterialAction::act()
 {
-  _problem->addADResidualMaterial(_type, _name, _moose_object_pars);
+  _problem->addResidualMaterial(_type, _name, _moose_object_pars);
   std::string to_erase = "<RESIDUAL>";
   std::string::size_type match = _type.find(to_erase);
   if (match != std::string::npos)
     _type.erase(match, to_erase.length());
-  _problem->addADJacobianMaterial(_type + "<JACOBIAN>", _name + "_jacobian", _moose_object_pars);
+  _problem->addJacobianMaterial(_type + "<JACOBIAN>", _name + "_jacobian", _moose_object_pars);
 }

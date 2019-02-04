@@ -189,12 +189,12 @@ DumpObjectsProblem::addInitialCondition(const std::string & type,
 }
 
 void
-DumpObjectsProblem::addMaterial(const std::string & type,
-                                const std::string & name,
-                                InputParameters parameters)
+DumpObjectsProblem::addResidualMaterial(const std::string & type,
+                                        const std::string & name,
+                                        InputParameters parameters)
 {
   dumpObjectHelper("Materials", type, name, parameters);
-  FEProblemBase::addMaterial(type, name, parameters);
+  FEProblemBase::addResidualMaterial(type, name, parameters);
 }
 
 std::string

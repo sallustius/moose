@@ -682,7 +682,6 @@ FEProblemBase::initialSetup()
     for (THREAD_ID tid = 0; tid < n_threads; tid++)
     {
       // Sort the Material objects, these will be actually computed by MOOSE in reinit methods.
-      _materials.sort(tid);
       _residual_materials.sort(tid);
       _jacobian_materials.sort(tid);
 
@@ -2340,25 +2339,17 @@ FEProblemBase::getMaterialData(Moose::MaterialDataType type, THREAD_ID tid)
 }
 
 void
-FEProblemBase::addMaterial(const std::string & mat_name,
-                           const std::string & name,
-                           InputParameters parameters)
-{
-  addMaterialHelper(_materials, mat_name, name, parameters);
-}
-
-void
-FEProblemBase::addADResidualMaterial(const std::string & mat_name,
-                                     const std::string & name,
-                                     InputParameters parameters)
+FEProblemBase::addResidualMaterial(const std::string & mat_name,
+                                   const std::string & name,
+                                   InputParameters parameters)
 {
   addMaterialHelper(_residual_materials, mat_name, name, parameters);
 }
 
 void
-FEProblemBase::addADJacobianMaterial(const std::string & mat_name,
-                                     const std::string & name,
-                                     InputParameters parameters)
+FEProblemBase::addJacobianMaterial(const std::string & mat_name,
+                                   const std::string & name,
+                                   InputParameters parameters)
 {
   addMaterialHelper(_jacobian_materials, mat_name, name, parameters);
 }
@@ -2466,8 +2457,6 @@ FEProblemBase::prepareMaterials(SubdomainID blk_id, THREAD_ID tid)
   const std::set<BoundaryID> & ids = _mesh.getSubdomainBoundaryIds(blk_id);
   for (const auto & id : ids)
   {
-    _materials.updateBoundaryVariableDependency(id, needed_moose_vars, tid);
-    _materials.updateBoundaryMatPropDependency(id, needed_mat_props, tid);
     if (_currently_computing_jacobian)
     {
       _jacobian_materials.updateBoundaryVariableDependency(id, needed_moose_vars, tid);
@@ -2510,9 +2499,6 @@ FEProblemBase::reinitMaterials(SubdomainID blk_id, THREAD_ID tid, bool swap_stat
     if (_discrete_materials.hasActiveBlockObjects(blk_id, tid))
       _material_data[tid]->reset(_discrete_materials.getActiveBlockObjects(blk_id, tid));
 
-    if (_materials.hasActiveBlockObjects(blk_id, tid))
-      _material_data[tid]->reinit(_materials.getActiveBlockObjects(blk_id, tid));
-
     if (_jacobian_materials.hasActiveBlockObjects(blk_id, tid) && _currently_computing_jacobian)
       _material_data[tid]->reinit(_jacobian_materials.getActiveBlockObjects(blk_id, tid));
 
@@ -2538,10 +2524,6 @@ FEProblemBase::reinitMaterialsFace(SubdomainID blk_id, THREAD_ID tid, bool swap_
     if (_discrete_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(blk_id, tid))
       _bnd_material_data[tid]->reset(
           _discrete_materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(blk_id, tid));
-
-    if (_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(blk_id, tid))
-      _bnd_material_data[tid]->reinit(
-          _materials[Moose::FACE_MATERIAL_DATA].getActiveBlockObjects(blk_id, tid));
 
     if (_jacobian_materials[Moose::FACE_MATERIAL_DATA].hasActiveBlockObjects(blk_id, tid) &&
         _currently_computing_jacobian)
@@ -2574,10 +2556,6 @@ FEProblemBase::reinitMaterialsNeighbor(SubdomainID blk_id, THREAD_ID tid, bool s
       _neighbor_material_data[tid]->reset(
           _discrete_materials[Moose::NEIGHBOR_MATERIAL_DATA].getActiveBlockObjects(blk_id, tid));
 
-    if (_materials[Moose::NEIGHBOR_MATERIAL_DATA].hasActiveBlockObjects(blk_id, tid))
-      _neighbor_material_data[tid]->reinit(
-          _materials[Moose::NEIGHBOR_MATERIAL_DATA].getActiveBlockObjects(blk_id, tid));
-
     if (_jacobian_materials[Moose::NEIGHBOR_MATERIAL_DATA].hasActiveBlockObjects(blk_id, tid) &&
         _currently_computing_jacobian)
       _neighbor_material_data[tid]->reinit(
@@ -2606,9 +2584,6 @@ FEProblemBase::reinitMaterialsBoundary(BoundaryID boundary_id, THREAD_ID tid, bo
     if (_discrete_materials.hasActiveBoundaryObjects(boundary_id, tid))
       _bnd_material_data[tid]->reset(
           _discrete_materials.getActiveBoundaryObjects(boundary_id, tid));
-
-    if (_materials.hasActiveBoundaryObjects(boundary_id, tid))
-      _bnd_material_data[tid]->reinit(_materials.getActiveBoundaryObjects(boundary_id, tid));
 
     if (_jacobian_materials.hasActiveBoundaryObjects(boundary_id, tid) &&
         _currently_computing_jacobian)
@@ -3295,7 +3270,6 @@ FEProblemBase::updateActiveObjects()
     _internal_side_indicators.updateActive(tid);
     _markers.updateActive(tid);
     _all_materials.updateActive(tid);
-    _materials.updateActive(tid);
     _residual_materials.updateActive(tid);
     _jacobian_materials.updateActive(tid);
     _discrete_materials.updateActive(tid);
@@ -5366,11 +5340,6 @@ FEProblemBase::checkProblemIntegrity()
     for (const auto & material : materials)
       material->checkStatefulSanity();
 
-    // auto mats_to_check = _materials.getActiveBlockObjects();
-    // const auto & discrete_materials = _discrete_materials.getActiveBlockObjects();
-    // for (const auto & map_it : discrete_materials)
-    //   for (const auto & container_element : map_it.second)
-    //     mats_to_check[map_it.first].push_back(container_element);
     checkDependMaterialsHelper(_all_materials.getActiveBlockObjects());
   }
 
@@ -5548,14 +5517,14 @@ FEProblemBase::checkDependMaterialsHelper(
           continue;
 
         // Check whether these materials are an AD pair
-        auto outer_mat_type = outer_mat->type();
-        auto inner_mat_type = inner_mat->type();
-        removeSubstring(outer_mat_type, "<RESIDUAL>");
-        removeSubstring(outer_mat_type, "<JACOBIAN>");
-        removeSubstring(inner_mat_type, "<RESIDUAL>");
-        removeSubstring(inner_mat_type, "<JACOBIAN>");
-        if (outer_mat_type == inner_mat_type && outer_mat_type != outer_mat->type() &&
-            inner_mat_type != inner_mat->type())
+        auto outer_mat_name = outer_mat->name();
+        auto inner_mat_name = inner_mat->name();
+        removeSubstring(outer_mat_name, "_residual");
+        removeSubstring(outer_mat_name, "_jacobian");
+        removeSubstring(inner_mat_name, "_residual");
+        removeSubstring(inner_mat_name, "_jacobian");
+        if (outer_mat_name == inner_mat_name && outer_mat_name != outer_mat->name() &&
+            inner_mat_name != inner_mat->name())
           continue;
 
         inner_supplied.insert(inner_mat->getSuppliedItems().begin(),
