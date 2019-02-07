@@ -149,10 +149,10 @@ DisplacedProblem::syncSolutions()
 {
   TIME_SECTION(_sync_solutions_timer);
 
-  (*_displaced_nl.sys().solution) = *_mproblem.getNonlinearSystemBase().currentSolution();
-  (*_displaced_aux.sys().solution) = *_mproblem.getAuxiliarySystem().currentSolution();
-  _displaced_nl.update();
-  _displaced_aux.update();
+  (*_displaced_nl.sys().current_local_solution) =
+      *_mproblem.getNonlinearSystemBase().currentSolution();
+  (*_displaced_aux.sys().current_local_solution) =
+      *_mproblem.getAuxiliarySystem().currentSolution();
 }
 
 void
@@ -161,10 +161,8 @@ DisplacedProblem::syncSolutions(const NumericVector<Number> & soln,
 {
   TIME_SECTION(_sync_solutions_timer);
 
-  (*_displaced_nl.sys().solution) = soln;
-  (*_displaced_aux.sys().solution) = aux_soln;
-  _displaced_nl.update();
-  _displaced_aux.update();
+  (*_displaced_nl.sys().current_local_solution) = soln;
+  (*_displaced_aux.sys().current_local_solution) = aux_soln;
 }
 
 void
