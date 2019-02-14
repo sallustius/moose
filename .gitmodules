@@ -1,7 +1,6 @@
 [submodule "libmesh"]
     path = libmesh
-    url = ../../lindsayad/libmesh
-    ignore = dirty
+    url = ../../libmesh/libmesh
 [submodule "large_media"]
     path = large_media
     url = ../../idaholab/large_media
