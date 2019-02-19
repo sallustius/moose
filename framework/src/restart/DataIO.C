@@ -238,6 +238,7 @@ ADStoreWrapperInstantiate(std::vector<VectorValue<Real>>);
 ADStoreWrapperInstantiate(std::vector<Real>);
 ADStoreWrapperInstantiate(RankTwoTensor);
 ADStoreWrapperInstantiate(unsigned int);
+ADStoreWrapperInstantiate(unsigned long);
 ADStoreWrapperInstantiate(int);
 ADStoreWrapperInstantiate(std::vector<TensorValue<Real>>);
 
@@ -488,5 +489,6 @@ ADLoadWrapperInstantiate(std::vector<VectorValue<Real>>);
 ADLoadWrapperInstantiate(std::vector<Real>);
 ADLoadWrapperInstantiate(RankTwoTensor);
 ADLoadWrapperInstantiate(unsigned int);
+ADLoadWrapperInstantiate(unsigned long);
 ADLoadWrapperInstantiate(int);
 ADLoadWrapperInstantiate(std::vector<TensorValue<Real>>);
