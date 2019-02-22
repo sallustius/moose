@@ -22,7 +22,11 @@ source and header files can be found
 [here](test/src/materials/ADCoupledMaterial.C) and
 [here](test/include/materials/ADCoupledMaterial.h); example kernel source and
 header files that use AD material properties can be found
-[here](test/src/kernels/ADMatDiffusionTest.C) and [here](test/include/kernels/ADMatDiffusionTest.h).
+[here](test/src/kernels/ADMatDiffusionTest.C) and
+[here](test/include/kernels/ADMatDiffusionTest.h).
+
+For more details about automatic differentiation, please read our
+[automatic differentiation page](automatic_differention.md).
 
 ## Traditional Hand-coded Jacobians
 
