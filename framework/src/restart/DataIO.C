@@ -241,6 +241,7 @@ ADStoreWrapperInstantiate(unsigned int);
 ADStoreWrapperInstantiate(unsigned long);
 ADStoreWrapperInstantiate(int);
 ADStoreWrapperInstantiate(std::vector<TensorValue<Real>>);
+ADStoreWrapperInstantiate(std::vector<RankTwoTensor>);
 
 // global load functions
 
@@ -492,3 +493,4 @@ ADLoadWrapperInstantiate(unsigned int);
 ADLoadWrapperInstantiate(unsigned long);
 ADLoadWrapperInstantiate(int);
 ADLoadWrapperInstantiate(std::vector<TensorValue<Real>>);
+ADLoadWrapperInstantiate(std::vector<RankTwoTensor>);
