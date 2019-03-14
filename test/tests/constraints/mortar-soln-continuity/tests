@@ -3,6 +3,7 @@
     type = 'Exodiff'
     input = 'soln-continuity.i'
     exodiff = 'soln-continuity_out.e'
+    max_parallel = 2
   []
   [soln-continuity-fine]
     type = 'Exodiff'
@@ -15,5 +16,6 @@
     input = 'soln-continuity.i'
     run_sim = True
     difference_tol = 1e-7
+    max_parallel = 2
   []
 []

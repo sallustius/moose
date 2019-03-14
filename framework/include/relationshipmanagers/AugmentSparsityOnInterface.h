@@ -32,7 +32,7 @@ public:
   virtual void operator()(const MeshBase::const_element_iterator & range_begin,
                           const MeshBase::const_element_iterator & range_end,
                           processor_id_type p,
-                          map_type & coupled_elements) libmesh_override;
+                          map_type & coupled_elements) override;
 
   /**
    * According to the base class docs, "We call mesh_reinit() whenever
@@ -52,15 +52,10 @@ public:
   std::string getInfo() const override;
 
 protected:
-  /**
-   * The Mesh we're calculating on
-   */
-  AutomaticMortarGeneration * _amg;
+  SubdomainID _master_subdomain_id;
+  SubdomainID _slave_subdomain_id;
 
-  bool _has_attached_amg;
-
-  std::pair<BoundaryID, BoundaryID> _interface;
-  std::pair<SubdomainID, SubdomainID> _subdomain_pair;
+  std::set<const Elem *> _interface_elems;
 };
 
 #endif

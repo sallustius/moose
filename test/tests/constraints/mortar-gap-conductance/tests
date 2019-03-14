@@ -3,12 +3,14 @@
     type = Exodiff
     input = 'gap-conductance.i'
     exodiff = 'gap-conductance_out.e'
+    max_parallel = 2
   [../]
   [gap_jacobian]
     type = PetscJacobianTester
     run_sim = True
     input = 'gap-conductance.i'
     difference_tol = 1e-7
+    max_parallel = 2
   []
   [gap_conductance_fine]
     type = Exodiff
