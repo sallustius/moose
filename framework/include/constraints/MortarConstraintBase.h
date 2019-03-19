@@ -7,8 +7,8 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef REALMORTARCONSTRAINTBASE_H
-#define REALMORTARCONSTRAINTBASE_H
+#ifndef MORTARCONSTRAINTBASE_H
+#define MORTARCONSTRAINTBASE_H
 
 // MOOSE includes
 #include "Constraint.h"
@@ -17,10 +17,10 @@
 #include "MooseVariableInterface.h"
 
 // Forward Declarations
-class RealMortarConstraintBase;
+class MortarConstraintBase;
 
 template <>
-InputParameters validParams<RealMortarConstraintBase>();
+InputParameters validParams<MortarConstraintBase>();
 
 /**
  * User for mortar methods
@@ -37,12 +37,12 @@ InputParameters validParams<RealMortarConstraintBase>();
  *         +--------------+-------------+-------------+
  *
  */
-class RealMortarConstraintBase : public Constraint,
+class MortarConstraintBase : public Constraint,
                                  public CoupleableMooseVariableDependencyIntermediateInterface,
                                  public MooseVariableInterface<Real>
 {
 public:
-  RealMortarConstraintBase(const InputParameters & parameters);
+  MortarConstraintBase(const InputParameters & parameters);
 
   /**
    * Method for computing the residual
@@ -55,4 +55,4 @@ public:
   virtual void computeJacobian() = 0;
 };
 
-#endif /* REALMORTARCONSTRAINTBASE_H */
+#endif /* MORTARCONSTRAINTBASE_H */
