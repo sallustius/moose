@@ -23,7 +23,7 @@ template <ComputeStage compute_stage>
 ADResidual
 SolutionContinuityTest<compute_stage>::computeQpResidual()
 {
-  return _has_master ? _test[_i][_qp] * (_u_slave(_qp) - _u_master(_qp)) : ADReal(0);
+  return _has_master ? _test[_i][_qp] * (_u_slave[_qp] - _u_master[_qp]) : ADReal(0);
 }
 
 template <ComputeStage compute_stage>
@@ -33,9 +33,9 @@ SolutionContinuityTest<compute_stage>::computeQpResidualSide(Moose::ConstraintTy
   switch (type)
   {
     case Moose::Slave:
-      return _test_slave[_i][_qp] * _lambda(_qp);
+      return _test_slave[_i][_qp] * _lambda[_qp];
 
     case Moose::Master:
-      return -_test_master[_i][_qp] * _lambda(_qp);
+      return -_test_master[_i][_qp] * _lambda[_qp];
   }
 }

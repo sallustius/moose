@@ -196,13 +196,16 @@ RealMortarConstraint<compute_stage>::loopOverMortarMesh()
       _fe_master_interior_primal->reinit(master_ip, master_side_id, TOLERANCE, &custom_xi2_pts);
     }
 
-    _lambda.zero();
-    _u_slave.zero();
-    _u_master.zero();
-    if (_need_primal_gradient)
+    for (unsigned int qp = 0; qp < _qrule_msm.n_points(); qp++)
     {
-      _grad_u_slave.zero();
-      _grad_u_master.zero();
+      _lambda[qp] = 0;
+      _u_slave[qp] = 0;
+      _u_master[qp] = 0;
+      if (_need_primal_gradient)
+      {
+        _grad_u_slave[qp] = 0;
+        _grad_u_master[qp] = 0;
+      }
     }
     computeSolutions();
 
@@ -226,25 +229,25 @@ RealMortarConstraint<compute_stage>::computeSolutions()
       auto idx = _dof_indices_lambda[i];
       auto soln_local = current_solution(idx);
 
-      _lambda(qp) += soln_local * _test[i][qp];
+      _lambda[qp] += soln_local * _test[i][qp];
     }
     for (unsigned int i = 0; i < _dof_indices_slave_interior_primal.size(); ++i)
     {
       auto idx = _dof_indices_slave_interior_primal[i];
       auto soln_local = current_solution(idx);
 
-      _u_slave(qp) += soln_local * _test_slave[i][qp];
+      _u_slave[qp] += soln_local * _test_slave[i][qp];
       if (_need_primal_gradient)
-        _grad_u_slave(qp) += soln_local * _grad_test_slave[i][qp];
+        _grad_u_slave[qp] += soln_local * _grad_test_slave[i][qp];
     }
     for (unsigned int i = 0; i < _dof_indices_master_interior_primal.size(); ++i)
     {
       auto idx = _dof_indices_master_interior_primal[i];
       auto soln_local = current_solution(idx);
 
-      _u_master(qp) += soln_local * _test_master[i][qp];
+      _u_master[qp] += soln_local * _test_master[i][qp];
       if (_need_primal_gradient)
-        _grad_u_master(qp) += soln_local * _grad_test_master[i][qp];
+        _grad_u_master[qp] += soln_local * _grad_test_master[i][qp];
     }
   }
 }
@@ -263,7 +266,7 @@ RealMortarConstraint<JACOBIAN>::computeSolutions()
       DualReal soln_local = current_solution(idx);
       soln_local.derivatives()[_lm_offset + i] = 1;
 
-      _lambda(qp) += soln_local * _test[i][qp];
+      _lambda[qp] += soln_local * _test[i][qp];
     }
     for (unsigned int i = 0; i < _dof_indices_slave_interior_primal.size(); ++i)
     {
@@ -271,9 +274,9 @@ RealMortarConstraint<JACOBIAN>::computeSolutions()
       DualReal soln_local = current_solution(idx);
       soln_local.derivatives()[_slave_primal_offset + i] = 1;
 
-      _u_slave(qp) += soln_local * _test_slave[i][qp];
+      _u_slave[qp] += soln_local * _test_slave[i][qp];
       if (_need_primal_gradient)
-        _grad_u_slave(qp) += soln_local * _grad_test_slave[i][qp];
+        _grad_u_slave[qp] += soln_local * _grad_test_slave[i][qp];
     }
     for (unsigned int i = 0; i < _dof_indices_master_interior_primal.size(); ++i)
     {
@@ -281,9 +284,9 @@ RealMortarConstraint<JACOBIAN>::computeSolutions()
       DualReal soln_local = current_solution(idx);
       soln_local.derivatives()[_master_primal_offset + i] = 1;
 
-      _u_master(qp) += soln_local * _test_master[i][qp];
+      _u_master[qp] += soln_local * _test_master[i][qp];
       if (_need_primal_gradient)
-        _grad_u_master(qp) += soln_local * _grad_test_master[i][qp];
+        _grad_u_master[qp] += soln_local * _grad_test_master[i][qp];
     }
   }
 }

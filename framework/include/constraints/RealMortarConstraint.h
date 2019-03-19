@@ -145,19 +145,19 @@ protected:
   unsigned int _qp;
 
   /// The LM solution
-  DenseVector<ADReal> _lambda;
+  MooseArray<ADReal> _lambda;
 
   /// The primal solution on the slave side
-  DenseVector<ADReal> _u_slave;
+  MooseArray<ADReal> _u_slave;
 
   /// The primal solution on the master side
-  DenseVector<ADReal> _u_master;
+  MooseArray<ADReal> _u_master;
 
   /// The primal solution gradient on the slave side
-  DenseVector<VectorValue<ADReal>> _grad_u_slave;
+  MooseArray<VectorValue<ADReal>> _grad_u_slave;
 
   /// The primal solution gradient on the master side
-  DenseVector<VectorValue<ADReal>> _grad_u_master;
+  MooseArray<VectorValue<ADReal>> _grad_u_master;
 
   /// The offset for LM dofs for derivative vector access
   const unsigned int _lm_offset;

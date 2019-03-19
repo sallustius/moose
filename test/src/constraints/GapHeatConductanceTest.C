@@ -35,8 +35,8 @@ GapHeatConductanceTest<compute_stage>::computeQpResidual()
     auto gap = (_xyz_slave_interior[_qp] - _xyz_master_interior[_qp]).norm();
     heat_transfer_coeff = _gap_conductance_constant / gap;
   }
-  return _test[_i][_qp] * (_lambda(_qp) - heat_transfer_coeff *
-                                              (_u_slave(_qp) - (_has_master ? _u_master(_qp) : 0)));
+  return _test[_i][_qp] * (_lambda[_qp] - heat_transfer_coeff *
+                                              (_u_slave[_qp] - (_has_master ? _u_master[_qp] : 0)));
 }
 
 template <ComputeStage compute_stage>
@@ -46,9 +46,9 @@ GapHeatConductanceTest<compute_stage>::computeQpResidualSide(Moose::ConstraintTy
   switch (type)
   {
     case Moose::Slave:
-      return _lambda(_qp) * _test_slave[_i][_qp];
+      return _lambda[_qp] * _test_slave[_i][_qp];
 
     case Moose::Master:
-      return -_lambda(_qp) * _test_master[_i][_qp];
+      return -_lambda[_qp] * _test_master[_i][_qp];
   }
 }
