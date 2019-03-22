@@ -122,6 +122,7 @@
 
 [Outputs]
   exodus = true
+  csv = true
   [dofmap]
     type = DOFMap
     execute_on = 'initial'
@@ -133,7 +134,7 @@
     type = ElementL2Error
     variable = lambda
     function = exact_soln_lambda
-    outputs = 'console'
+    outputs = 'console csv'
     execute_on = 'timestep_end'
     block = '1001'
   []
@@ -141,7 +142,15 @@
     type = ElementL2Error
     variable = T
     function = exact_soln_primal
-    outputs = 'console'
+    outputs = 'console csv'
+    execute_on = 'timestep_end'
+    block = 'domain'
+  []
+  [H1u]
+    type = ElementH1Error
+    variable = T
+    function = exact_soln_primal
+    outputs = 'console csv'
     execute_on = 'timestep_end'
     block = 'domain'
   []
