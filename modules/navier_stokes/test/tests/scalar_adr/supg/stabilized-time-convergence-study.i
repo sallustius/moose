@@ -1,12 +1,3 @@
-# velocity=1
-
-# [GlobalParams]
-#   u = ${velocity}
-#   p = 0
-#   tau_type = opt
-#   alpha = 0
-# []
-
 [Mesh]
   type = GeneratedMesh
   dim  = 2
@@ -19,19 +10,6 @@
   elem_type = QUAD9
 []
 
-# [AuxVariables]
-#   [exact]
-#     order = SECOND
-#   []
-# []
-
-# [AuxKernels]
-#   [exact]
-#     type = FunctionAux
-#     function = exact_soln
-#     variable = exact
-#   []
-# []
 
 [Variables]
   [./u]
@@ -44,10 +22,14 @@
     type = TimeDerivative
     variable = u
   []
-  # [./adv]
-  #   type = Advection
-  #   variable = u
-  # [../]
+  [adv]
+    type = Advection
+    variable = u
+    u = 1
+    p = 0
+    tau_type = mod
+    alpha = 0
+  []
   [diff]
     type = Diffusion
     variable = u
