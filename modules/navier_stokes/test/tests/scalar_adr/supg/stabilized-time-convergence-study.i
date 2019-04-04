@@ -39,6 +39,12 @@
     variable = u
     function = forcing_function
   []
+  [supg]
+    type = SUPG
+    variable = u
+    forcing_func = forcing_function
+    velocity = '1 0 0'
+  []
 []
 
 [BCs]
