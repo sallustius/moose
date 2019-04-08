@@ -17,7 +17,11 @@ defineADValidParams(SUPG,
                     params.addParam<FunctionName>("forcing_func",
                                                   0,
                                                   "The forcing function, typically used for MMS.");
-                    params.addRequiredParam<RealVectorValue>("velocity", "The velocity"););
+                    params.addRequiredParam<RealVectorValue>("velocity", "The velocity");
+                    params.addParam<Real>("diff", 0, "The diffusivity");
+                    params.addParam<bool>("include_transient_term",
+                                          false,
+                                          "Whether to include the transient term in this kernel"););
 
 template <ComputeStage compute_stage>
 SUPG<compute_stage>::SUPG(const InputParameters & parameters)
@@ -25,7 +29,9 @@ SUPG<compute_stage>::SUPG(const InputParameters & parameters)
     _ffn(getFunction("forcing_func")),
     _velocity(adGetParam<RealVectorValue>("velocity")),
     _second_u(_var.template adSecondSln<compute_stage>()),
-    _u_dot(_var.template adUDot<compute_stage>())
+    _u_dot(_var.template adUDot<compute_stage>()),
+    _diff(adGetParam<Real>("diff")),
+    _include_transient_term(adGetParam<bool>("include_transient_term"))
 {
 }
 
@@ -35,7 +41,8 @@ SUPG<compute_stage>::computeQpResidual()
 {
   auto h = _current_elem->hmax();
   auto tau = 1. / std::sqrt(4. / (_dt * _dt) + 4. * _velocity * _velocity / (h * h) +
-                            9. * (4. / (h * h)) * (4. / (h * h)));
+                            9. * (4. * _diff / (h * h)) * (4. * _diff / (h * h)));
+  ADReal transient_term = _include_transient_term ? _u_dot[_qp] : 0;
   return tau * _velocity * _grad_test[_i][_qp] *
-         (_u_dot[_qp] + _velocity * _grad_u[_qp] - _second_u[_qp].tr());
+         (transient_term + _velocity * _grad_u[_qp] - _diff * _second_u[_qp].tr());
 }
