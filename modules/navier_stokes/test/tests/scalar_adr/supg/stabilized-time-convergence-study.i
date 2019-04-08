@@ -18,6 +18,7 @@
 []
 
 [Kernels]
+  active = ''
   [time]
     type = TimeDerivative
     variable = u
@@ -30,35 +31,31 @@
     tau_type = mod
     alpha = 0
   []
-  # [diff]
-  #   type = Diffusion
-  #   variable = u
-  # []
   [mms_forcing_function]
     type = BodyForce
     variable = u
     function = forcing_function
   []
-  # [supg]
-  #   type = SUPG
-  #   variable = u
-  #   forcing_func = forcing_function
-  #   velocity = '1 0 0'
-  #   include_transient_term = true
-  # []
-  # [time_supg]
-  #   type = TimeDerivativeSUPG
-  #   variable = u
-  #   velocity = '1 0 0'
-  # []
+  [supg]
+    type = SUPG
+    variable = u
+    forcing_func = forcing_function
+    velocity = '1 0 0'
+    include_transient_term = ''
+  []
+  [time_supg]
+    type = TimeDerivativeSUPG
+    variable = u
+    velocity = '1 0 0'
+  []
 []
 
 [BCs]
   [./left]
     type = FunctionDirichletBC
     variable = u
-    # boundary = 'left right top bottom'
-    boundary = 'left'
+    boundary = 'left right top bottom'
+    # boundary = 'left'
     function = exact_soln
   [../]
 []

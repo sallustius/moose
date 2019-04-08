@@ -31,6 +31,8 @@ protected:
   const ADVariableValue & _u_dot;
   const Real _diff;
 
+  MooseEnum _tau_type;
+
   usingKernelMembers;
 };
 

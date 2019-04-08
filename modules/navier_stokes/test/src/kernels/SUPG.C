@@ -21,7 +21,10 @@ defineADValidParams(SUPG,
                     params.addParam<Real>("diff", 0, "The diffusivity");
                     params.addParam<bool>("include_transient_term",
                                           false,
-                                          "Whether to include the transient term in this kernel"););
+                                          "Whether to include the transient term in this kernel");
+                    MooseEnum tau_type("none squares simple", "squares");
+                    params.addRequiredParam<MooseEnum>(
+                        "tau_type", tau_type, "The type of stabilization parameter to use."););
 
 template <ComputeStage compute_stage>
 SUPG<compute_stage>::SUPG(const InputParameters & parameters)
@@ -31,7 +34,8 @@ SUPG<compute_stage>::SUPG(const InputParameters & parameters)
     _second_u(_var.template adSecondSln<compute_stage>()),
     _u_dot(_var.template adUDot<compute_stage>()),
     _diff(adGetParam<Real>("diff")),
-    _include_transient_term(adGetParam<bool>("include_transient_term"))
+    _include_transient_term(adGetParam<bool>("include_transient_term")),
+    _tau_type(adGetParam<MooseEnum>("tau_type"))
 {
 }
 
@@ -40,9 +44,17 @@ ADReal
 SUPG<compute_stage>::computeQpResidual()
 {
   auto h = _current_elem->hmax();
-  auto tau = 1. / std::sqrt(4. / (_dt * _dt) + 4. * _velocity * _velocity / (h * h) +
-                            9. * (4. * _diff / (h * h)) * (4. * _diff / (h * h)));
+  ADReal tau;
+  if (_tau_type == "squares")
+    tau = 1. / std::sqrt(4. / (_dt * _dt) + 4. * _velocity * _velocity / (h * h) +
+                         9. * (4. * _diff / (h * h)) * (4. * _diff / (h * h)));
+  else if (_tau_type == "simple")
+    tau = h / (2. * _velocity.norm());
+  else if (_tau_type == "none")
+    tau = 0;
+
   ADReal transient_term = _include_transient_term ? _u_dot[_qp] : 0;
   return tau * _velocity * _grad_test[_i][_qp] *
-         (transient_term + _velocity * _grad_u[_qp] - _diff * _second_u[_qp].tr());
+         (transient_term + _velocity * _grad_u[_qp] - _diff * _second_u[_qp].tr() -
+          _ffn.value(_t, _q_point[_qp]));
 }

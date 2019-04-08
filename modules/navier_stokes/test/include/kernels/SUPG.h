@@ -34,6 +34,10 @@ protected:
   const Real _diff;
   const bool _include_transient_term;
 
+  MooseEnum _tau_type;
+
+  using KernelBase::_q_point;
+
   usingKernelMembers;
 };
 
