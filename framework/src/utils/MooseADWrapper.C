@@ -327,3 +327,121 @@ operator=(const MooseADWrapper<RankFourTensorTempl<Real>> & rhs)
     *_dual_number = 0;
   return *this;
 }
+
+MooseADWrapper<DenseVector<Real>>::MooseADWrapper(bool use_ad)
+  : _use_ad(use_ad), _val(), _dual_number(nullptr)
+{
+  if (_use_ad)
+    _dual_number = libmesh_make_unique<DenseVector<DualReal>>();
+}
+
+const DenseVector<DualReal> &
+MooseADWrapper<DenseVector<Real>>::dn(bool) const
+{
+  if (!_dual_number)
+    _dual_number = libmesh_make_unique<DenseVector<DualReal>>(_val);
+  else if (!_use_ad)
+    for (std::size_t i = 0; i < _dual_number->size(); ++i)
+      (*_dual_number)(i).value() = _val(i);
+  return *_dual_number;
+}
+
+DenseVector<DualReal> &
+MooseADWrapper<DenseVector<Real>>::dn(bool)
+{
+  return *_dual_number;
+}
+
+void
+MooseADWrapper<DenseVector<Real>>::copyDualNumberToValue()
+{
+  for (std::size_t i = 0; i < _dual_number->size(); ++i)
+    _val(i) = (*_dual_number)(i).value();
+}
+
+void
+MooseADWrapper<DenseVector<Real>>::markAD(bool use_ad)
+{
+  if (!use_ad && _use_ad)
+    _dual_number = nullptr;
+  else if (use_ad && !_use_ad)
+    _dual_number = libmesh_make_unique<DenseVector<DualReal>>();
+  _use_ad = use_ad;
+}
+
+MooseADWrapper<DenseVector<Real>> &
+MooseADWrapper<DenseVector<Real>>::operator=(const MooseADWrapper<DenseVector<Real>> & rhs)
+{
+  _val = rhs._val;
+  if (_dual_number && rhs._dual_number)
+    *_dual_number = *rhs._dual_number;
+  else if (_dual_number)
+    // I don't know why we do this, but other code does it - ask Alex.
+    for (size_t i = 0; i < _dual_number->size(); ++i)
+      (*_dual_number)(i) = 0;
+  return *this;
+}
+
+MooseADWrapper<DenseMatrix<Real>>::MooseADWrapper(bool use_ad)
+  : _use_ad(use_ad), _val(), _dual_number(nullptr)
+{
+  if (_use_ad)
+    _dual_number = libmesh_make_unique<DenseMatrix<DualReal>>();
+}
+
+const DenseMatrix<DualReal> &
+MooseADWrapper<DenseMatrix<Real>>::dn(bool) const
+{
+  auto m = _val.m();
+  auto n = _val.n();
+  if (!_dual_number)
+  {
+    _dual_number = libmesh_make_unique<DenseMatrix<DualReal>>(m, n);
+    for (std::size_t i = 0; i < m; ++i)
+      for (std::size_t j = 0; j < n; ++j)
+        (*_dual_number)(i, j).value() = _val(i, j);
+  }
+  else if (!_use_ad)
+    for (std::size_t i = 0; i < m; ++i)
+      for (std::size_t j = 0; j < n; ++j)
+        (*_dual_number)(i, j).value() = _val(i, j);
+  return *_dual_number;
+}
+
+DenseMatrix<DualReal> &
+MooseADWrapper<DenseMatrix<Real>>::dn(bool)
+{
+  return *_dual_number;
+}
+
+void
+MooseADWrapper<DenseMatrix<Real>>::copyDualNumberToValue()
+{
+  for (std::size_t i = 0; i < _dual_number->m(); ++i)
+    for (std::size_t j = 0; j < _dual_number->n(); ++j)
+      _val(i, j) = (*_dual_number)(i, j).value();
+}
+
+void
+MooseADWrapper<DenseMatrix<Real>>::markAD(bool use_ad)
+{
+  if (!use_ad && _use_ad)
+    _dual_number = nullptr;
+  else if (use_ad && !_use_ad)
+    _dual_number = libmesh_make_unique<DenseMatrix<DualReal>>();
+  _use_ad = use_ad;
+}
+
+MooseADWrapper<DenseMatrix<Real>> &
+MooseADWrapper<DenseMatrix<Real>>::operator=(const MooseADWrapper<DenseMatrix<Real>> & rhs)
+{
+  _val = rhs._val;
+  if (_dual_number && rhs._dual_number)
+    *_dual_number = *rhs._dual_number;
+  else if (_dual_number)
+    // I don't know why we do this, but other code does it - ask Alex.
+    for (std::size_t i = 0; i < _dual_number->m(); ++i)
+      for (std::size_t j = 0; j < _dual_number->n(); ++j)
+        (*_dual_number)(i, j) = 0;
+  return *this;
+}

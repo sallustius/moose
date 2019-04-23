@@ -7,8 +7,10 @@
 #include "RankThreeTensor.h"
 #include "RankFourTensor.h"
 
+#include "libmesh/dense_vector.h"
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
+#include "libmesh/dense_matrix.h"
 
 #include "metaphysicl/numberarray.h"
 #include "metaphysicl/dualnumber.h"
@@ -311,6 +313,74 @@ private:
   friend void dataLoad<RankFourTensorTempl<Real>>(std::istream &,
                                                   MooseADWrapper<RankFourTensorTempl<Real>> &,
                                                   void *);
+};
+
+template <>
+class MooseADWrapper<DenseVector<Real>>
+{
+public:
+  MooseADWrapper(bool use_ad = false);
+  MooseADWrapper(MooseADWrapper<DenseVector<Real>> &&) = default;
+
+  typedef DenseVector<DualReal> DNType;
+
+  const DenseVector<Real> & value() const { return _val; }
+
+  DenseVector<Real> & value() { return _val; }
+
+  const DenseVector<DualReal> & dn(bool = true) const;
+
+  DenseVector<DualReal> & dn(bool = true);
+
+  void copyDualNumberToValue();
+
+  void markAD(bool use_ad);
+
+  MooseADWrapper<DenseVector<Real>> & operator=(const MooseADWrapper<DenseVector<Real>> &);
+  MooseADWrapper<DenseVector<Real>> & operator=(MooseADWrapper<DenseVector<Real>> &&) = default;
+
+private:
+  bool _use_ad;
+  DenseVector<Real> _val;
+  mutable std::unique_ptr<DenseVector<DualReal>> _dual_number;
+  friend void
+  dataStore<DenseVector<Real>>(std::ostream &, MooseADWrapper<DenseVector<Real>> &, void *);
+  friend void
+  dataLoad<DenseVector<Real>>(std::istream &, MooseADWrapper<DenseVector<Real>> &, void *);
+};
+
+template <>
+class MooseADWrapper<DenseMatrix<Real>>
+{
+public:
+  MooseADWrapper(bool use_ad = false);
+  MooseADWrapper(MooseADWrapper<DenseMatrix<Real>> &&) = default;
+
+  typedef DenseMatrix<DualReal> DNType;
+
+  const DenseMatrix<Real> & value() const { return _val; }
+
+  DenseMatrix<Real> & value() { return _val; }
+
+  const DenseMatrix<DualReal> & dn(bool = true) const;
+
+  DenseMatrix<DualReal> & dn(bool = true);
+
+  void copyDualNumberToValue();
+
+  void markAD(bool use_ad);
+
+  MooseADWrapper<DenseMatrix<Real>> & operator=(const MooseADWrapper<DenseMatrix<Real>> &);
+  MooseADWrapper<DenseMatrix<Real>> & operator=(MooseADWrapper<DenseMatrix<Real>> &&) = default;
+
+private:
+  bool _use_ad;
+  DenseMatrix<Real> _val;
+  mutable std::unique_ptr<DenseMatrix<DualReal>> _dual_number;
+  friend void
+  dataStore<DenseMatrix<Real>>(std::ostream &, MooseADWrapper<DenseMatrix<Real>> &, void *);
+  friend void
+  dataLoad<DenseMatrix<Real>>(std::istream &, MooseADWrapper<DenseMatrix<Real>> &, void *);
 };
 
 #endif // MOOSEADWRAPPER_H
