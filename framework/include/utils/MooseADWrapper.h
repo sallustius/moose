@@ -11,6 +11,8 @@
 #include "libmesh/vector_value.h"
 #include "libmesh/tensor_value.h"
 #include "libmesh/dense_matrix.h"
+#include "libmesh/dense_matrix_base.h"
+#include "libmesh/dense_matrix_impl.h"
 
 #include "metaphysicl/numberarray.h"
 #include "metaphysicl/dualnumber.h"
