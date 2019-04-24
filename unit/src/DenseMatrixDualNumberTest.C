@@ -19,11 +19,22 @@ using libMesh::DenseMatrix;
 
 TEST(DenseMatrixDualNumber, DenseMatrixDualNumber)
 {
-  MaterialProperty<std::vector<DenseMatrix<Real>>> * property =
-      new ADMaterialPropertyObject<std::vector<DenseMatrix<Real>>>(true);
+  {
+    MaterialProperty<std::vector<DenseMatrix<Real>>> * property =
+        new ADMaterialPropertyObject<std::vector<DenseMatrix<Real>>>(true);
 
-  property->resize(1);
-  (*property)[0].resize(1);
+    property->resize(1);
+    (*property)[0].resize(1);
+    delete property;
+  }
 
-  delete property;
+  {
+    ADMaterialPropertyObject<std::vector<DenseMatrix<Real>>> * property =
+        new ADMaterialPropertyObject<std::vector<DenseMatrix<Real>>>(true);
+
+    property->resize(1);
+    (*property)[0].resize(1);
+
+    delete property;
+  }
 }

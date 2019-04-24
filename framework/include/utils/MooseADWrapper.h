@@ -13,11 +13,13 @@
 #include "libmesh/dense_matrix.h"
 #include "libmesh/dense_matrix_base.h"
 #include "libmesh/dense_matrix_impl.h"
+#include "libmesh/print_trace.h"
 
 #include "metaphysicl/numberarray.h"
 #include "metaphysicl/dualnumber.h"
 
 #include <typeinfo>
+#include <vector>
 
 template <typename T>
 class MooseADWrapper;
@@ -62,7 +64,7 @@ public:
   {
     if (requested_by_user)
       mooseError("Type ",
-                 typeid(T).name(),
+                 demangle(typeid(T).name()),
                  " does not currently support automatic differentiation. Consider using a regular "
                  "material property (declareProperty, getMaterialProperty) instead.");
     return _val;
@@ -76,7 +78,7 @@ public:
   {
     if (requested_by_user)
       mooseError("Type ",
-                 typeid(T).name(),
+                 demangle(typeid(T).name()),
                  " does not currently support automatic differentiation. Consider using a regular "
                  "material property (declareProperty, getMaterialProperty) instead.");
     return _val;
@@ -383,6 +385,42 @@ private:
   dataStore<DenseMatrix<Real>>(std::ostream &, MooseADWrapper<DenseMatrix<Real>> &, void *);
   friend void
   dataLoad<DenseMatrix<Real>>(std::istream &, MooseADWrapper<DenseMatrix<Real>> &, void *);
+};
+
+template <>
+class MooseADWrapper<std::vector<DenseMatrix<Real>>>
+{
+public:
+  MooseADWrapper(bool use_ad = false);
+  MooseADWrapper(MooseADWrapper<std::vector<DenseMatrix<Real>>> &&) = default;
+
+  typedef std::vector<DenseMatrix<DualReal>> DNType;
+
+  const std::vector<DenseMatrix<Real>> & value() const { return _val; }
+
+  std::vector<DenseMatrix<Real>> & value() { return _val; }
+
+  const std::vector<DenseMatrix<DualReal>> & dn(bool = true) const;
+
+  std::vector<DenseMatrix<DualReal>> & dn(bool = true);
+
+  void copyDualNumberToValue();
+
+  void markAD(bool use_ad);
+
+  MooseADWrapper<std::vector<DenseMatrix<Real>>> &
+  operator=(const MooseADWrapper<std::vector<DenseMatrix<Real>>> &);
+  MooseADWrapper<std::vector<DenseMatrix<Real>>> &
+  operator=(MooseADWrapper<std::vector<DenseMatrix<Real>>> &&) = default;
+
+private:
+  bool _use_ad;
+  std::vector<DenseMatrix<Real>> _val;
+  mutable std::unique_ptr<std::vector<DenseMatrix<DualReal>>> _dual_number;
+  friend void dataStore<std::vector<DenseMatrix<Real>>>(
+      std::ostream &, MooseADWrapper<std::vector<DenseMatrix<Real>>> &, void *);
+  friend void dataLoad<std::vector<DenseMatrix<Real>>>(
+      std::istream &, MooseADWrapper<std::vector<DenseMatrix<Real>>> &, void *);
 };
 
 #endif // MOOSEADWRAPPER_H
