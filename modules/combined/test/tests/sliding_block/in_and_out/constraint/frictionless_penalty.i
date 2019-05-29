@@ -93,20 +93,20 @@
 []
 
 [Postprocessors]
-  [./nonlinear_its]
+  [./num_nl]
     type = NumNonlinearIterations
-    execute_on = timestep_end
   [../]
-  [./penetration]
-    type = NodalVariableValue
-    variable = penetration
-    nodeid = 222
+  [./cumulative]
+    type = CumulativeValuePostprocessor
+    postprocessor = num_nl
   [../]
-  [./contact_pressure]
-    type = NodalVariableValue
-    variable = contact_pressure
-    nodeid = 222
-  [../]
+  [lin]
+    type = NumLinearIterations
+  []
+  [cum_lin]
+    type = CumulativeValuePostprocessor
+    postprocessor = lin
+  []
 []
 
 [BCs]
@@ -165,39 +165,23 @@
 [Executioner]
   type = Transient
   solve_type = 'PJFNK'
-
-  petsc_options = '-snes_ksp_ew'
-  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-  petsc_options_value = 'lu     superlu_dist'
-
-  line_search = 'none'
-
-  l_max_its = 100
-  nl_max_its = 1000
-  dt = 0.1
+  petsc_options = '-snes_converged_reason -ksp_converged_reason'
+  petsc_options_iname = '-pc_type -mat_mffd_err -pc_factor_shift_type -pc_factor_shift_amount'
+  petsc_options_value = 'lu       1e-5          NONZERO               1e-15'
   end_time = 15
-  num_steps = 1000
-  l_tol = 1e-6
-  nl_rel_tol = 1e-10
-  nl_abs_tol = 1e-6
+  dt = 0.1
   dtmin = 0.01
-
-  [./Predictor]
-    type = SimplePredictor
-    scale = 1.0
-  [../]
+  l_max_its = 30
+  nl_max_its = 20
+  line_search = 'none'
+  timestep_tolerance = 1e-6
 []
 
 [Outputs]
   file_base = frictionless_penalty_out
-  interval = 10
   [./exodus]
     type = Exodus
     elemental_as_nodal = true
-  [../]
-  [./console]
-    type = Console
-    max_rows = 5
   [../]
 []
 
