@@ -32,10 +32,6 @@ validParams<NodalTangentialContactLM>()
   params.addRequiredCoupledVar("disp_y", "The y velocity");
   params.addRequiredParam<Real>("mu", "The coefficient of friction.");
 
-  MooseEnum ncp_function_type("min fb", "min");
-  params.addParam<MooseEnum>(
-      "ncp_function_type", ncp_function_type, "The type of NCP function to use");
-
   params.addClassDescription("Implements the KKT conditions for frictional Coulomb contact using "
                              "an NCP function. Requires that either the relative tangential "
                              "velocity is zero or the tangential stress is equal to the friction "
@@ -43,15 +39,6 @@ validParams<NodalTangentialContactLM>()
 
   params.addRequiredParam<Real>("mu", "The friction coefficient for the Coulomb friction law");
 
-  params.addParam<Real>(
-      "k_abs",
-      10,
-      "The smoothing parameter for the function used to approximate std::abs. The approximating "
-      "function is courtesy of https://math.stackexchange.com/a/1115033/408963");
-  params.addParam<Real>("k_step",
-                        10,
-                        "The smoothing parameter for approximating the step function as a "
-                        "hyperbolic tangent function");
   return params;
 }
 
@@ -65,10 +52,7 @@ NodalTangentialContactLM::NodalTangentialContactLM(const InputParameters & param
     _du_dot_du(_master_var.dofValuesDuDotDu()),
 
     _mu(getParam<Real>("mu")),
-    _epsilon(std::numeric_limits<Real>::epsilon()),
-    _ncp_type(getParam<MooseEnum>("ncp_function_type")),
-    _k_abs(getParam<Real>("k_abs")),
-    _k_step(getParam<Real>("k_step"))
+    _epsilon(std::numeric_limits<Real>::epsilon())
 {
   _overwrite_slave_residual = false;
 }
@@ -93,6 +77,7 @@ void
 NodalTangentialContactLM::computeJacobian()
 {
   _Kee.resize(1, 1);
+  // We have to calculate these connected dof indices because of logic in NonlinearSystemBase
   _connected_dof_indices.clear();
   _connected_dof_indices.push_back(_var.nodalDofIndex());
 
@@ -117,7 +102,15 @@ NodalTangentialContactLM::computeOffDiagJacobian(unsigned jvar)
   _qp = 0;
 
   _Kee.resize(1, 1);
-  _Kee(0, 0) += computeQpOffDiagJacobian(Moose::SlaveSlave, jvar);
+  _Kee(0, 0) = computeQpOffDiagJacobian(Moose::SlaveSlave, jvar);
+
+  DenseMatrix<Number> & Ken =
+      _assembly.jacobianBlockNeighbor(Moose::ElementNeighbor, _var.number(), jvar);
+
+  auto master_jsize = var.dofIndicesNeighbor().size();
+
+  for (_j = 0; _j < master_jsize; ++_j)
+    Ken(0, _j) = computeQpOffDiagJacobian(Moose::SlaveMaster, jvar);
 }
 
 Real NodalTangentialContactLM::computeQpResidual(Moose::ConstraintType /*type*/)
@@ -127,41 +120,19 @@ Real NodalTangentialContactLM::computeQpResidual(Moose::ConstraintType /*type*/)
   if (found != _penetration_locator._penetration_info.end())
   {
     PenetrationInfo * pinfo = found->second;
-    if (pinfo != NULL)
+    if (pinfo)
     {
-      if (_contact_pressure < _epsilon)
-        return _u_slave[_qp];
-      else
-      {
-        RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
-        Real v_dot_tan = RealVectorValue(_disp_x_dot, _disp_y_dot, 0) * tangent_vec;
+      RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
+      auto v_dot_tan = RealVectorValue(_disp_x_dot, _disp_y_dot, 0) * tangent_vec;
 
-        // NCP part 1: requirement that either there is no slip **or** slip velocity and
-        // frictional force exerted **by** the slave side are in the same direction
-        //
-        // The exact description of this inequality is: v_dot_tan * std::abs(u) / u >= 0 or more
-        // succinctly: v_dot_tan * sgn(u) >= 0. However we are going to approximate the sgn function
-        // by a hyperbolic tangent
-        Real a = v_dot_tan * std::tanh(_k_step * _u_slave[_qp]);
+      auto gap = -pinfo->_distance;
 
-        // NCP part 2: require that the frictional force can never exceed the frictional
-        // coefficient times the normal force.
-        //
-        // The exact description of this inequation is: _mu * _contact_pressure - std::abs(u) >= 0.
-        // However we are goign to approximate the abs function by the function given in
-        // https://math.stackexchange.com/a/1115033/408963
-        auto approx_abs = 2. / _k_abs * std::log(1. + std::exp(_k_abs * _u_slave[_qp])) -
-                          _u_slave[_qp] - 2. / _k_abs * std::log(2);
-        auto b = _mu * _contact_pressure - approx_abs;
-
-        if (_ncp_type == "fb")
-          return a + b - std::sqrt(a * a + b * b + _epsilon);
-        else
-          return std::min(a, b);
-      }
+      return std::max(_mu * (_contact_pressure - gap), std::abs(_u_slave[_qp] + v_dot_tan)) *
+                 _u_slave[_qp] -
+             _mu * std::max(0., _contact_pressure - gap) * (_u_slave[_qp] + v_dot_tan);
     }
   }
-  return 0;
+  return _u_slave[_qp];
 }
 
 Real NodalTangentialContactLM::computeQpJacobian(Moose::ConstraintJacobianType /*type*/)
@@ -171,110 +142,105 @@ Real NodalTangentialContactLM::computeQpJacobian(Moose::ConstraintJacobianType /
   if (found != _penetration_locator._penetration_info.end())
   {
     PenetrationInfo * pinfo = found->second;
-    if (pinfo != NULL)
+    if (pinfo)
     {
-      if (_contact_pressure < _epsilon)
-        return 1.;
-      else
-      {
-        RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
-        Real v_dot_tan = RealVectorValue(_disp_x_dot, _disp_y_dot, 0) * tangent_vec;
+      RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
+      auto v_dot_tan = RealVectorValue(_disp_x_dot, _disp_y_dot, 0) * tangent_vec;
 
-        // NCP part 1: requirement that either there is no slip **or** slip velocity and
-        // frictional force exerted **by** the slave side are in the same direction
-        //
-        // The exact description of this inequality is: v_dot_tan * std::abs(u) / u >= 0 or more
-        // succinctly: v_dot_tan * sgn(u) >= 0. However we are going to approximate the sgn function
-        // by a hyperbolic tangent
-        Real a = v_dot_tan * std::tanh(_k_step * _u_slave[_qp]);
+      auto gap = -pinfo->_distance;
 
-        // NCP part 2: require that the frictional force can never exceed the frictional
-        // coefficient times the normal force.
-        //
-        // The exact description of this inequation is: _mu * _contact_pressure - std::abs(u) >= 0.
-        // However we are goign to approximate the abs function by the function given in
-        // https://math.stackexchange.com/a/1115033/408963
-        DualNumber<Real> dual_u_slave(_u_slave[_qp]);
-        dual_u_slave.derivatives() = 1;
+      DualNumber<Real> dual_u_slave(_u_slave[_qp]);
+      dual_u_slave.derivatives() = 1.;
 
-        auto approx_abs = 2. / _k_abs * std::log(1. + std::exp(_k_abs * dual_u_slave)) -
-                          dual_u_slave - 2. / _k_abs * std::log(2);
-        auto b = _mu * _contact_pressure - approx_abs;
-
-        if (_ncp_type == "fb")
-          return (a + b - std::sqrt(a * a + b * b + _epsilon)).derivatives();
-        else
-          return std::min(a, b).derivatives();
-      }
+      return (std::max(_mu * (_contact_pressure - gap), std::abs(dual_u_slave + v_dot_tan)) *
+                  dual_u_slave -
+              _mu * std::max(0., _contact_pressure - gap) * (dual_u_slave + v_dot_tan))
+          .derivatives();
     }
   }
-  return 0;
+  return 1;
 }
 
 Real
-NodalTangentialContactLM::computeQpOffDiagJacobian(Moose::ConstraintJacobianType /*type*/,
+NodalTangentialContactLM::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type,
                                                    unsigned jvar)
 {
-  std::map<dof_id_type, PenetrationInfo *>::iterator found =
-      _penetration_locator._penetration_info.find(_current_node->id());
-  if (found != _penetration_locator._penetration_info.end())
+  if (jvar == _master_var_num || jvar == _disp_y_id || jvar == _contact_pressure_id)
   {
-    PenetrationInfo * pinfo = found->second;
-    if (pinfo != NULL)
+    std::map<dof_id_type, PenetrationInfo *>::iterator found =
+        _penetration_locator._penetration_info.find(_current_node->id());
+    if (found != _penetration_locator._penetration_info.end())
     {
-      if (_contact_pressure < _epsilon)
-        return 0.;
+      PenetrationInfo * pinfo = found->second;
+      if (pinfo)
+      {
+        // Our local dual number is going to depend on only three degrees of freedom: the slave
+        // nodal dofs for disp_x (index 0), disp_y (index 1), and the contact pressure (index 2).
+        // The latter of course exists only on the slave side
+        typedef DualNumber<Real, NumberArray<3, Real>> LocalDN;
 
-      // Our local dual number is going to depend on only three degrees of freedom: the slave nodal
-      // dofs for disp_x (index 0), disp_y (index 1), and the contact pressure (index 2). The latter
-      // of course exists only on the slave side
-      typedef DualNumber<Real, NumberArray<3, Real>> LocalDN;
+        RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
 
-      RealVectorValue tangent_vec(pinfo->_normal(1), -pinfo->_normal(0), 0);
+        LocalDN dual_disp_x_dot(_disp_x_dot);
+        // We index the zeroth entry of the _du_dot_du member variable because there is only one
+        // degree of freedom on the node
+        dual_disp_x_dot.derivatives()[0] = _du_dot_du[0];
 
-      LocalDN dual_disp_x_dot(_disp_x_dot);
-      // We index the zeroth entry of the _du_dot_du member variable because there is only one
-      // degree of freedom on the node
-      dual_disp_x_dot.derivatives()[0] = _du_dot_du[0];
+        LocalDN dual_disp_y_dot(_disp_y_dot);
+        dual_disp_y_dot.derivatives()[1] = _du_dot_du[0];
 
-      LocalDN dual_disp_y_dot(_disp_y_dot);
-      dual_disp_y_dot.derivatives()[1] = _du_dot_du[0];
+        LocalDN dual_contact_pressure(_contact_pressure);
+        dual_contact_pressure.derivatives()[2] = 1;
 
-      LocalDN dual_contact_pressure(_contact_pressure);
-      dual_contact_pressure.derivatives()[2] = 1;
+        auto v_dot_tan = VectorValue<LocalDN>(dual_disp_x_dot, dual_disp_y_dot, 0) * tangent_vec;
 
-      auto v_dot_tan = VectorValue<LocalDN>(dual_disp_x_dot, dual_disp_y_dot, 0) * tangent_vec;
+        LocalDN gap(-pinfo->_distance);
 
-      // NCP part 1: requirement that either there is no slip **or** slip velocity and
-      // frictional force exerted **by** the slave side are in the same direction
-      //
-      // The exact description of this inequality is: v_dot_tan * std::abs(u) / u >= 0 or more
-      // succinctly: v_dot_tan * sgn(u) >= 0. However we are going to approximate the sgn function
-      // by a hyperbolic tangent
-      auto a = v_dot_tan * std::tanh(_k_step * _u_slave[_qp]);
+        if (jvar == _master_var_num)
+        {
+          switch (type)
+          {
+            case Moose::SlaveSlave:
+              gap.derivatives()[0] = pinfo->_normal(0);
+              break;
+            case Moose::SlaveMaster:
+              gap.derivatives()[0] = pinfo->_normal(0) * -_phi_master[_j][_qp];
+              break;
+            default:
+              mooseError(
+                  "You shouldn't be calling in with types other than SlaveSlave or SlaveMaster");
+              break;
+          }
+        }
+        else if (jvar == _disp_y_id)
+        {
+          switch (type)
+          {
+            case Moose::SlaveSlave:
+              gap.derivatives()[1] = pinfo->_normal(1);
+              break;
+            case Moose::SlaveMaster:
+              gap.derivatives()[1] = pinfo->_normal(1) * -_phi_master[_j][_qp];
+              break;
+            default:
+              mooseError(
+                  "You shouldn't be calling in with types other than SlaveSlave or SlaveMaster");
+              break;
+          }
+        }
 
-      // NCP part 2: require that the frictional force can never exceed the frictional
-      // coefficient times the normal force.
-      //
-      // The exact description of this inequation is: _mu * _contact_pressure - std::abs(u) >= 0.
-      // However we are goign to approximate the abs function by the function given in
-      // https://math.stackexchange.com/a/1115033/408963
-      auto approx_abs = 2. / _k_abs * std::log(1. + std::exp(_k_abs * _u_slave[_qp])) -
-                        _u_slave[_qp] - 2. / _k_abs * std::log(2);
-      auto b = _mu * dual_contact_pressure - approx_abs;
+        auto ncp_value =
+            std::max(_mu * (dual_contact_pressure - gap), std::abs(_u_slave[_qp] + v_dot_tan)) *
+                _u_slave[_qp] -
+            _mu * std::max(0., dual_contact_pressure - gap) * (_u_slave[_qp] + v_dot_tan);
 
-      LocalDN ncp_value;
-      if (_ncp_type == "fb")
-        ncp_value = a + b - std::sqrt(a * a + b * b + _epsilon);
-      else
-        ncp_value = std::min(a, b);
-
-      if (jvar == _contact_pressure_id)
-        return ncp_value.derivatives()[2];
-      else if (jvar == _master_var.number())
-        return ncp_value.derivatives()[0];
-      else if (jvar == _disp_y_id)
-        return ncp_value.derivatives()[1];
+        if (jvar == _contact_pressure_id)
+          return ncp_value.derivatives()[2];
+        else if (jvar == _master_var.number())
+          return ncp_value.derivatives()[0];
+        else if (jvar == _disp_y_id)
+          return ncp_value.derivatives()[1];
+      }
     }
   }
   return 0.;

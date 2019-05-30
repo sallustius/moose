@@ -89,7 +89,6 @@ offset = 1e-2
     master_variable = disp_x
     disp_y = disp_y
     contact_pressure = normal_lm
-    ncp_function_type = min
     mu = .1
   []
   [tangential_x]
@@ -165,6 +164,7 @@ offset = 1e-2
 
 [Outputs]
   exodus = true
+  checkpoint = true
   [dof]
     type = DOFMap
     execute_on = 'initial'

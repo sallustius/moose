@@ -62,49 +62,48 @@ TangentialContactLMTest<compute_stage>::computeQpResidual(Moose::MortarType mort
       // Check whether we project onto a master face
       if (_has_master)
       {
-        // Check whether we are actually in contact
-        if (_contact_pressure[_qp] > TOLERANCE * TOLERANCE)
-        {
-          // Build the velocity vector
-          ADRealVectorValue relative_velocity(
-              _slave_x_dot[_qp] - _master_x_dot[_qp], _slave_y_dot[_qp] - _master_y_dot[_qp], 0);
+        // Build the velocity vector
+        ADRealVectorValue relative_velocity(
+            _slave_x_dot[_qp] - _master_x_dot[_qp], _slave_y_dot[_qp] - _master_y_dot[_qp], 0);
 
-          // Get the component in the tangential direction
-          auto tangential_velocity = relative_velocity * _tangents[_qp][0];
+        // Get the component in the tangential direction
+        auto v_dot_tan = relative_velocity * _tangents[_qp][0];
 
-          // NCP part 1: requirement that either there is no slip **or** slip velocity and
-          // frictional force exerted **by** the slave side are in the same direction
-          ADReal a;
-          if (tangential_velocity * _lambda[_qp] < 0)
-            a = -tangential_velocity * tangential_velocity;
-          else
-            a = tangential_velocity * tangential_velocity;
+        auto gap_vec = gapVec<compute_stage>();
+        auto gap = gap_vec * _normals[_qp];
 
-          // NCP part 2: require that the frictional force can never exceed the frictional
-          // coefficient times the normal force
-          auto b = _friction_coeff * _contact_pressure[_qp] - std::abs(_lambda[_qp]);
-
-          ADReal fb_function;
-          if (_ncp_type == "fb")
-            // The FB function (in its pure form) is not differentiable at (0, 0) but if we add some
-            // constant > 0 into the root function, then it is
-            fb_function = a + b - std::sqrt(a * a + b * b + _epsilon);
-          else
-            fb_function = std::min(a, b);
-
-          return _test[_i][_qp] * fb_function;
-        }
-        else
-          // If not in contact then we force the tangential lagrange multiplier to zero
-          return _test[_i][_qp] * _lambda[_qp];
+        return _test[_i][_qp] *
+                   std::max(_mu * (_contact_pressure[_qp] - gap),
+                            std::abs(_lambda[_qp] + v_dot_tan)) *
+                   _lambda[_qp] -
+               _mu * std::max(0., _contact_pressure[_qp] - gap) * (_lambda[_qp] + v_dot_tan);
       }
       else
-        // If not in contact then we force the tangential lagrange multiplier to zero (if we don't
-        // project onto a master face, then we're definitely not in contact)
+        // If not in contact then we force the tangential lagrange multiplier to zero
         return _test[_i][_qp] * _lambda[_qp];
     }
 
     default:
       return 0;
   }
+}
+
+template <>
+RealVectorValue
+TangentialContactLMTest<RESIDUAL>::gapVec()
+{
+  return _phys_points_master[_qp] - _phys_points_slave[_qp];
+}
+
+template <>
+DualRealVectorValue
+TangentialContactLMTest<JACOBIAN>::gapVec()
+{
+  DualRealVectorValue gap_vec = _phys_points_master[_qp] - _phys_points_slave[_qp];
+  // Here we're assuming that the user provided the x-component as the slave/master
+  // variable!
+  gap_vec(0).derivatives() = _u_master[_qp].derivatives() - _u_slave[_qp].derivatives();
+  gap_vec(1).derivatives() =
+      (*_master_disp_y_sln)[_qp].derivatives() - (*_slave_disp_y_sln)[_qp].derivatives();
+  return gap_vec;
 }

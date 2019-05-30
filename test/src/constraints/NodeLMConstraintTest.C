@@ -75,6 +75,7 @@ void
 NodeLMConstraintTest::computeJacobian()
 {
   _Kee.resize(1, 1);
+  // We have to calculate these connected dof indices because of logic in NonlinearSystemBase
   _connected_dof_indices.clear();
   _connected_dof_indices.push_back(_var.nodalDofIndex());
 
@@ -99,13 +100,15 @@ NodeLMConstraintTest::computeOffDiagJacobian(unsigned jvar)
   _qp = 0;
 
   _Kee.resize(1, 1);
-  _Kee(0, 0) += computeQpOffDiagJacobian(Moose::SlaveSlave, jvar);
+  _Kee(0, 0) = computeQpOffDiagJacobian(Moose::SlaveSlave, jvar);
 
   DenseMatrix<Number> & Ken =
       _assembly.jacobianBlockNeighbor(Moose::ElementNeighbor, _var.number(), jvar);
 
-  for (_j = 0; _j < _phi_master.size(); ++_j)
-    Ken(0, _j) += computeQpOffDiagJacobian(Moose::SlaveMaster, jvar);
+  auto master_jsize = var.dofIndicesNeighbor().size();
+
+  for (_j = 0; _j < master_jsize; ++_j)
+    Ken(0, _j) = computeQpOffDiagJacobian(Moose::SlaveMaster, jvar);
 }
 
 Real NodeLMConstraintTest::computeQpResidual(Moose::ConstraintType /*type*/)
@@ -126,7 +129,7 @@ Real NodeLMConstraintTest::computeQpResidual(Moose::ConstraintType /*type*/)
         return std::min(a, b);
     }
   }
-  return 0;
+  return _u_slave[_qp];
 }
 
 // Note that the Jacobians below are inexact. To really make them exact, the most algorithmically
@@ -153,7 +156,7 @@ Real NodeLMConstraintTest::computeQpJacobian(Moose::ConstraintJacobianType /*typ
         return std::min(a, b).derivatives();
     }
   }
-  return 0;
+  return 1;
 }
 
 Real
