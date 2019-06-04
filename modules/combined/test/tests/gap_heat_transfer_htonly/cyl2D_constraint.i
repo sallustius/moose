@@ -133,7 +133,7 @@
     type = GapConductanceConstraint
     variable = lm
     slave_variable = temp
-    k = 0.05
+    k = 0.5
     use_displaced_mesh = true
     master_boundary = 3
     master_subdomain = 300
@@ -194,13 +194,13 @@
 
 [Executioner]
   type = Transient
-  line_search = bt
+  line_search = none
 
-  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package -mat_mffd_err' # -mat_mffd_err
-  petsc_options_value = 'lu       superlu_dist                  1e-8'
+  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package -mat_mffd_err -snes_max_it'
+  petsc_options_value = 'lu       superlu_dist                  1e-5          10'
 
   dt = 0.1
-  dtmin = 0.01
+  dtmin = 0.1
   end_time = 1
 
   nl_rel_tol = 1e-12

@@ -112,7 +112,7 @@
     variable = temp
     master = 3
     slave = 2
-    gap_conductivity = 0.005
+    gap_conductivity = 0.5
     quadrature = true
     gap_geometry_type = PLATE
   [../]
