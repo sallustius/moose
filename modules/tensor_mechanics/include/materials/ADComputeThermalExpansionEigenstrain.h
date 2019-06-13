@@ -30,8 +30,7 @@ public:
 protected:
   virtual void computeThermalStrain(ADReal & thermal_strain, ADReal & instantaneous_cte) override;
 
-  const Real & _thermal_expansion_coeff;
+  const ADMaterialProperty(Real) & _thermal_expansion_coeff;
 
   usingComputeThermalExpansionEigenstrainBaseMembers;
 };
-

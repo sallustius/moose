@@ -15,14 +15,15 @@ defineADValidParams(ADComputeThermalExpansionEigenstrain,
                     ADComputeThermalExpansionEigenstrainBase,
                     params.addClassDescription("Computes eigenstrain due to thermal expansion "
                                                "with a constant coefficient");
-                    params.addRequiredParam<Real>("thermal_expansion_coeff",
-                                                  "Thermal expansion coefficient"););
+                    params.addParam<MaterialPropertyName>("thermal_expansion_coeff",
+                                                          "thermal_expansion",
+                                                          "Thermal expansion coefficient"););
 
 template <ComputeStage compute_stage>
 ADComputeThermalExpansionEigenstrain<compute_stage>::ADComputeThermalExpansionEigenstrain(
     const InputParameters & parameters)
   : ADComputeThermalExpansionEigenstrainBase<compute_stage>(parameters),
-    _thermal_expansion_coeff(adGetParam<Real>("thermal_expansion_coeff"))
+    _thermal_expansion_coeff(adGetADMaterialProperty<Real>("thermal_expansion_coeff"))
 {
 }
 
@@ -31,6 +32,7 @@ void
 ADComputeThermalExpansionEigenstrain<compute_stage>::computeThermalStrain(
     ADReal & thermal_strain, ADReal & instantaneous_cte)
 {
-  thermal_strain = _thermal_expansion_coeff * (_temperature[_qp] - _stress_free_temperature[_qp]);
-  instantaneous_cte = _thermal_expansion_coeff;
+  thermal_strain =
+      _thermal_expansion_coeff[_qp] * (_temperature[_qp] - _stress_free_temperature[_qp]);
+  instantaneous_cte = _thermal_expansion_coeff[_qp];
 }
