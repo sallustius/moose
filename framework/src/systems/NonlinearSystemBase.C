@@ -3212,8 +3212,12 @@ NonlinearSystemBase::computeScalingJacobian(NonlinearImplicitSystem & sys)
 
     // We have to make sure that our scaling values are not zero
     for (auto & scaling_factor : inverse_scaling_factors)
+    {
       if (scaling_factor < std::numeric_limits<Real>::epsilon())
         scaling_factor = 1;
+      _console << "\nScaling factor is " << 1. / scaling_factor << "\n";
+    }
+    _console << "\n";
 
     // Now set the scaling factors for the variables
     applyScalingFactors(inverse_scaling_factors);

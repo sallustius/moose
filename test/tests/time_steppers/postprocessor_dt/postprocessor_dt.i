@@ -6,7 +6,7 @@
   ymin = -1
   ymax =  1
   nx = 2
-  ny = 2
+  ny = 1
   elem_type = QUAD9
 []
 
