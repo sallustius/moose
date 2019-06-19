@@ -5,8 +5,10 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  ny = 200
-  nx = 10
+  # ny = 200
+  # nx = 10
+  ny = 1
+  nx = 2
   ymax = 0.304 # Length of test chamber
   xmax = 0.0257 # Test chamber radius
 []
@@ -22,6 +24,8 @@
 []
 
 [Variables]
+  [disp_r][]
+  [disp_z][]
   [pressure]
   []
   [temperature]
@@ -44,17 +48,17 @@
   []
 []
 
-[Modules/TensorMechanics/Master]
-  [all]
-    # This block adds all of the proper Kernels, strain calculators, and Variables
-    # for TensorMechanics in the correct coordinate system (autodetected)
-    add_variables = true
-    strain = FINITE
-    eigenstrain_names = eigenstrain
-    use_automatic_differentiation = true
-    generate_output = 'vonmises_stress elastic_strain_xx elastic_strain_yy strain_xx strain_yy'
-  []
-[]
+# [Modules/TensorMechanics/Master]
+#   [all]
+#     # This block adds all of the proper Kernels, strain calculators, and Variables
+#     # for TensorMechanics in the correct coordinate system (autodetected)
+#     add_variables = true
+#     strain = FINITE
+#     # eigenstrain_names = eigenstrain
+#     use_automatic_differentiation = true
+#     generate_output = 'vonmises_stress elastic_strain_xx elastic_strain_yy strain_xx strain_yy'
+#   []
+# []
 
 [Kernels]
   [darcy_pressure]
@@ -64,15 +68,28 @@
   [heat_conduction]
     type = ADHeatConduction
     variable = temperature
+    use_displaced_mesh = false
+    thermal_conductivity = 'const_k'
   []
   [heat_conduction_time_derivative]
     type = ADHeatConductionTimeDerivative
     variable = temperature
+    use_displaced_mesh = true
+    specific_heat = const_cp
+    density_name = const_rho
   []
   [heat_convection]
     type = DarcyAdvection
     variable = temperature
     pressure = pressure
+  []
+  [diff_r]
+    type = Diffusion
+    variable = 'disp_r'
+  []
+  [diff_z]
+    type = Diffusion
+    variable = 'disp_z'
   []
 []
 
@@ -174,21 +191,27 @@
     fluid_thermal_expansion_file = ${thermal_expansion_file}
   []
 
-  [elasticity_tensor]
-    type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 200e9 # (Pa) from wikipedia
-    poissons_ratio = .3 # from wikipedia
+  # [elasticity_tensor]
+  #   type = ComputeIsotropicElasticityTensor
+  #   youngs_modulus = 200e9 # (Pa) from wikipedia
+  #   poissons_ratio = .3 # from wikipedia
 
-  []
-  [elastic_stress]
-    type = ADComputeFiniteStrainElasticStress
-  []
-  [thermal_strain]
-    type = ADComputeThermalExpansionEigenstrain
-    stress_free_temperature = 300
-    eigenstrain_name = eigenstrain
-    temperature = temperature
-    thermal_expansion_coeff = 1e-5 # TM modules doesn't support material property, but it will
+  # []
+  # [elastic_stress]
+  #   type = ADComputeFiniteStrainElasticStress
+  # []
+  # [thermal_strain]
+  #   type = ADComputeThermalExpansionEigenstrain
+  #   stress_free_temperature = 300
+  #   eigenstrain_name = eigenstrain
+  #   temperature = temperature
+  #   thermal_expansion_coeff = 1e-5 # TM modules doesn't support material property, but it will
+  # []
+  [constant_mat]
+    type = GenericConstantMaterial
+    block = '0 1'
+    prop_names = 'const_k const_cp const_rho'
+    prop_values = '1.1e3    1.1e3      1.1e3'
   []
 []
 
@@ -201,7 +224,14 @@
 
 [Problem]
   type = FEProblem
-  coord_type = RZ
+  coord_type = XYZ
+[]
+
+[Preconditioning]
+  [smp]
+    type = SMP
+    full = true
+  []
 []
 
 [Executioner]
@@ -213,9 +243,9 @@
   dt = 0.25
   solve_type = PJFNK
   automatic_scaling = true
-  compute_scaling_once = false
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'lu'
+  compute_scaling_once = true
+  petsc_options_iname = '-pc_type -snes_test_err'
+  petsc_options_value = 'lu       1e-8'
   #petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
   #petsc_options_value = 'hypre boomeramg 500'
   line_search = none
@@ -229,5 +259,9 @@
   [out]
     type = Exodus
     elemental_as_nodal = true
+  []
+  [dof]
+    type = DOFMap
+    execute_on = 'initial'
   []
 []
