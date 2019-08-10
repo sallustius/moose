@@ -5,8 +5,8 @@
   xmax = 1.0
   ymin = 0
   ymax = 1.0
-  nx = 16
-  ny = 16
+  nx = 32
+  ny = 32
   elem_type = QUAD9
 []
 
