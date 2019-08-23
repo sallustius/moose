@@ -28,32 +28,7 @@
 
 # Newton's Method
 
-- We now have a nonlinear system of equations,
-  $$$R_i(u_h)=0, \qquad i=1,\ldots, N$$$
-  to solve for the coefficients $$$u_j, j=1,\dots,N$$$.
-
-- Newton's method has good convergence properties, we use it to solve this system of nonlinear equations.
-- Newton's method is a "root finding" method: it finds zeros of nonlinear equations.
-- Newton's Method in "Update Form" for finding roots of the scalar equation
-  $$$\begin{array}{rl}f(x)&=0, f(x): \mathbb{R} &\rightarrow \mathbb{R}\textrm{ is given by}:\\
-  f'(x_n) \delta x_{n+1} &= -f(x_n) \\
-  x_{n+1} &= x_n + \delta x_{n+1}\end{array}$$$
-- We don't have just one scalar equation: we have a system of nonlinear equations.
-- This leads to the following form of Newton's Method:
-
-    $$$\begin{aligned}
-    \mathbf{J}(\vec{u}_n) \delta\vec{u}_{n+1} &= -\vec{R}(\vec{u}_n) \\
-    \vec{u}_{n+1} &= \vec{u}_n + \delta\vec{u}_{n+1}\end{aligned}$$$
-
-- Where $$$\mathbf{J}(\vec{u}_n)$$$ is the Jacobian matrix evaluated at the current iterate:
-    $$$J_{ij}(\vec{u}_n) = \frac{\partial R_i(\vec{u}_n)}{\partial u_j}$$$
-
-- Note that:
-    $$$\frac{\partial u_h}{\partial u_j} =
-      \sum_k\frac{\partial }{\partial u_j}\left(u_k \phi_k\right) = \phi_j
-    \qquad
-    \frac{\partial \left(\nabla u_h\right)}{\partial u_j} =
-      \sum_k \frac{\partial }{\partial u_j}\left(u_k \nabla \phi_k\right) = \nabla \phi_j$$$
+[NonlinearSystem.md#newtons_method]
 
 # Newton for a Simple Equation
 
@@ -92,40 +67,7 @@ $$$\begin{aligned} J_{ij}(u_h) &= \left(\nabla\psi_i, \frac{\partial k}{\partial
 
 # Jacobian Free Newton Krylov
 
-- $$$\mathbf{J}(\vec{u}_n)\delta \vec{u}_{n+1} = -\vec{R}(\vec{u}_n)$$$ is a linear system solved during each Newton step.
-- For simplicity, we can write this linear system as $$$\mathbf{A}\vec{x} = \vec{b}$$$, where:
-    - $$$\mathbf{A} \equiv \mathbf{J}(\vec{u}_n)$$$
-    - $$$\vec{x} \equiv \delta \vec{u}_{n+1}$$$
-    - $$$\vec{b} \equiv -\vec{R}(\vec{u}_n)$$$
-- We employ an iterative Krylov method (e.g. GMRES) to produce a sequence of iterates $$$\vec{x}_k \rightarrow \vec{x}$$$, $$$k=1,2,\ldots$$$
-- $$$\mathbf{A}$$$ and $$$\vec{b}$$$ remain *fixed* during the iterative process.
-- The "linear residual" at step $$$k$$$ is defined as
-
-  $$$\vec{\rho}_k \equiv \mathbf{A}\vec{x}_k - \vec{b}$$$
-
-- MOOSE prints the norm of this vector, $$$\|\vec{\rho}_k\|$$$, at each iteration, if you set `print_linear_residuals = true` in the `Outputs` block.
-
-- The "nonlinear residual" printed by MOOSE is $$$\|\vec{R}(\vec{u}_n)\|$$$.
-
-- By iterate $$$k$$$, the Krylov method has constructed the subspace
-
-  $$$\mathcal{K}_k = \text{span}\{ \vec{b}, \mathbf{A}\vec{b}, \mathbf{A}^2\vec{b}, \ldots, \mathbf{A}^{k-1}\vec{b}\}$$$
-
-- Different Krylov methods produce the $$$\vec{x}_k$$$ iterates in different ways:
-- Conjugate Gradients: $$$\vec{\rho}_k$$$ orthogonal to $$$\mathcal{K}_k$$$.
-- GMRES/MINRES: $$$\vec{\rho}_k$$$ has minimum norm for $$$\vec{x}_k$$$ in $$$\mathcal{K}_k$$$.
-- Biconjugate Gradients: $$$\vec{\rho}_k$$$ is orthogonal to $$$\mathcal{K}_k(\mathbf{A}^T)$$$
-
-- $$$\mathbf{J}$$$ is never explicitly needed to construct the subspace, only the action of $$$\mathbf{J}$$$ on a vector is required.
-
-
-- This action can be approximated by:
-    $$$\mathbf{J}\vec{v} \approx \frac{\vec{R}(\vec{u} + \epsilon\vec{v}) - \vec{R}(\vec{u})}{\epsilon}$$$
-
-- This form has many advantages:
-    - No need to do analytic derivatives to form $$$\mathbf{J}$$$
-    - No time needed to compute $$$\mathbf{J}$$$ (just residual computations)
-    - No space needed to store $$$\mathbf{J}$$$
+[NonlinearSystem.md#JFNK]
 
 # Wrap Up
 
