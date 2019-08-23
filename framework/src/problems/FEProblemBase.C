@@ -4785,6 +4785,7 @@ void
 FEProblemBase::computeResidualTags(const std::set<TagID> & tags)
 {
   TIME_SECTION(_compute_residual_tags_timer);
+  CONSOLE_TIMED_PRINT("Computing residual");
 
   _nl->zeroVariablesForResidual();
   _aux->zeroVariablesForResidual();
@@ -4936,6 +4937,7 @@ FEProblemBase::computeJacobianTags(const std::set<TagID> & tags)
   if (!_has_jacobian || !_const_jacobian)
   {
     TIME_SECTION(_compute_jacobian_tags_timer);
+    CONSOLE_TIMED_PRINT("Computing jacobian");
 
     for (auto tag : tags)
       if (_nl->hasMatrix(tag))
