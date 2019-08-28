@@ -102,8 +102,12 @@
 [Executioner]
   type = Transient
   petsc_options = '-ksp_monitor_true_residual'
-  petsc_options_iname = '-snes_type -snes_ls -ksp_gmres_restart -pc_type -pc_hypre_type'
-  petsc_options_value = 'newtonls   basic    201                hypre    boomeramg'
+  # petsc_options_iname = '-ksp_gmres_restart -pc_type'
+  # petsc_options_value = '201                lu'
+  petsc_options_iname = '-ksp_gmres_restart -pc_type -mg_levels_pc_type -mg_levels_sub_pc_type -ksp_type -mg_levels_ksp_type -mat_mffd_type -mat_mffd_err'
+  petsc_options_value = '201                hmg      bjacobi            sor                    fgmres    gmres               ds             1e-4'
+  # petsc_options_iname = '-ksp_gmres_restart -pc_type -pc_hypre_type'
+  # petsc_options_value = '201                hypre    boomeramg'
   line_search = none
   dt = 4036608
   solve_type = PJFNK
@@ -111,7 +115,9 @@
   nl_abs_tol = 1e-10
   nl_rel_tol = 1e-4
   l_tol = 8e-3
-  l_max_its = 100
+  l_max_its = 300
+  automatic_scaling = true
+  verbose = true
   [TimeStepper]
     type = TimeSequenceStepper
     time_sequence = '540 1080 1620 2160 2700 3240 3780 4320 4860 5400 5940 6480 7020 7560 8100 8640 9180 9720 10260 10800 11340 11880 12420 12960'
