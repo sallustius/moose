@@ -194,6 +194,7 @@ validParams<FEProblemBase>()
                                         "Extra matrices to add to the system that can be filled "
                                         "by objects which compute residuals and Jacobians "
                                         "(Kernels, BCs, etc.) by setting tags on them.");
+  params.addParam<unsigned>("num_grid_sequences", 0, "The number of grid sequences to perform");
 
   params.addPrivateParam<MooseMesh *>("mesh");
 
@@ -328,7 +329,8 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
     _u_dotdot_requested(false),
     _u_dot_old_requested(false),
     _u_dotdot_old_requested(false),
-    _has_mortar(false)
+    _has_mortar(false),
+    _num_grid_sequences(getParam<unsigned>("num_grid_sequences"))
 {
   _time = 0.0;
   _time_old = 0.0;
@@ -1021,6 +1023,24 @@ FEProblemBase::initialSetup()
 void
 FEProblemBase::timestepSetup()
 {
+  if (_t_step > 1)
+  {
+    MeshRefinement mesh_refinement(_mesh);
+    std::unique_ptr<MeshRefinement> displaced_mesh_refinement(nullptr);
+    if (_displaced_mesh)
+    {
+      displaced_mesh_refinement = libmesh_make_unique<MeshRefinement>(*_displaced_mesh);
+      _displaced_problem->undisplaceMesh();
+    }
+    for (MooseIndex(_num_grid_sequences) i = 0; i < _num_grid_sequences; ++i)
+    {
+      mesh_refinement.uniformly_coarsen();
+      if (_displaced_mesh)
+        displaced_mesh_refinement->uniformly_coarsen();
+      meshChangedHelper();
+    }
+  }
+
   // Random interface objects
   for (const auto & it : _random_data_objects)
     it.second->updateSeeds(EXEC_TIMESTEP_BEGIN);
@@ -6401,4 +6421,16 @@ SystemBase &
 FEProblemBase::systemBaseAuxiliary()
 {
   return *_aux;
+}
+
+void
+FEProblemBase::uniformRefine()
+{
+  Adaptivity::uniformRefine(&_mesh, 1);
+  if (_displaced_problem)
+  {
+    _displaced_problem->undisplaceMesh();
+    Adaptivity::uniformRefine(&_displaced_problem->mesh(), 1);
+  }
+  meshChangedHelper();
 }
