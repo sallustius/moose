@@ -678,7 +678,7 @@ FEProblemBase::initialSetup()
   _app.getOutputWarehouse().mooseConsole();
 
   // Build Refinement and Coarsening maps for stateful material projections if necessary
-  if (_adaptivity.isOn() &&
+  if ((_adaptivity.isOn() || _num_grid_sequences) &&
       (_material_props.hasStatefulProperties() || _bnd_material_props.hasStatefulProperties() ||
        _neighbor_material_props.hasStatefulProperties()))
   {
@@ -5790,6 +5790,11 @@ FEProblemBase::meshChangedHelper(bool intermediate_change)
 
   _evaluable_local_elem_range.reset();
 
+  // Just like we reinitialized our geometric search objects, we also need to reinitialize our
+  // mortar meshes. Note that this needs to happen after DisplacedProblem::meshChanged because the
+  // mortar mesh discretization will depend necessarily on the displaced mesh being re-displaced
+  updateMortarMesh();
+
   reinitBecauseOfGhostingOrNewGeomObjects();
 
   // We need to create new storage for the new elements and copy stateful properties from the old
@@ -5852,7 +5857,7 @@ FEProblemBase::checkProblemIntegrity()
   // Check materials
   {
 #ifdef LIBMESH_ENABLE_AMR
-    if (_adaptivity.isOn() &&
+    if ((_adaptivity.isOn() || _num_grid_sequences) &&
         (_material_props.hasStatefulProperties() || _bnd_material_props.hasStatefulProperties() ||
          _neighbor_material_props.hasStatefulProperties()))
     {
