@@ -15,7 +15,7 @@
 
 #include "DualRealOps.h"
 
-registerMooseObject("ContactTestApp", TangentialNodalLMMechanicalContact);
+registerMooseObject("ContactApp", TangentialNodalLMMechanicalContact);
 
 template <>
 InputParameters
@@ -40,12 +40,8 @@ validParams<TangentialNodalLMMechanicalContact>()
                              "coefficient times the normal contact pressure.");
 
   params.addRequiredParam<Real>("mu", "The friction coefficient for the Coulomb friction law");
-
   params.addParam<Real>(
-      "k_abs",
-      10,
-      "The smoothing parameter for the function used to approximate std::abs. The approximating "
-      "function is courtesy of https://math.stackexchange.com/a/1115033/408963");
+      "c", 1, "Parameter for balancing the size of the velocity and the pressures");
   return params;
 }
 
@@ -61,7 +57,8 @@ TangentialNodalLMMechanicalContact::TangentialNodalLMMechanicalContact(
 
     _mu(getParam<Real>("mu")),
     _epsilon(std::numeric_limits<Real>::epsilon()),
-    _ncp_type(getParam<MooseEnum>("ncp_function_type"))
+    _ncp_type(getParam<MooseEnum>("ncp_function_type")),
+    _c(getParam<Real>("c"))
 {
   _overwrite_slave_residual = false;
 }
@@ -136,6 +133,7 @@ Real TangentialNodalLMMechanicalContact::computeQpResidual(Moose::ConstraintType
           a = -std::abs(v_dot_tan);
         else
           a = std::abs(v_dot_tan);
+        a *= _c;
 
         // NCP part 2: require that the frictional force can never exceed the frictional
         // coefficient times the normal force.
@@ -174,6 +172,7 @@ Real TangentialNodalLMMechanicalContact::computeQpJacobian(Moose::ConstraintJaco
           a = -std::abs(v_dot_tan);
         else
           a = std::abs(v_dot_tan);
+        a *= _c;
 
         // NCP part 2: require that the frictional force can never exceed the frictional
         // coefficient times the normal force.
@@ -233,6 +232,7 @@ TangentialNodalLMMechanicalContact::computeQpOffDiagJacobian(Moose::ConstraintJa
         a = -std::abs(v_dot_tan);
       else
         a = std::abs(v_dot_tan);
+      a *= _c;
 
       // NCP part 2: require that the frictional force can never exceed the frictional
       // coefficient times the normal force.

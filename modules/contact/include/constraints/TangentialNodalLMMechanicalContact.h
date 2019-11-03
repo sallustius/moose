@@ -48,4 +48,5 @@ protected:
   const Real _epsilon;
 
   const MooseEnum _ncp_type;
+  const Real _c;
 };

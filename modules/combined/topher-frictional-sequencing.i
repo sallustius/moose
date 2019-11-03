@@ -101,7 +101,7 @@ name = 'stiff_stiff'
     scaling = 1e-7
   [../]
   [./frictional_tangential_lm]
-    type = MooseVariableConstMonomial
+    type = MooseVariable
     block = frictional_slave_subdomain
     scaling = 1e-6
   [../]
@@ -127,18 +127,17 @@ name = 'stiff_stiff'
     c = 1e8
   [../]
   [./frictional_tangential_lm]
-    type = TangentialMortarLMMechanicalContact
-    contact_pressure = frictional_normal_lm
-    friction_coefficient = 0.1
-    master_boundary = plank_right
-    master_subdomain = frictional_master_subdomain
-    slave_boundary = block_left
-    slave_disp_y = disp_y
-    slave_subdomain = frictional_slave_subdomain
-    slave_variable = disp_x
-    use_displaced_mesh = true
+    type = TangentialNodalLMMechanicalContact
     variable = frictional_tangential_lm
+    master_variable = disp_x
+    disp_y = disp_y
+    mu = 0.1
+    contact_pressure = frictional_normal_lm
+    use_displaced_mesh = true
     c = 1e6
+    slave = block_left
+    master = plank_right
+    ncp_function_type = fb
   [../]
   [./frictional_normal_constraint_0]
     type = NormalMortarMechanicalContact
@@ -302,6 +301,7 @@ name = 'stiff_stiff'
     variable = frictional_tangential_lm
     execute_on = 'nonlinear timestep_end'
     outputs = 'console out'
+    value = 1e-12
   []
   [./avg_hydro]
     type = ElementAverageValue
