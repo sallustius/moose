@@ -97,6 +97,8 @@
 #include "libmesh/nonlinear_solver.h"
 #include "libmesh/sparse_matrix.h"
 #include "libmesh/string_to_enum.h"
+#include "libmesh/petsc_vector.h"
+#include "libmesh/petsc_matrix.h"
 
 // Anonymous namespace for helper function
 namespace
@@ -4848,6 +4850,19 @@ FEProblemBase::computeResidualSys(NonlinearImplicitSystem & /*sys*/,
   TIME_SECTION(_compute_residual_sys_timer);
 
   computeResidual(soln, residual);
+
+  auto & petsc_vector = static_cast<PetscVector<Number> &>(residual);
+
+  PetscViewer viewer;
+  PetscInt ierr;
+  static int counter = 0;
+  std::string file_name_str =
+      "residual_time_step_" + std::to_string(_t_step) + "_" + std::to_string(counter++);
+  const char * file_name = file_name_str.c_str();
+  ierr = PetscPrintf(PETSC_COMM_WORLD, "writing residual vector in binary...\n");
+  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD, file_name, FILE_MODE_WRITE, &viewer);
+  ierr = VecView(petsc_vector.vec(), viewer);
+  ierr = PetscViewerDestroy(&viewer);
 }
 
 void
@@ -5088,6 +5103,20 @@ FEProblemBase::computeJacobianSys(NonlinearImplicitSystem & /*sys*/,
                                   SparseMatrix<Number> & jacobian)
 {
   computeJacobian(soln, jacobian);
+
+  PetscViewer viewer;
+  PetscInt ierr;
+
+  auto & petsc_matrix = static_cast<PetscMatrix<Number> &>(jacobian);
+
+  static int counter = 0;
+  std::string file_name_str =
+      "jacobian_time_step_" + std::to_string(_t_step) + "_" + std::to_string(counter++);
+  const char * file_name = file_name_str.c_str();
+  ierr = PetscPrintf(PETSC_COMM_WORLD, "writing Jacobian matrix in binary...\n");
+  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD, file_name, FILE_MODE_WRITE, &viewer);
+  ierr = MatView(petsc_matrix.mat(), viewer);
+  ierr = PetscViewerDestroy(&viewer);
 }
 
 void

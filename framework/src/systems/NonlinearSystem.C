@@ -26,6 +26,7 @@
 #include "libmesh/petsc_matrix.h"
 #include "libmesh/diagonal_matrix.h"
 #include "libmesh/default_coupling.h"
+#include "libmesh/petsc_vector.h"
 
 namespace Moose
 {
@@ -213,6 +214,20 @@ NonlinearSystem::solve()
     _n_linear_iters = solver.get_total_linear_iterations();
 #endif
   }
+
+  auto & petsc_vector =
+      static_cast<PetscVector<Number> &>(const_cast<NumericVector<Number> &>(*_current_solution));
+
+  PetscViewer viewer;
+  static int counter = 0;
+  PetscInt ierr;
+  std::string file_name_str = "solution_time_step_" + std::to_string(_fe_problem.timeStep()) + "_" +
+                              std::to_string(counter++);
+  const char * file_name = file_name_str.c_str();
+  ierr = PetscPrintf(PETSC_COMM_WORLD, "writing solution vector in binary...\n");
+  ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD, file_name, FILE_MODE_WRITE, &viewer);
+  ierr = VecView(petsc_vector.vec(), viewer);
+  ierr = PetscViewerDestroy(&viewer);
 
   // store info about the solve
   _final_residual = _transient_sys.final_nonlinear_residual();
