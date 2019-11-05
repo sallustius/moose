@@ -411,8 +411,7 @@ Transient::takeStep(Real input_dt)
 
   _problem.onTimestepBegin();
 
-  auto steps = _problem.numGridSequences();
-  for (decltype(steps) step = 0; step <= steps; ++step)
+  for (MooseIndex(_num_grid_steps) step = 0; step <= _num_grid_steps; ++step)
   {
     _time_stepper->step();
     _xfem_repeat_step = _picard_solve.XFEMRepeatStep();
@@ -425,7 +424,7 @@ Transient::takeStep(Real input_dt)
       break;
     }
 
-    if (step != steps)
+    if (step != _num_grid_steps)
       _problem.uniformRefine();
   }
 
