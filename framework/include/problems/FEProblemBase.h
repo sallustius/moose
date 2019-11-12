@@ -1742,6 +1742,9 @@ public:
    */
   void uniformRefine();
 
+  using SubProblem::computingNonlinearResid;
+  void computingNonlinearResid(bool computing_nonlinear_residual) override;
+
 protected:
   /// Create extra tagged vectors and matrices
   void createTagVectors();
