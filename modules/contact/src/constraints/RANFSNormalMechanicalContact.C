@@ -37,7 +37,8 @@ RANFSNormalMechanicalContact::RANFSNormalMechanicalContact(const InputParameters
   : NodeFaceConstraint(parameters),
     _component(getParam<MooseEnum>("component")),
     _mesh_dimension(_mesh.dimension()),
-    _residual_copy(_sys.residualGhosted())
+    _residual_copy(_sys.residualGhosted()),
+    _lock_should_apply(false)
 {
   // modern parameter scheme for displacements
   for (unsigned int i = 0; i < coupledComponents("displacements"); ++i)
@@ -106,14 +107,27 @@ RANFSNormalMechanicalContact::shouldApply()
         // This only works for a basic line search! Write assertion here
         if (_subproblem.computingNonlinearResid())
         {
+          // Were we locked during the last non-linear iteration? If so, then we now unlock
+          if (_lock_should_apply)
+            _lock_should_apply = false;
+
           auto & master_elem_sequence = _node_to_master_elem_sequence[_current_node->id()];
           master_elem_sequence.push_back(_pinfo->_elem);
 
           if (master_elem_sequence.size() >= 3 &&
               _pinfo->_elem == *(master_elem_sequence.rbegin() + 2) &&
               _pinfo->_elem != *(master_elem_sequence.rbegin() + 1))
-            mooseError("We are ping-ponging!");
+          // mooseError("We are ping-ponging!");
+          {
+            _lock_should_apply = true;
+            master_elem_sequence.clear();
+          }
         }
+
+        // When we evaluated the last non-linear residual we may have determined that we don't want
+        // to apply this constraint during the linear solve
+        if (_lock_should_apply)
+          return false;
 
         // The constraint is active -> we're going to use our linear solve to ensure that the gap
         // is driven to zero. We only have one zero-penetration constraint per node, so we choose

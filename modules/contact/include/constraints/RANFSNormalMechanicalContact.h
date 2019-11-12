@@ -56,4 +56,5 @@ protected:
   std::unordered_map<dof_id_type, std::vector<const Elem *>> _node_to_master_elem_sequence;
   Real _lagrange_multiplier;
   PenetrationInfo * _pinfo;
+  bool _lock_should_apply;
 };
