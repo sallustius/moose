@@ -46,7 +46,7 @@ public:
   /**
    * Compute the value the slave node should have at the beginning of a timestep.
    */
-  void computeSlaveValue(NumericVector<Number> & current_solution);
+  virtual void computeSlaveValue(NumericVector<Number> & current_solution);
 
   /**
    * Computes the residual Nodal residual.
