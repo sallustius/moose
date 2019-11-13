@@ -24,6 +24,7 @@ class DisplacedProblem;
 class MooseMesh;
 class Assembly;
 class FEProblemBase;
+class LineSearch;
 
 // libMesh forward declarations
 namespace libMesh
@@ -279,6 +280,8 @@ public:
    * refining the DisplacedMesh.
    */
   void undisplaceMesh();
+
+  LineSearch * getLineSearch() override;
 
 protected:
   FEProblemBase & _mproblem;
