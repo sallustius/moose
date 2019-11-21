@@ -168,7 +168,7 @@ NonlinearSystemBase::NonlinearSystemBase(FEProblemBase & fe_problem,
     _compute_jacobian_blocks_timer(registerTimedSection("computeJacobianBlocks", 3)),
     _compute_dampers_timer(registerTimedSection("computeDampers", 3)),
     _compute_dirac_timer(registerTimedSection("computeDirac", 3)),
-    _compute_scaling_jacobian_timer(registerTimedSection("computeScalingJacobian", 2)),
+    _compute_scaling_timer(registerTimedSection("computeScaling", 2)),
     _computed_scaling(false),
     _automatic_scaling(false),
     _compute_scaling_once(true)
@@ -353,12 +353,12 @@ NonlinearSystemBase::timestepSetup()
     {
       if (!_computed_scaling)
       {
-        computeScalingJacobian();
+        computeScaling();
         _computed_scaling = true;
       }
     }
     else
-      computeScalingJacobian();
+      computeScaling();
   }
 }
 
@@ -1469,6 +1469,26 @@ NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
     }
   }
   PARALLEL_CATCH;
+
+  if (_computing_scaling_residual)
+  {
+    // We computed the volumetric objects. We can return now (after assembling) before we get into
+    // any strongly enforced constraint conditions (NodalBCs, Constraints) or penalty-type objects
+    // (DGKernels, IntegratedBCs, InterfaceKernels, Constraints)
+    if (_need_residual_copy)
+    {
+      _Re_non_time->close();
+      _Re_non_time->localize(_residual_copy);
+    }
+
+    if (_need_residual_ghosted)
+    {
+      _Re_non_time->close();
+      *_residual_ghosted = *_Re_non_time;
+      _residual_ghosted->close();
+    }
+    return;
+  }
 
   // residual contributions from boundary NodalKernels
   PARALLEL_TRY
@@ -3214,7 +3234,7 @@ NonlinearSystemBase::mortarJacobianConstraints(bool displaced)
 }
 
 void
-NonlinearSystemBase::computeScalingJacobian()
+NonlinearSystemBase::computeScaling()
 {
   mooseWarning("The NonlinearSystemBase derived class that is being used does not currently "
                "support automatic scaling.");
