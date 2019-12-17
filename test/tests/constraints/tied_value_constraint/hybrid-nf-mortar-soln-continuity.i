@@ -23,8 +23,6 @@
   [../]
   [lambda]
     block = 100
-    # family = MONOMIAL
-    # order = CONSTANT
   []
 []
 
@@ -71,7 +69,16 @@
     master_subdomain = 200
     variable = lambda
     slave_variable = T
+    compute_lm_residuals = false
   [../]
+  [lm-nf]
+    type = LMTiedValueConstraint
+    variable = lambda
+    master_variable = T
+    primal_var = T
+    slave = 'left_interface'
+    master = 'right_interface'
+  []
 []
 
 [Preconditioning]
@@ -100,12 +107,6 @@
     function = flux
     block = 100
   []
-  [lambda_h1]
-    type = ElementH1Error
-    variable = lambda
-    function = flux
-    block = 100
-  []
 []
 
 [Executioner]
@@ -117,4 +118,8 @@
 
 [Outputs]
   exodus = true
+  [dof]
+    type = DOFMap
+    execute_on = 'initial'
+  []
 []

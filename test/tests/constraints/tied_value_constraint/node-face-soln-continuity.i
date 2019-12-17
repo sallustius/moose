@@ -58,6 +58,11 @@
     variable = T
     function = exact
   []
+  [h1]
+    type = ElementH1Error
+    variable = T
+    function = exact
+  []
 []
 
 [Executioner]
