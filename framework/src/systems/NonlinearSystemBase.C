@@ -1153,7 +1153,12 @@ NonlinearSystemBase::constraintResiduals(NumericVector<Number> & residual, bool 
                               "We are on a node so there should only be one dof per variable (for "
                               "an ArrayVariable we should have a number of dofs equal to the "
                               "number of components");
-                  std::vector<Number> values = {nfc->slaveResidual() * slave_var.scalingFactor()};
+
+                  // Assume that if the user is overwriting the slave residual, then they are
+                  // supplying residuals that do not correspond to their other physics
+                  // (e.g. Kernels), hence we should not apply a scalingFactor that is normally
+                  // based on the order of their other physics (e.g. Kernels)
+                  std::vector<Number> values = {nfc->slaveResidual()};
                   residual.insert(values, slave_dofs);
                   residual_has_inserted_values = true;
                 }
@@ -1862,11 +1867,16 @@ NonlinearSystemBase::constraintJacobians(bool displaced)
 
                 std::vector<dof_id_type> slave_dofs(1, nfc->variable().nodalDofIndex());
 
+                // Assume that if the user is overwriting the slave Jacobian, then they are
+                // supplying Jacobians that do not correspond to their other physics
+                // (e.g. Kernels), hence we should not apply a scalingFactor that is normally
+                // based on the order of their other physics (e.g. Kernels)
+                Real scaling_factor =
+                    nfc->overwriteSlaveJacobian() ? 1. : nfc->variable().scalingFactor();
+
                 // Cache the jacobian block for the slave side
-                _fe_problem.assembly(0).cacheJacobianBlock(nfc->_Kee,
-                                                           slave_dofs,
-                                                           nfc->_connected_dof_indices,
-                                                           nfc->variable().scalingFactor());
+                _fe_problem.assembly(0).cacheJacobianBlock(
+                    nfc->_Kee, slave_dofs, nfc->_connected_dof_indices, scaling_factor);
 
                 // Cache the jacobian block for the master side
                 if (nfc->addCouplingEntriesToJacobian())
@@ -1876,6 +1886,8 @@ NonlinearSystemBase::constraintJacobians(bool displaced)
                       nfc->_connected_dof_indices,
                       nfc->variable().scalingFactor());
 
+                // Fix-me. Handle this directly here like is done above so I can control the scaling
+                // factors
                 _fe_problem.cacheJacobian(0);
                 if (nfc->addCouplingEntriesToJacobian())
                   _fe_problem.cacheJacobianNeighbor(0);
@@ -1903,10 +1915,8 @@ NonlinearSystemBase::constraintJacobians(bool displaced)
                   nfc->computeOffDiagJacobian(jvar->number());
 
                   // Cache the jacobian block for the slave side
-                  _fe_problem.assembly(0).cacheJacobianBlock(nfc->_Kee,
-                                                             slave_dofs,
-                                                             nfc->_connected_dof_indices,
-                                                             nfc->variable().scalingFactor());
+                  _fe_problem.assembly(0).cacheJacobianBlock(
+                      nfc->_Kee, slave_dofs, nfc->_connected_dof_indices, scaling_factor);
 
                   // Cache the jacobian block for the master side
                   if (nfc->addCouplingEntriesToJacobian())
@@ -1915,6 +1925,8 @@ NonlinearSystemBase::constraintJacobians(bool displaced)
                                                                nfc->_connected_dof_indices,
                                                                nfc->variable().scalingFactor());
 
+                  // Fix-me. Handle this directly here like is done above so I can control the
+                  // scaling factors
                   _fe_problem.cacheJacobian(0);
                   if (nfc->addCouplingEntriesToJacobian())
                     _fe_problem.cacheJacobianNeighbor(0);
