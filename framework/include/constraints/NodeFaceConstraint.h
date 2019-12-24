@@ -283,6 +283,18 @@ protected:
 public:
   std::vector<dof_id_type> _connected_dof_indices;
 
+  // We want to manually manipulate Kne because of the dependence of the slave/master residuals on
+  // dofs from all elements connected to the slave node (e.g. those held by _connected_dof_indices)
   DenseMatrix<Number> _Kne;
+
+  // We want to manually manipulate Kee because of the dependence of the slave/master residuals on
+  // dofs from all elements connected to the slave node (e.g. those held by _connected_dof_indices)
+  // and because when we're overwriting the slave residual we traditionally want to use a different
+  // scaling factor from the one associated with interior physics
   DenseMatrix<Number> _Kee;
+
+  // We want to manually manipulate Kee because when we're overwriting the slave residual we
+  // traditionally want to use a different scaling factor from the one associated with interior
+  // physics
+  DenseMatrix<Number> _Ken;
 };
