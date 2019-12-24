@@ -7,6 +7,7 @@
     exodiff = bouncing-block-ranfs_exo.e
     requirement = 'The system shall be able to apply automatic scaling in conjunection with ranfs contact'
     abs_zero = 1e-8
+    petsc_version = '>=3.9.0'
   []
   [no-scaling]
     type = Exodiff
