@@ -1,0 +1,19 @@
+[Tests]
+  issues = '#12601'
+  design = 'Constraints/index.md'
+  [auto-scaling]
+    type = Exodiff
+    input = bouncing-block-kinematic.i
+    exodiff = bouncing-block-kinematic_exo.e
+    requirement = 'The system shall be able to apply automatic scaling in conjunection with kinematic contact constraint enforcement and show close to no penetration with a unity penalty factor'
+    abs_zero = 1e-8
+  []
+  [no-scaling]
+    type = Exodiff
+    input = bouncing-block-kinematic.i
+    exodiff = no-scaling.e
+    requirement = 'The system shall show penetration when automatic scaling is not used with kinematic contact constraint enforcement and when the element Jacobian diagonals are significantly larger than the kinematic penalty factor'
+    cli_args = 'Executioner/automatic_scaling=false Outputs/file_base=no-scaling -pc_type lu -pc_factor_shift_type NONZERO'
+    abs_zero = 1e-8
+  []
+[]
