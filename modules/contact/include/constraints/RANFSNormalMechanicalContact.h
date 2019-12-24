@@ -43,10 +43,11 @@ public:
   void computeSlaveValue(NumericVector<Number> & solution) override;
 
 protected:
-  virtual Real computeQpSlaveValue() override;
+  Real computeQpSlaveValue() override;
 
-  virtual Real computeQpResidual(Moose::ConstraintType type) override;
-  virtual Real computeQpJacobian(Moose::ConstraintJacobianType type) override;
+  Real computeQpResidual(Moose::ConstraintType type) override;
+  Real computeQpJacobian(Moose::ConstraintJacobianType type) override;
+  Real computeQpOffDiagJacobian(Moose::ConstraintJacobianType type, unsigned int jvar) override;
 
   const MooseEnum _component;
   const unsigned int _mesh_dimension;
@@ -67,7 +68,16 @@ protected:
   unsigned int _master_index;
   RealVectorValue _res_vec;
   const Node * _nearest_node;
+
+  /// Vector size corresponds to the number of displacement variables. Each index in the vector
+  /// holds an unordered map. The map container maps a non-zero global column index to its
+  /// corresponding entry in the Jacobian. This container is very useful in conjunction with
+  /// NodeFaceConstraint::_connected_dof_indices which is a vector whose entries correspond to the
+  /// global degrees of freedom of the current jvar
   std::vector<std::unordered_map<dof_id_type, Number>> _dof_number_to_value;
+
   CouplingMatrix _disp_coupling;
   const bool _ping_pong_protection;
+
+  std::unordered_map<unsigned int, unsigned int> _jvar_to_comp;
 };

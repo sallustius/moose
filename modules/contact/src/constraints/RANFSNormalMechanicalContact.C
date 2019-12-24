@@ -55,8 +55,10 @@ RANFSNormalMechanicalContact::RANFSNormalMechanicalContact(const InputParameters
   // modern parameter scheme for displacements
   for (unsigned int i = 0; i < coupledComponents("displacements"); ++i)
   {
-    _vars.push_back(coupled("displacements", i));
+    auto jvar = coupled("displacements", i);
+    _vars.push_back(jvar);
     _var_objects.push_back(getVar("displacements", i));
+    _jvar_to_comp.insert(std::make_pair(jvar, i));
   }
 
   for (auto & var : _var_objects)
@@ -407,6 +409,131 @@ RANFSNormalMechanicalContact::computeQpJacobian(Moose::ConstraintJacobianType ty
 
       // The only master-master dependence would come from the dependence of the normal and also the
       // location of the integration (quadrature) points. We assume (valid or not) that this
+      // dependence is weak
+      // case MooseConstraintJacobianType::MasterMaster
+
+    default:
+      return 0;
+  }
+}
+
+Real
+RANFSNormalMechanicalContact::computeQpOffDiagJacobian(Moose::ConstraintJacobianType type,
+                                                       unsigned int jvar)
+{
+  if (jvar == _var.number())
+    return computeQpJacobian(type);
+
+  auto it = _jvar_to_comp.find(jvar);
+  if (it == _jvar_to_comp.end())
+    return 0;
+
+  auto jvar_component = it->second;
+
+  switch (type)
+  {
+    case Moose::ConstraintJacobianType::SlaveSlave:
+    {
+      if (_tie_nodes)
+        // The tied node slave residual only depends on _component, e.g. there is no off-diagonal
+        // dependence
+        return 0;
+
+      // doing contact
+      else
+      {
+        // corresponds to gap equation
+        if (_largest_component == static_cast<unsigned int>(_component))
+          // _phi_slave has been set such that it is 1 when _j corresponds to the degree of
+          // freedom associated with the _current node and 0 otherwise
+          return std::abs(_pinfo->_normal(jvar_component)) * _phi_slave[_j][_qp];
+
+        // corresponds to regular residual with Lagrange Multiplier applied
+        else
+        {
+          Real ret_val = 0;
+          for (MooseIndex(_disp_coupling) i = 0; i < _disp_coupling.size(); ++i)
+            if (_disp_coupling(_component, i))
+            {
+              mooseAssert(
+                  _dof_number_to_value[i].find(_connected_dof_indices[_j]) !=
+                      _dof_number_to_value[i].end(),
+                  "The connected dof index is not found in the _dof_number_to_value container. "
+                  "This must mean that insufficient sparsity was allocated");
+              ret_val += -_pinfo->_normal(_component) * _pinfo->_normal(i) *
+                         _dof_number_to_value[i][_connected_dof_indices[_j]];
+            }
+          return ret_val;
+        }
+      }
+    }
+
+    case Moose::ConstraintJacobianType::SlaveMaster:
+    {
+      // A good user sets up their problem such that the constraint equations should yield
+      // initial residuals and Jacobian entries on the order of unity. Unfortunately derivatives
+      // with respect to the master side are automatically multiplied times the scaling factor
+      // coming from the volume when the Jacobians are cached from
+      // NonlinearSystemBase::constraintJacobian. So here we undo what is later going to happen.
+
+      if (_tie_nodes)
+        // The tied node slave residual only depends on _component, e.g. there is no off-diagonal
+        // dependence
+        return 0;
+
+      // doing contact
+      else
+      {
+        if (_largest_component == static_cast<unsigned int>(_component))
+          return -std::abs(_pinfo->_normal(_component)) * _phi_master[_j][_qp] /
+                 _var.scalingFactor();
+
+        // If we're not applying the gap constraint equation on this _component, then we're
+        // applying a Lagrange multiplier, and consequently there is no dependence of the slave
+        // residual on the master dofs because the Lagrange multiplier is only a functon of the
+        // slave residuals
+        else
+          return 0;
+      }
+    }
+
+    case Moose::ConstraintJacobianType::MasterSlave:
+    {
+      if (_tie_nodes)
+      {
+        if (_i == _master_index)
+        {
+          mooseAssert(_dof_number_to_value[jvar_component].find(_connected_dof_indices[_j]) !=
+                          _dof_number_to_value[jvar_component].end(),
+                      "The connected dof index is not found in the _dof_number_to_value container. "
+                      "This must mean that insufficient sparsity was allocated");
+          return _dof_number_to_value[jvar_component][_connected_dof_indices[_j]];
+        }
+
+        // We only apply the tied node Lagrange multiplier to the closest master node
+        else
+          return 0;
+      }
+      else
+      {
+        Real ret_val = 0;
+        for (MooseIndex(_disp_coupling) i = 0; i < _disp_coupling.size(); ++i)
+          if (_disp_coupling(_component, i))
+          {
+            mooseAssert(
+                _dof_number_to_value[i].find(_connected_dof_indices[_j]) !=
+                    _dof_number_to_value[i].end(),
+                "The connected dof index is not found in the _dof_number_to_value container. "
+                "This must mean that insufficient sparsity was allocated");
+            ret_val += _test_master[_i][_qp] * _pinfo->_normal(_component) * _pinfo->_normal(i) *
+                       _dof_number_to_value[i][_connected_dof_indices[_j]];
+          }
+        return ret_val;
+      }
+    }
+
+      // The only master-master dependence would come from the dependence of the normal and also
+      // the location of the integration (quadrature) points. We assume (valid or not) that this
       // dependence is weak
       // case MooseConstraintJacobianType::MasterMaster
 
