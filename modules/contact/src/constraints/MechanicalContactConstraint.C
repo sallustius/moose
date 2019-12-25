@@ -22,6 +22,7 @@
 #include "AddVariableAction.h"
 #include "ContactLineSearchBase.h"
 #include "ContactAction.h"
+#include "MooseError.h"
 
 #include "libmesh/string_to_enum.h"
 #include "libmesh/sparse_matrix.h"
@@ -181,14 +182,25 @@ MechanicalContactConstraint::MechanicalContactConstraint(const InputParameters &
   if (_formulation == ContactFormulation::TANGENTIAL_PENALTY && _model != ContactModel::COULOMB)
     mooseError("The 'tangential_penalty' formulation can only be used with the 'coulomb' model");
 
+  if (_sys.automaticScaling() &&
+      (_formulation == ContactFormulation::TANGENTIAL_PENALTY ||
+       _formulation == ContactFormulation::KINEMATIC) &&
+      std::abs(_penalty - 1) > TOLERANCE)
+    mooseError("If automatic scaling is being used, then the penalty parameter for the ",
+               stringToEnum(_formulation),
+               " formulation must be unity");
+
   if (_model == ContactModel::GLUED)
     _penetration_locator.setUpdate(false);
 
   if (_friction_coefficient < 0)
     mooseError("The friction coefficient must be nonnegative");
 
-  // set _penalty_tangential to the value of _penalty for now
-  _penalty_tangential = _penalty;
+  if (isParamValid("tangential_penalty"))
+    _penalty_tangential = getParam<Real>("tangential_penalty");
+  else
+    // set _penalty_tangential to the value of _penalty for now
+    _penalty_tangential = _penalty;
 
   if (_formulation == ContactFormulation::AUGMENTED_LAGRANGE)
   {
@@ -1873,5 +1885,25 @@ MechanicalContactConstraint::residualEnd()
       _contact_linesearch->insertSet(_current_contact_state);
     _old_contact_state.swap(_current_contact_state);
     _current_contact_state.clear();
+  }
+}
+
+std::string
+MechanicalContactConstraint::stringToEnum(ContactFormulation formulation)
+{
+  switch (formulation)
+  {
+    case ContactFormulation::KINEMATIC:
+      return "kinematic";
+    case ContactFormulation::PENALTY:
+      return "penalty";
+    case ContactFormulation::AUGMENTED_LAGRANGE:
+      return "augmented Lagrange";
+    case ContactFormulation::TANGENTIAL_PENALTY:
+      return "tangential penalty";
+    case ContactFormulation::MORTAR:
+      return "mortar";
+    default:
+      ::mooseError("Unrecognized constraint formulation!");
   }
 }

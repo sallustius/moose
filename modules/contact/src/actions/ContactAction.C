@@ -51,6 +51,10 @@ validParams<ContactAction>()
       "penalty",
       1e8,
       "The penalty to apply.  This can vary depending on the stiffness of your materials");
+  params.addParam<Real>("tangential_penalty",
+                        1e8,
+                        "The tangential penalty to apply for frictional contact.  This can vary "
+                        "depending on the stiffness of your materials");
   params.addParam<Real>("friction_coefficient", 0, "The friction coefficient");
   params.addParam<Real>("tension_release",
                         0.0,

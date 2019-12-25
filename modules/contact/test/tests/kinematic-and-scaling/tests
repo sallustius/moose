@@ -17,4 +17,12 @@
     cli_args = 'Executioner/automatic_scaling=false Outputs/file_base=no-scaling -pc_type lu -pc_factor_shift_type NONZERO'
     abs_zero = 1e-8
   []
+  [error]
+    type = RunException
+    input = bouncing-block-kinematic.i
+    cli_args = "Outputs/active='' Contact/leftright/penalty=1e6"
+    expect_err = 'If automatic scaling is being used, then the penalty parameter for the kinematic formulation must be unity'
+    requirement = 'The system shall error if automatic scaling is used in conjunction with a non-unity kinematic penalty parameter'
+    petsc_version = '>=3.9.0'
+  []
 []
