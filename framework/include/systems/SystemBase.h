@@ -128,6 +128,9 @@ public:
     _computing_scaling_jacobian = computing_scaling_jacobian;
   }
 
+  bool automaticScaling() const { return _automatic_scaling; }
+  void automaticScaling(bool automatic_scaling) { _automatic_scaling = automatic_scaling; }
+
   /**
    * Gets writeable reference to the dof map
    */
@@ -812,6 +815,9 @@ protected:
 
   /// Flag used to indicate whether we are computing the scaling Jacobian
   bool _computing_scaling_jacobian;
+
+  /// Whether to automatically scale the variables
+  bool _automatic_scaling;
 };
 
 #define PARALLEL_TRY

@@ -656,6 +656,16 @@ public:
    */
   void addAlgebraicGhostingFunctor(GhostingFunctor & algebraic_gf, bool to_mesh = true);
 
+  /**
+   * Automatic scaling setter
+   */
+  virtual void automaticScaling(bool automatic_scaling);
+
+  /**
+   * Automatic scaling getter
+   */
+  bool automaticScaling() const;
+
 protected:
   /**
    * Helper function called by getVariable that handles the logic for
