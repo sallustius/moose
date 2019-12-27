@@ -56,7 +56,7 @@
     min_parallel = 4
     abs_zero = 1e-6
     max_time = 800
-    cli_args = 'Variables/disp_x/scaling=1e-6 Variables/disp_y/scaling=1e-6'
+    cli_args = 'Variables/disp_x/scaling=1e-6 Variables/disp_y/scaling=1e-6 Contact/leftright/penalty=1'
     prereq = 'frictionless_kinematic_sm'
     custom_cmp = 'frictionless_kinematic_out.cmp'
     requirement = "Kinematic contact shall produce the same results regardless of whether
