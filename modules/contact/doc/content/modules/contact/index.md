@@ -276,8 +276,9 @@ The recommended PETSc options for use with `NodeFaceConstraint` based contact ar
 Automatic scaling can significantly improve both linear and non-linear
 convergence for contact problems. The below linear and non-linear convergence
 statistics are based on running
-[RANFS](/ranfs-and-scaling/bouncing-block-ranfs.i) and
-[kinematic](/bouncing-block-kinematic.i) test input files with two processes.
+[RANFS](/ranfs-and-scaling/bouncing-block-ranfs.i),
+[kinematic](/bouncing-block-kinematic.i), and
+[tangential penalty](/bouncing-block-tan-pen.i) test input files with two processes.
 
 | Scheme | Cumulative nonlinear iterations | Cumulative linear iterations |
 | --- | --- | --- |
@@ -287,3 +288,7 @@ statistics are based on running
 | Kinematic auto-scaling AMG | 53 | 203 |
 | Kinematic no scaling LU | 65 | 271 |
 | Kinematic auto-scaling LU | 41 | 114 |
+| Tangential Penalty no scaling AMG | No convergence | No convergence |
+| Tangential Penalty auto-scaling AMG | 53 | 208 |
+| Tangential Penalty no scaling LU | 60 | 224 |
+| Tangential Penalty auto-scaling LU | 41 | 116 |

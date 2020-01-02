@@ -1,0 +1,31 @@
+[Tests]
+  issues = '#12601'
+  design = 'Constraints/index.md'
+  [auto-scaling]
+    type = Exodiff
+    input = bouncing-block-tan-pen.i
+    exodiff = bouncing-block-tan-pen_exo.e
+    requirement = 'The system shall be able to apply automatic scaling in conjunction with tangential penalty contact constraint enforcement and show zero penetration with a unity (normal) penalty factor'
+    abs_zero = 1e-8
+    petsc_version = '>=3.9.0'
+    cli_args = "Postprocessors/active=''"
+    rel_err = 7e-5
+  []
+  [no-scaling]
+    type = Exodiff
+    input = bouncing-block-tan-pen.i
+    exodiff = no-scaling.e
+    requirement = 'The system shall show penetration when automatic scaling is not used with tangential penalty contact constraint enforcement and when the element Jacobian diagonals are significantly larger than the (normal) penalty factor'
+    cli_args = "Executioner/automatic_scaling=false Outputs/file_base=no-scaling Postprocessors/active='' -pc_type lu -pc_factor_shift_type NONZERO"
+    abs_zero = 1e-8
+    rel_err = 7e-5
+  []
+  [error]
+    type = RunException
+    input = bouncing-block-tan-pen.i
+    cli_args = "Outputs/active='' Contact/leftright/penalty=1e6 Postprocessors/active=''"
+    expect_err = 'If automatic scaling is being used, then the penalty parameter for the tangential penalty formulation must be unity'
+    requirement = 'The system shall error if automatic scaling is used in conjunction with a non-unity (normal) penalty parameter for the tangential penalty formulation'
+    petsc_version = '>=3.9.0'
+  []
+[]
