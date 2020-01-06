@@ -7,7 +7,6 @@
     exodiff = bouncing-block-kinematic_exo.e
     requirement = 'The system shall be able to apply automatic scaling in conjunection with kinematic contact constraint enforcement and show zero penetration with a unity penalty factor'
     abs_zero = 1e-8
-    petsc_version = '>=3.9.0'
   []
   [no-scaling]
     type = Exodiff
@@ -23,6 +22,5 @@
     cli_args = "Outputs/active='' Contact/leftright/penalty=1e6"
     expect_err = 'If automatic scaling is being used, then the penalty parameter for the kinematic formulation must be unity'
     requirement = 'The system shall error if automatic scaling is used in conjunction with a non-unity kinematic penalty parameter'
-    petsc_version = '>=3.9.0'
   []
 []
