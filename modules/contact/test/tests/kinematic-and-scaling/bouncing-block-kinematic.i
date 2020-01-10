@@ -106,3 +106,13 @@ offset = 1e-2
     full = true
   [../]
 []
+
+[Postprocessors]
+  [nl]
+    type = NumNonlinearIterations
+  []
+  [cum_nl]
+    type = CumulativeValuePostprocessor
+    postprocessor = nl
+  []
+[]
