@@ -17,6 +17,7 @@
   zmin = 0.0
   zmax = 1.0
   elem_type = HEX8
+  uniform_refine = 1
 []
 
 [Variables]
@@ -88,27 +89,27 @@
 
 [Preconditioning]
   [./pc]
-    type = SMP
-    full = True
+    type = FDP
+    full = true
+    finite_difference_type = standard
   [../]
 []
 
 [Executioner]
   type = Transient
   solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-  petsc_options_value = 'lu     superlu_dist'
+  petsc_options_iname = '-ksp_gmres_restart'
+  petsc_options_value = '200'
 
-  l_max_its = 20
-  l_tol = 1e-2
+  l_max_its = 200
 
-  nl_max_its = 50
-  # nl_rel_tol = 1e-8
-  # nl_abs_tol = 1e-4
+  nl_max_its = 20
 
   start_time = 0.0
   dt = 1
+  dtmin = 1
   end_time = 5
+  num_steps = 1
 []
 
 [Postprocessors]
@@ -141,4 +142,5 @@
 [Outputs]
   exodus = true
   csv = true
+  print_linear_residuals = false
 []
