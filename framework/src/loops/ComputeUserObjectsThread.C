@@ -213,6 +213,12 @@ ComputeUserObjectsThread::onInterface(const Elem * elem, unsigned int side, Boun
   SwapBackSentinel neighbor_sentinel(_fe_problem, &FEProblem::swapBackMaterialsNeighbor, _tid);
   _fe_problem.reinitMaterialsNeighbor(neighbor->subdomain_id(), _tid);
 
+  // Has to happen after face and neighbor properties have been computed. Note that we don't use
+  // a sentinel here because FEProblem::swapBackMaterialsFace is going to handle face materials,
+  // boundary materials, and interface materials (e.g. it queries the boundary material data
+  // with the current element and side
+  _fe_problem.reinitMaterialsInterface(bnd_id, _tid);
+
   for (const auto & uo : userobjs)
     uo->execute();
 }
