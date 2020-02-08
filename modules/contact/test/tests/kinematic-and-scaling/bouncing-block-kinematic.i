@@ -98,7 +98,7 @@ offset = 1e-2
   automatic_scaling = true
   verbose = true
   scaling_group_variables = 'disp_x disp_y'
-  resid_vs_jac_scaling_param = 1
+  resid_vs_jac_scaling_param = 0
 []
 
 [Debug]

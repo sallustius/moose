@@ -104,4 +104,22 @@
 
 [Outputs]
   exodus = true
+  csv = true
+[]
+
+[Postprocessors]
+  [nl]
+    type = NumNonlinearIterations
+  []
+  [lin]
+    type = NumLinearIterations
+  []
+  [tot_nl]
+    type = CumulativeValuePostprocessor
+    postprocessor = nl
+  []
+  [tot_lin]
+    type = CumulativeValuePostprocessor
+    postprocessor = lin
+  []
 []
