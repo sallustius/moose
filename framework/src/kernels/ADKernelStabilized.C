@@ -46,14 +46,14 @@ ADKernelStabilizedTempl<T, compute_stage>::computeResidual()
     {
       const auto value = precomputeQpStrongResidual() * _ad_JxW[_qp] * _ad_coord[_qp];
       for (_i = 0; _i < n_test; _i++) // target for auto vectorization
-        _local_re(_i) += _grad_test[_i][_qp] * computeQpStabilization() * value;
+        _local_re(_i) += raw_value(_grad_test[_i][_qp] * computeQpStabilization() * value);
     }
   else
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     {
       const auto value = precomputeQpStrongResidual() * _JxW[_qp] * _coord[_qp];
       for (_i = 0; _i < n_test; _i++) // target for auto vectorization
-        _local_re(_i) += _regular_grad_test[_i][_qp] * computeQpStabilization() * value;
+        _local_re(_i) += raw_value(_regular_grad_test[_i][_qp] * computeQpStabilization() * value);
     }
 
   accumulateTaggedLocalResidual();

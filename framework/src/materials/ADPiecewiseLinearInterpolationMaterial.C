@@ -99,5 +99,5 @@ template <>
 void
 ADPiecewiseLinearInterpolationMaterial<RESIDUAL>::computeQpProperties()
 {
-  _property[_qp] = _scale_factor * _linear_interp->sample(_coupled_var[_qp]);
+  _property[_qp] = _scale_factor * _linear_interp->sample(raw_value(_coupled_var[_qp]));
 }

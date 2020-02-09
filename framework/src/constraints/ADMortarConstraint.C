@@ -75,7 +75,7 @@ ADMortarConstraint<compute_stage>::computeResidual(Moose::MortarType mortar_type
 
   for (_qp = 0; _qp < _qrule_msm->n_points(); _qp++)
     for (_i = 0; _i < test_space_size; _i++)
-      _local_re(_i) += _JxW_msm[_qp] * _coord[_qp] * computeQpResidual(mortar_type);
+      _local_re(_i) += raw_value(_JxW_msm[_qp] * _coord[_qp] * computeQpResidual(mortar_type));
 
   accumulateTaggedLocalResidual();
 }

@@ -12,6 +12,7 @@
 #include "DenseMatrix.h"
 #include "MooseArray.h"
 #include "MooseTypes.h"
+#include "MooseVariableFE.h"
 
 #include "libmesh/dense_vector.h"
 #include "libmesh/enum_quadrature_type.h"
@@ -200,11 +201,15 @@ public:
   template <ComputeStage compute_stage>
   const MooseArray<ADReal> & adJxWFace() const
   {
-    return _current_JxW_face;
+    return _ad_JxW_face;
   }
 
   template <ComputeStage compute_stage>
-  const MooseArray<ADReal> & adCurvatures() const;
+  const MooseArray<ADReal> & adCurvatures() const
+  {
+    _calculate_curvatures = true;
+    return _ad_curvatures;
+  }
 
   /**
    * Returns the reference to the coordinate transformation coefficients
@@ -225,7 +230,14 @@ public:
   template <ComputeStage compute_stage>
   const MooseArray<ADReal> & adCoordTransformation() const
   {
-    return _coord;
+    // Coord values for non-cartesian coordinate systems are functions of the locations of the
+    // quadrature points in physical space. We also have no way of knowing whether this was called
+    // from a volumetric or face object so we should set both volumetric and face xyz to true
+    _calculate_xyz = true;
+    _calculate_face_xyz = true;
+
+    _calculate_ad_coord = true;
+    return _ad_coord;
   }
 
   /**
@@ -283,19 +295,21 @@ public:
   template <ComputeStage compute_stage>
   const ADPoint & adNormals() const
   {
-    return _current_normals;
+    return _ad_normals;
   }
 
   template <ComputeStage compute_stage>
   const ADPoint & adQPoints() const
   {
-    return _current_q_points;
+    _calculate_xyz = true;
+    return _ad_q_points;
   }
 
   template <ComputeStage compute_stage>
   const ADPoint & adQPointsFace() const
   {
-    return _current_q_points_face;
+    _calculate_face_xyz = true;
+    return _ad_q_points_face;
   }
 
   /**
@@ -891,7 +905,7 @@ public:
   const typename VariableTestGradientType<T, compute_stage>::type &
   adGradPhi(const MooseVariableFE<T> & v) const
   {
-    return gradPhi(v);
+    return _ad_grad_phi_data.at(v.feType());
   }
   const VariablePhiValue & phi(const MooseVariable &) const { return _phi; }
   const VariablePhiGradient & gradPhi() const { return _grad_phi; }
@@ -1370,10 +1384,10 @@ protected:
 
   void reinitFENeighbor(const Elem * neighbor, const std::vector<Point> & reference_points);
 
-  template <ComputeStage compute_stage>
+  template <typename Points, typename Coords>
   void setCoordinateTransformation(const QBase * qrule,
-                                   const ADPoint & q_points,
-                                   MooseArray<ADReal> & coord,
+                                   const Points & q_points,
+                                   Coords & coord,
                                    SubdomainID sub_id);
 
   void computeCurrentElemVolume();
@@ -1992,6 +2006,10 @@ private:
   mutable bool _calculate_face_xyz;
   mutable bool _calculate_curvatures;
 
+  /// Whether to calculate coord with AD. This will only be set to \p true if a consumer calls
+  /// adCoordTransformation()
+  mutable bool _calculate_ad_coord;
+
   mutable std::map<FEType, bool> _need_second_derivative;
   mutable std::map<FEType, bool> _need_second_derivative_neighbor;
   mutable std::map<FEType, bool> _need_curl;
@@ -2025,52 +2043,6 @@ inline const typename VariableTestGradientType<RealVectorValue, ComputeStage::JA
 Assembly::feADGradPhiFace<RealVectorValue>(FEType type) const
 {
   return _ad_vector_grad_phi_data_face[type];
-}
-
-template <>
-inline const MooseArray<typename Moose::RealType<ComputeStage::JACOBIAN>::type> &
-Assembly::adCurvatures<ComputeStage::JACOBIAN>() const
-{
-  _calculate_curvatures = true;
-  return _ad_curvatures;
-}
-
-template <>
-inline const MooseArray<VectorValue<DualReal>> &
-Assembly::adNormals<ComputeStage::JACOBIAN>() const
-{
-  return _ad_normals;
-}
-
-template <>
-inline const typename PointType<ComputeStage::JACOBIAN>::type &
-Assembly::adQPoints<ComputeStage::JACOBIAN>() const
-{
-  _calculate_xyz = true;
-  return _ad_q_points;
-}
-
-template <>
-inline const typename PointType<ComputeStage::JACOBIAN>::type &
-Assembly::adQPointsFace<ComputeStage::JACOBIAN>() const
-{
-  _calculate_face_xyz = true;
-  return _ad_q_points_face;
-}
-
-template <>
-inline const MooseArray<DualReal> &
-Assembly::adJxWFace<ComputeStage::JACOBIAN>() const
-{
-  return _ad_JxW_face;
-}
-
-template <>
-inline const MooseArray<DualReal> &
-Assembly::adCoordTransformation<ComputeStage::JACOBIAN>() const
-{
-  _calculate_xyz = _calculate_face_xyz = true;
-  return _ad_coord;
 }
 
 template <>
@@ -2146,13 +2118,17 @@ const typename OutputTools<VectorValue<Real>>::VariablePhiCurl &
 Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type) const;
 
 template <>
-const typename VariableTestGradientType<Real, ComputeStage::JACOBIAN>::type &
-Assembly::adGradPhi<Real, ComputeStage::JACOBIAN>(const MooseVariableFE<Real> & v) const;
-
-template <>
-const typename VariableTestGradientType<RealVectorValue, ComputeStage::JACOBIAN>::type &
+inline const typename VariableTestGradientType<RealVectorValue, ComputeStage::JACOBIAN>::type &
 Assembly::adGradPhi<RealVectorValue, ComputeStage::JACOBIAN>(
-    const MooseVariableFE<RealVectorValue> & v) const;
+    const MooseVariableFE<RealVectorValue> & v) const
+{
+  return _ad_vector_grad_phi_data.at(v.feType());
+}
 
 template <>
-const MooseArray<typename Moose::RealType<RESIDUAL>::type> & Assembly::adJxW<RESIDUAL>() const;
+inline const typename VariableTestGradientType<RealVectorValue, ComputeStage::RESIDUAL>::type &
+Assembly::adGradPhi<RealVectorValue, ComputeStage::RESIDUAL>(
+    const MooseVariableFE<RealVectorValue> & v) const
+{
+  return _ad_vector_grad_phi_data.at(v.feType());
+}

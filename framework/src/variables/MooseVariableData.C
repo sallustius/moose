@@ -741,7 +741,7 @@ MooseVariableData<OutputType>::computeValues()
   }
 
   // Automatic differentiation
-  if (_need_ad && _subproblem.currentlyComputingJacobian())
+  if (_need_ad)
     computeAD(num_dofs, nqp);
 }
 
@@ -1361,10 +1361,10 @@ MooseVariableData<OutputType>::computeAD(const unsigned int num_dofs, const unsi
     _ad_dof_values[i] = (*_sys.currentSolution())(_dof_indices[i]);
 
     // NOTE!  You have to do this AFTER setting the value!
-    if (_var.kind() == Moose::VAR_NONLINEAR)
+    if (_var.kind() == Moose::VAR_NONLINEAR && _subproblem.currentlyComputingJacobian())
       Moose::derivInsert(_ad_dof_values[i].derivatives(), ad_offset + i, 1.);
 
-    if (_need_ad_u_dot && _time_integrator)
+    if (_need_ad_u_dot && _time_integrator && _time_integrator->dt())
     {
       _ad_dofs_dot[i] = _ad_dof_values[i];
       _time_integrator->computeADTimeDerivatives(_ad_dofs_dot[i], _dof_indices[i]);
@@ -2088,7 +2088,7 @@ MooseVariableData<OutputType>::computeNodalValues()
     fetchDoFValues();
     assignNodalValue();
 
-    if (_need_ad && _subproblem.currentlyComputingJacobian())
+    if (_need_ad)
       fetchADDoFValues();
   }
   else
@@ -2349,7 +2349,7 @@ MooseVariableData<OutputType>::fetchADDoFValues()
   for (decltype(n) i = 0; i < n; ++i)
   {
     _ad_dof_values[i] = _dof_values[i];
-    if (_var.kind() == Moose::VAR_NONLINEAR)
+    if (_var.kind() == Moose::VAR_NONLINEAR && _subproblem.currentlyComputingJacobian())
       Moose::derivInsert(_ad_dof_values[i].derivatives(), ad_offset + i, 1.);
     assignADNodalValue(_ad_dof_values[i], i);
   }
@@ -2610,109 +2610,6 @@ MooseVariableData<OutputType>::reinitNodes(const std::vector<dof_id_type> & node
     _has_dof_indices = true;
   else
     _has_dof_indices = false;
-}
-
-template <>
-template <>
-const VariableValue &
-MooseVariableData<Real>::adSln<RESIDUAL>() const
-{
-  return _u;
-}
-
-template <>
-template <>
-const VectorVariableValue &
-MooseVariableData<RealVectorValue>::adSln<RESIDUAL>() const
-{
-  return _u;
-}
-
-template <>
-template <>
-const VariableGradient &
-MooseVariableData<Real>::adGradSln<RESIDUAL>() const
-{
-  return _grad_u;
-}
-
-template <>
-template <>
-const VectorVariableGradient &
-MooseVariableData<RealVectorValue>::adGradSln<RESIDUAL>() const
-{
-  return _grad_u;
-}
-
-template <>
-template <>
-const VariableSecond &
-MooseVariableData<Real>::adSecondSln<RESIDUAL>() const
-{
-  _need_second = true;
-  secondPhi();
-  secondPhiFace();
-  return _second_u;
-}
-
-template <>
-template <>
-const VectorVariableSecond &
-MooseVariableData<RealVectorValue>::adSecondSln<RESIDUAL>() const
-{
-  _need_second = true;
-  secondPhi();
-  secondPhiFace();
-  return _second_u;
-}
-
-template <>
-template <>
-const VariableValue &
-MooseVariableData<Real>::adUDot<RESIDUAL>() const
-{
-
-  return uDot();
-}
-
-template <>
-template <>
-const VectorVariableValue &
-MooseVariableData<RealVectorValue>::adUDot<RESIDUAL>() const
-{
-  return uDot();
-}
-
-template <>
-template <>
-const MooseArray<Real> &
-MooseVariableData<Real>::adDofValues<RESIDUAL>() const
-{
-  return _dof_values;
-}
-
-template <>
-template <>
-const MooseArray<Real> &
-MooseVariableData<RealVectorValue>::adDofValues<RESIDUAL>() const
-{
-  return _dof_values;
-}
-
-template <>
-template <>
-const Real &
-MooseVariableData<Real>::adNodalValue<RESIDUAL>() const
-{
-  return _nodal_value;
-}
-
-template <>
-template <>
-const RealVectorValue &
-MooseVariableData<RealVectorValue>::adNodalValue<RESIDUAL>() const
-{
-  return _nodal_value;
 }
 
 template class MooseVariableData<Real>;

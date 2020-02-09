@@ -70,7 +70,7 @@ ADNodalBCTempl<T, compute_stage>::computeResidual()
   for (auto tag_id : _vector_tags)
     if (_sys.hasVector(tag_id))
       for (size_t i = 0; i < dof_indices.size(); ++i)
-        _sys.getVector(tag_id).set(dof_indices[i], conversionHelper(residual, i));
+        _sys.getVector(tag_id).set(dof_indices[i], raw_value(conversionHelper(residual, i)));
 }
 
 template <>

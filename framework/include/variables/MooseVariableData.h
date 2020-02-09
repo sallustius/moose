@@ -329,6 +329,14 @@ public:
   const typename VariableValueType<OutputType, compute_stage>::type & adUDot() const
   {
     _need_ad = _need_ad_u_dot = true;
+
+    if (!_time_integrator)
+      // If we don't have a time integrator (this will be the case for variables that are a part of
+      // the AuxiliarySystem) then we have no way to calculate _ad_u_dot and we are just going to
+      // copy the values from _u_dot. Of course in order to be able to do that we need to calculate
+      // _u_dot
+      _need_u_dot = true;
+
     return _ad_u_dot;
   }
 
@@ -823,84 +831,4 @@ MooseVariableData<OutputType>::adNodalValue() const
 template <>
 void MooseVariableData<RealEigenVector>::fetchDoFValues();
 
-template <>
-template <>
-const VariableValue & MooseVariableData<Real>::adSln<RESIDUAL>() const;
-
-template <>
-template <>
-const VariableGradient & MooseVariableData<Real>::adGradSln<RESIDUAL>() const;
-
-template <>
-template <>
-const VariableSecond & MooseVariableData<Real>::adSecondSln<RESIDUAL>() const;
-
-template <>
-template <>
-const VariableValue & MooseVariableData<Real>::adUDot<RESIDUAL>() const;
-
-template <>
-template <>
-const VectorVariableValue & MooseVariableData<RealVectorValue>::adSln<RESIDUAL>() const;
-
-template <>
-template <>
-const VectorVariableGradient & MooseVariableData<RealVectorValue>::adGradSln<RESIDUAL>() const;
-
-template <>
-template <>
-const VectorVariableSecond & MooseVariableData<RealVectorValue>::adSecondSln<RESIDUAL>() const;
-
-template <>
-template <>
-const VectorVariableValue & MooseVariableData<RealVectorValue>::adUDot<RESIDUAL>() const;
-
-template <>
-template <>
-const MooseArray<Real> & MooseVariableData<Real>::adDofValues<RESIDUAL>() const;
-
-template <>
-template <>
-const MooseArray<Real> & MooseVariableData<RealVectorValue>::adDofValues<RESIDUAL>() const;
-
-template <>
-template <>
-const Real & MooseVariableData<Real>::adNodalValue<RESIDUAL>() const;
-
-template <>
-template <>
-const RealVectorValue & MooseVariableData<RealVectorValue>::adNodalValue<RESIDUAL>() const;
-
 ////////////////////// Definitions of fully specialized templates (must be inlined) //////////
-
-template <>
-template <>
-inline const typename VariableTestGradientType<Real, RESIDUAL>::type &
-MooseVariableData<Real>::adGradPhi<RESIDUAL>() const
-{
-  return *_grad_phi;
-}
-
-template <>
-template <>
-inline const typename VariableTestGradientType<RealVectorValue, RESIDUAL>::type &
-MooseVariableData<RealVectorValue>::adGradPhi<RESIDUAL>() const
-{
-  return *_grad_phi;
-}
-
-template <>
-template <>
-inline const typename VariableTestGradientType<Real, RESIDUAL>::type &
-MooseVariableData<Real>::adGradPhiFace<RESIDUAL>() const
-{
-  return *_grad_phi_face;
-}
-
-template <>
-template <>
-inline const typename VariableTestGradientType<RealVectorValue, RESIDUAL>::type &
-MooseVariableData<RealVectorValue>::adGradPhiFace<RESIDUAL>() const
-{
-  return *_grad_phi_face;
-}

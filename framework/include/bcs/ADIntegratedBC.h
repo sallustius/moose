@@ -40,10 +40,10 @@ protected:
   MooseVariableFE<T> & _var;
 
   /// normals at quadrature points
-  const typename PointType<compute_stage>::type & _normals;
+  const ADPoint & _normals;
 
   /// (physical) quadrature points
-  const typename PointType<compute_stage>::type & _ad_q_points;
+  const ADPoint & _ad_q_points;
 
   // test functions
 

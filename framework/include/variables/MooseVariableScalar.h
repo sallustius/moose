@@ -174,7 +174,7 @@ protected:
   /// whether dual_u is needed
   mutable bool _need_dual_u;
   /// The scalar solution with derivative information
-  DualVariableValue _dual_u;
+  ADVariableValue _dual_u;
 
 private:
   /**
@@ -186,8 +186,10 @@ private:
   void computeAD(bool nodal_ordering);
 };
 
-template <>
-const VariableValue & MooseVariableScalar::adSln<ComputeStage::RESIDUAL>() const;
-
-template <>
-const DualVariableValue & MooseVariableScalar::adSln<ComputeStage::JACOBIAN>() const;
+template <ComputeStage compute_stage>
+const ADVariableValue &
+MooseVariableScalar::adSln() const
+{
+  _need_dual = _need_dual_u = true;
+  return _dual_u;
+}

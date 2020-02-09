@@ -1276,9 +1276,6 @@ Coupleable::getADDefaultValue(const std::string & var_name)
   return default_value_it->second.get();
 }
 
-template <>
-VariableValue * Coupleable::getADDefaultValue<RESIDUAL>(const std::string & var_name);
-
 template <ComputeStage compute_stage>
 ADVectorVariableValue *
 Coupleable::getADDefaultVectorValue(const std::string & var_name)
@@ -1297,18 +1294,12 @@ Coupleable::getADDefaultVectorValue(const std::string & var_name)
   return default_value_it->second.get();
 }
 
-template <>
-VectorVariableValue * Coupleable::getADDefaultVectorValue<RESIDUAL>(const std::string & var_name);
-
 template <ComputeStage compute_stage>
 ADVariableGradient &
 Coupleable::getADDefaultGradient()
 {
   return _ad_default_gradient;
 }
-
-template <>
-VariableGradient & Coupleable::getADDefaultGradient<RESIDUAL>();
 
 template <ComputeStage compute_stage>
 ADVectorVariableGradient &
@@ -1317,18 +1308,12 @@ Coupleable::getADDefaultVectorGradient()
   return _ad_default_vector_gradient;
 }
 
-template <>
-VectorVariableGradient & Coupleable::getADDefaultVectorGradient<RESIDUAL>();
-
 template <ComputeStage compute_stage>
 ADVariableSecond &
 Coupleable::getADDefaultSecond()
 {
   return _ad_default_second;
 }
-
-template <>
-VariableSecond & Coupleable::getADDefaultSecond<RESIDUAL>();
 
 template <ComputeStage compute_stage>
 const ADVariableValue &
@@ -1350,10 +1335,3 @@ Coupleable::adZeroSecondTemplate()
 {
   return _ad_second_zero;
 }
-
-template <>
-const VariableValue & Coupleable::adZeroValueTemplate<RESIDUAL>();
-template <>
-const VariableGradient & Coupleable::adZeroGradientTemplate<RESIDUAL>();
-template <>
-const VariableSecond & Coupleable::adZeroSecondTemplate<RESIDUAL>();

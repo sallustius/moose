@@ -85,7 +85,7 @@ MooseVariableScalar::reinit(bool reinit_for_derivative_reordering /* = false*/)
   {
     // We've already calculated everything in an earlier reinit. All we have to do is re-sort the
     // derivative vector for AD calculations
-    if (_need_dual && _subproblem.currentlyComputingJacobian())
+    if (_need_dual)
       computeAD(/*nodal_ordering=*/true);
     return;
   }
@@ -291,7 +291,7 @@ MooseVariableScalar::reinit(bool reinit_for_derivative_reordering /* = false*/)
   }
 
   // Automatic differentiation
-  if (_need_dual && _subproblem.currentlyComputingJacobian())
+  if (_need_dual)
     computeAD(/*nodal_ordering=*/false);
 }
 
@@ -355,19 +355,4 @@ MooseVariableScalar::insert(NumericVector<Number> & soln)
   const dof_id_type end_dof = _dof_map.end_dof();
   if (_dof_indices.size() > 0 && first_dof <= _dof_indices[0] && _dof_indices[0] < end_dof)
     soln.insert(&_u[0], _dof_indices);
-}
-
-template <>
-const VariableValue &
-MooseVariableScalar::adSln<ComputeStage::RESIDUAL>() const
-{
-  return _u;
-}
-
-template <>
-const DualVariableValue &
-MooseVariableScalar::adSln<ComputeStage::JACOBIAN>() const
-{
-  _need_dual = _need_dual_u = true;
-  return _dual_u;
 }

@@ -174,14 +174,14 @@ struct DecrementRank<Eigen::Matrix<Real, Eigen::Dynamic, LIBMESH_DIM>>
 /**
  * Convenience macros for automatic dual/non-dual typing
  */
-#define ADReal typename Moose::RealType<compute_stage>::type
-#define ADRealVectorValue typename RealVectorValueType<compute_stage>::type
-#define ADPoint typename PointType<compute_stage>::type
-#define ADRealTensorValue typename RealTensorValueType<compute_stage>::type
-#define ADRankTwoTensor typename RankTwoTensorType<compute_stage>::type
-#define ADRankFourTensor typename RankFourTensorType<compute_stage>::type
-#define ADDenseMatrix typename DenseMatrixType<compute_stage>::type
-#define ADDenseVector typename DenseVectorType<compute_stage>::type
+#define ADReal typename Moose::RealType<ComputeStage::JACOBIAN>::type
+#define ADRealVectorValue typename RealVectorValueType<ComputeStage::JACOBIAN>::type
+#define ADPoint typename PointType<ComputeStage::JACOBIAN>::type
+#define ADRealTensorValue typename RealTensorValueType<ComputeStage::JACOBIAN>::type
+#define ADRankTwoTensor typename RankTwoTensorType<ComputeStage::JACOBIAN>::type
+#define ADRankFourTensor typename RankFourTensorType<ComputeStage::JACOBIAN>::type
+#define ADDenseMatrix typename DenseMatrixType<ComputeStage::JACOBIAN>::type
+#define ADDenseVector typename DenseVectorType<ComputeStage::JACOBIAN>::type
 
 /**
  * MOOSE typedefs
@@ -210,11 +210,6 @@ namespace Moose
 {
 template <ComputeStage compute_stage>
 struct RealType
-{
-  typedef Real type;
-};
-template <>
-struct RealType<JACOBIAN>
 {
   typedef DualReal type;
 };
@@ -466,22 +461,22 @@ struct PointType<JACOBIAN>
   typedef MooseArray<VectorValue<DualReal>> type;
 };
 
-#define ADVariableValue typename VariableValueType<Real, compute_stage>::type
-#define ADVariableGradient typename VariableGradientType<Real, compute_stage>::type
-#define ADVariableSecond typename VariableSecondType<Real, compute_stage>::type
+#define ADVariableValue typename VariableValueType<Real, JACOBIAN>::type
+#define ADVariableGradient typename VariableGradientType<Real, JACOBIAN>::type
+#define ADVariableSecond typename VariableSecondType<Real, JACOBIAN>::type
 
-#define ADVectorVariableValue typename VariableValueType<RealVectorValue, compute_stage>::type
-#define ADVectorVariableGradient typename VariableGradientType<RealVectorValue, compute_stage>::type
-#define ADVectorVariableSecond typename VariableSecondType<RealVectorValue, compute_stage>::type
+#define ADVectorVariableValue typename VariableValueType<RealVectorValue, JACOBIAN>::type
+#define ADVectorVariableGradient typename VariableGradientType<RealVectorValue, JACOBIAN>::type
+#define ADVectorVariableSecond typename VariableSecondType<RealVectorValue, JACOBIAN>::type
 
-#define ADTemplateVariableValue typename VariableValueType<T, compute_stage>::type
-#define ADTemplateVariableGradient typename VariableGradientType<T, compute_stage>::type
-#define ADTemplateVariableSecond typename VariableSecondType<T, compute_stage>::type
+#define ADTemplateVariableValue typename VariableValueType<T, JACOBIAN>::type
+#define ADTemplateVariableGradient typename VariableGradientType<T, JACOBIAN>::type
+#define ADTemplateVariableSecond typename VariableSecondType<T, JACOBIAN>::type
 
-#define ADTemplateVariablePhiGradient typename VariablePhiGradientType<T, compute_stage>::type
-#define ADVariablePhiGradient typename VariablePhiGradientType<Real, compute_stage>::type
+#define ADTemplateVariablePhiGradient typename VariablePhiGradientType<T, JACOBIAN>::type
+#define ADVariablePhiGradient typename VariablePhiGradientType<Real, JACOBIAN>::type
 
-#define ADMaterialProperty(Type) typename MaterialPropertyType<Type, compute_stage>::type
+#define ADMaterialProperty(Type) typename MaterialPropertyType<Type, JACOBIAN>::type
 
 typedef VariableTestValue ADVariableTestValue;
 typedef VariableTestGradient ADVariableTestGradient;

@@ -45,14 +45,14 @@ ADKernelGradTempl<T, compute_stage>::computeResidual()
     {
       const auto value = precomputeQpResidual() * _ad_JxW[_qp] * _ad_coord[_qp];
       for (_i = 0; _i < n_test; _i++) // target for auto vectorization
-        _local_re(_i) += MathUtils::dotProduct(value, _grad_test[_i][_qp]);
+        _local_re(_i) += raw_value(MathUtils::dotProduct(value, _grad_test[_i][_qp]));
     }
   else
     for (_qp = 0; _qp < _qrule->n_points(); _qp++)
     {
       const auto value = precomputeQpResidual() * _JxW[_qp] * _coord[_qp];
       for (_i = 0; _i < n_test; _i++) // target for auto vectorization
-        _local_re(_i) += MathUtils::dotProduct(value, _regular_grad_test[_i][_qp]);
+        _local_re(_i) += raw_value(MathUtils::dotProduct(value, _regular_grad_test[_i][_qp]));
     }
 
   accumulateTaggedLocalResidual();

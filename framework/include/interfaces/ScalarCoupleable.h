@@ -283,11 +283,3 @@ private:
 
   std::set<TagID> _sc_coupleable_matrix_tags;
 };
-
-template <>
-VariableValue *
-ScalarCoupleable::getADDefaultValue<ComputeStage::RESIDUAL>(const std::string & var_name);
-
-template <>
-DualVariableValue *
-ScalarCoupleable::getADDefaultValue<ComputeStage::JACOBIAN>(const std::string & var_name);

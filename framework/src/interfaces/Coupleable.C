@@ -1345,62 +1345,6 @@ Coupleable::validateExecutionerType(const std::string & name, const std::string 
                "only in transient simulations.");
 }
 
-template <>
-VariableValue *
-Coupleable::getADDefaultValue<RESIDUAL>(const std::string & var_name)
-{
-  return getDefaultValue(var_name, 0);
-}
-
-template <>
-VectorVariableValue *
-Coupleable::getADDefaultVectorValue<RESIDUAL>(const std::string & var_name)
-{
-  return getDefaultVectorValue(var_name);
-}
-
-template <>
-VariableGradient &
-Coupleable::getADDefaultGradient<RESIDUAL>()
-{
-  return _default_gradient;
-}
-
-template <>
-VectorVariableGradient &
-Coupleable::getADDefaultVectorGradient<RESIDUAL>()
-{
-  return _default_vector_gradient;
-}
-
-template <>
-VariableSecond &
-Coupleable::getADDefaultSecond<RESIDUAL>()
-{
-  return _default_second;
-}
-
-template <>
-const VariableValue &
-Coupleable::adZeroValueTemplate<RESIDUAL>()
-{
-  return _zero;
-}
-
-template <>
-const VariableGradient &
-Coupleable::adZeroGradientTemplate<RESIDUAL>()
-{
-  return _grad_zero;
-}
-
-template <>
-const VariableSecond &
-Coupleable::adZeroSecondTemplate<RESIDUAL>()
-{
-  return _second_zero;
-}
-
 template <typename T, ComputeStage compute_stage>
 const typename Moose::ValueType<T, compute_stage>::type &
 Coupleable::adCoupledNodalValueTemplate(const std::string & var_name, unsigned int comp)
@@ -1459,15 +1403,15 @@ template const Real & Coupleable::coupledNodalDot<Real>(const std::string & var_
 template const RealVectorValue &
 Coupleable::coupledNodalDot<RealVectorValue>(const std::string & var_name, unsigned int comp);
 
-template const Real &
+template const ADReal &
 Coupleable::adCoupledNodalValueTemplate<Real, RESIDUAL>(const std::string & var_name,
                                                         unsigned int comp);
-template const RealVectorValue &
+template const ADRealVectorValue &
 Coupleable::adCoupledNodalValueTemplate<RealVectorValue, RESIDUAL>(const std::string & var_name,
                                                                    unsigned int comp);
-template const DualReal &
+template const ADReal &
 Coupleable::adCoupledNodalValueTemplate<Real, JACOBIAN>(const std::string & var_name,
                                                         unsigned int comp);
-template const libMesh::VectorValue<DualReal> &
+template const ADRealVectorValue &
 Coupleable::adCoupledNodalValueTemplate<RealVectorValue, JACOBIAN>(const std::string & var_name,
                                                                    unsigned int comp);
