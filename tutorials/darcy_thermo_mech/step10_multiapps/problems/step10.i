@@ -11,6 +11,13 @@
   xmax = 0.0257 # Test chamber radius
 []
 
+[Problem]
+  type = ReferenceResidualProblem
+  extra_tag_vectors = 'ref'
+  reference_vector = 'ref'
+  group_variables = 'disp_r disp_z'
+[]
+
 [Variables]
   [pressure]
   []
@@ -37,6 +44,7 @@
     strain = FINITE
     eigenstrain_names = eigenstrain
     use_automatic_differentiation = true
+    extra_vector_tags = 'ref'
     generate_output = 'vonmises_stress elastic_strain_xx elastic_strain_yy strain_xx strain_yy'
   []
 []
@@ -45,19 +53,23 @@
   [darcy_pressure]
     type = DarcyPressure
     variable = pressure
+    extra_vector_tags = 'ref'
   []
   [heat_conduction]
     type = ADHeatConduction
     variable = temperature
+    extra_vector_tags = 'ref'
   []
   [heat_conduction_time_derivative]
     type = ADHeatConductionTimeDerivative
     variable = temperature
+    extra_vector_tags = 'ref'
   []
   [heat_convection]
     type = DarcyAdvection
     variable = temperature
     pressure = pressure
+    extra_vector_tags = 'ref'
   []
 []
 
@@ -152,27 +164,52 @@
     type = ElementAverageValue
     variable = temperature
   []
+  [num_lin]
+    type = NumLinearIterations
+  []
+  [num_nl]
+    type = NumNonlinearIterations
+  []
+  [cum_lin]
+    type = CumulativeValuePostprocessor
+    postprocessor = num_lin
+  []
+  [cum_nl]
+    type = CumulativeValuePostprocessor
+    postprocessor = num_nl
+  []
 []
 
 [Executioner]
   type = Transient
   start_time = -1
   end_time = 200
+  num_steps = 10
   steady_state_tolerance = 1e-7
   steady_state_detection = true
   dt = 0.25
+  dtmin = 0.25
   solve_type = PJFNK
   automatic_scaling = true
   compute_scaling_once = false
-  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
-  petsc_options_value = 'hypre boomeramg 500'
+  petsc_options = '-snes_converged_reason -ksp_converged_reason -ksp_monitor_true_residual -snes_linesearch_monitor'
+  petsc_options_iname = '-ksp_gmres_restart -pc_type'
+  petsc_options_value = '500                asm'
+  # petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
+  # petsc_options_value = 'hypre boomeramg 500'
   line_search = none
+  nl_rel_tol = 1e-8
+  verbose = true
+  scaling_group_variables = 'disp_r disp_z'
   [TimeStepper]
     type = FunctionDT
     function = 'if(t<0,0.1,0.25)'
   []
 []
 
+# [Debug]
+#   show_var_residual_norms = true
+# []
 
 [MultiApps]
   [micro]
@@ -219,6 +256,8 @@
 []
 
 [Outputs]
+  perf_graph = true
+  print_linear_residuals = false
   [out]
     type = Exodus
     elemental_as_nodal = true

@@ -1,5 +1,6 @@
 [GlobalParams]
   displacements = 'disp_r disp_z'
+  preset = true
 []
 
 [Mesh]
@@ -44,6 +45,7 @@
     strain = FINITE
     eigenstrain_names = eigenstrain
     use_automatic_differentiation = true
+    extra_vector_tags = 'ref'
     generate_output = 'vonmises_stress elastic_strain_xx elastic_strain_yy strain_xx strain_yy'
   []
 []
@@ -52,10 +54,12 @@
   [darcy_pressure]
     type = DarcyPressure
     variable = pressure
+    extra_vector_tags = 'ref'
   []
   [heat_conduction]
     type = ADHeatConduction
     variable = temperature
+    extra_vector_tags = 'ref'
   []
   [heat_conduction_time_derivative]
     type = ADHeatConductionTimeDerivative
@@ -65,6 +69,7 @@
     type = DarcyAdvection
     variable = temperature
     pressure = pressure
+    extra_vector_tags = 'ref'
   []
 []
 
@@ -174,27 +179,52 @@
     type = ElementAverageValue
     variable = temperature
   []
+  [num_lin]
+    type = NumLinearIterations
+  []
+  [num_nl]
+    type = NumNonlinearIterations
+  []
+  [cum_lin]
+    type = CumulativeValuePostprocessor
+    postprocessor = num_lin
+  []
+  [cum_nl]
+    type = CumulativeValuePostprocessor
+    postprocessor = num_nl
+  []
 []
 
 [Problem]
-  type = FEProblem
+  type = ReferenceResidualProblem
+  extra_tag_vectors = 'ref'
+  reference_vector = 'ref'
+  group_variables = 'disp_r disp_z'
   coord_type = RZ
 []
 
 [Executioner]
   type = Transient
+  num_steps = 10
   start_time = -1
   end_time = 200
   steady_state_tolerance = 1e-7
   steady_state_detection = true
   dt = 0.25
+  dtmin = 0.25
   solve_type = PJFNK
   automatic_scaling = true
   compute_scaling_once = false
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'lu'
-  #petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
-  #petsc_options_value = 'hypre boomeramg 500'
+  scaling_group_variables = 'disp_r disp_z'
+  resid_vs_jac_scaling_param = 0.5
+  verbose = true
+  petsc_options = '-snes_converged_reason -ksp_converged_reason -ksp_monitor_true_residual -snes_linesearch_monitor'
+  petsc_options_iname = '-ksp_gmres_restart -pc_type -pc_asm_overlap -sub_pc_factor_levels -ksp_max_it'
+  petsc_options_value = '500                asm      2               4                     500'
+  # petsc_options_iname = '-pc_type'
+  # petsc_options_value = 'lu'
+  # petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
+  # petsc_options_value = 'hypre boomeramg 500'
   line_search = none
   [TimeStepper]
     type = FunctionDT
@@ -203,6 +233,9 @@
 []
 
 [Outputs]
+  perf_graph = true
+  print_linear_residuals = false
+  checkpoint = true
   [out]
     type = Exodus
     elemental_as_nodal = true
