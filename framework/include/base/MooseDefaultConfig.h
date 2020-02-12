@@ -49,4 +49,6 @@
 #endif
 
 /* Whether to use a sparse derivative type */
-/* #undef SPARSE_AD */
+#ifndef MOOSE_SPARSE_AD
+#define MOOSE_SPARSE_AD 1
+#endif
