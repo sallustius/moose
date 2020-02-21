@@ -1,4 +1,5 @@
 [Mesh]
+  uniform_refine = 1
   [gen]
     type = GeneratedMeshGenerator
     dim = 2
@@ -142,14 +143,15 @@
   [./SMP]
     type = SMP
     full = true
-    solve_type = 'NEWTON'
+    solve_type = 'PJFNK'
   [../]
 []
 
 [Executioner]
   type = Steady
-  petsc_options_iname = '-pc_type'
-  petsc_options_value = 'lu'
+  petsc_options = '-options_left'
+  petsc_options_iname = '-pc_type -sub_pc_factor_levels -ksp_gmres_restart'
+  petsc_options_value = 'asm      8                     200'
   line_search = 'none'
   nl_rel_tol = 1e-12
   nl_abs_tol = 1e-13
@@ -159,6 +161,7 @@
 []
 
 [Outputs]
+  perf_graph = true
   exodus = true
   file_base = lid_driven_stabilized_out
 []
