@@ -43,15 +43,15 @@ class Communicator;
 class MultiMooseEnum;
 namespace MetaPhysicL
 {
-template <typename, typename>
+template <typename, typename, bool>
 class DualNumber;
 }
 namespace std
 {
-template <typename T, typename D>
-MetaPhysicL::DualNumber<T, D> abs(const MetaPhysicL::DualNumber<T, D> & in);
-template <typename T, typename D>
-MetaPhysicL::DualNumber<T, D> abs(MetaPhysicL::DualNumber<T, D> && in);
+template <typename T, typename D, bool asd>
+MetaPhysicL::DualNumber<T, D, asd> abs(const MetaPhysicL::DualNumber<T, D, asd> & in);
+template <typename T, typename D, bool asd>
+MetaPhysicL::DualNumber<T, D, asd> abs(MetaPhysicL::DualNumber<T, D, asd> && in);
 }
 
 namespace MooseUtils
