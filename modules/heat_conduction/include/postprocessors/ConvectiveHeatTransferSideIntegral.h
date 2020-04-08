@@ -26,11 +26,11 @@ protected:
   const VariableValue * _T_fluid;
 
   /// fluid temperature variable
-  const MaterialProperty<Real> * _T_fluid_mat;
+  const ADMaterialProperty<Real> * _T_fluid_mat;
 
   /// the heat transfer coefficient variable
   const VariableValue * _hw;
 
   /// the heat transfer coefficient material, either variable or matprop need to be provided
-  const MaterialProperty<Real> * _hw_mat;
+  const ADMaterialProperty<Real> * _hw_mat;
 };

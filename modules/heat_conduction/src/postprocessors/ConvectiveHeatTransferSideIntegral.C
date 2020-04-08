@@ -1,5 +1,7 @@
 #include "ConvectiveHeatTransferSideIntegral.h"
 
+#include "metaphysicl/raw_value.h"
+
 registerMooseObject("HeatConductionApp", ConvectiveHeatTransferSideIntegral);
 
 template <>
@@ -23,9 +25,9 @@ ConvectiveHeatTransferSideIntegral::ConvectiveHeatTransferSideIntegral(
   : SideIntegralPostprocessor(parameters),
     _T_wall(coupledValue("T_solid")),
     _T_fluid(isCoupled("T_fluid_var") ? &coupledValue("T_fluid_var") : nullptr),
-    _T_fluid_mat(isParamValid("T_fluid") ? &getMaterialProperty<Real>("T_fluid") : nullptr),
+    _T_fluid_mat(isParamValid("T_fluid") ? &getADMaterialProperty<Real>("T_fluid") : nullptr),
     _hw(isCoupled("htc_var") ? &coupledValue("htc_var") : nullptr),
-    _hw_mat(isParamValid("htc") ? &getMaterialProperty<Real>("htc") : nullptr)
+    _hw_mat(isParamValid("htc") ? &getADMaterialProperty<Real>("htc") : nullptr)
 {
   if (isCoupled("htc_var") == isParamValid("htc"))
     paramError("htc", "Either htc_var OR htc must be provided (exactly one, not both).");
@@ -46,13 +48,13 @@ ConvectiveHeatTransferSideIntegral::computeQpIntegral()
   if (_hw)
     hw = (*_hw)[_qp];
   else
-    hw = (*_hw_mat)[_qp];
+    hw = MetaPhysicL::raw_value((*_hw_mat)[_qp]);
 
   Real Tf;
   if (_T_fluid)
     Tf = (*_T_fluid)[_qp];
   else
-    Tf = (*_T_fluid_mat)[_qp];
+    Tf = MetaPhysicL::raw_value((*_T_fluid_mat)[_qp]);
 
   return hw * (_T_wall[_qp] - Tf);
 }
