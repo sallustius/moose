@@ -1,81 +1,81 @@
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  nx = 10
-  ny = 10
-  nz = 0
-  zmax = 0
-  elem_type = QUAD4
+  [gen]
+    type = GeneratedMeshGenerator
+    dim = 2
+    nx = 10
+    ny = 10
+    elem_type = QUAD4
+  []
 []
 
 [Variables]
-  [./u]
+  [u]
     order = CONSTANT
     family = MONOMIAL
-  [../]
+  []
   [v][]
 []
 
 [Functions]
-  [./force]
+  [force]
     type = ParsedFunction
     value = t
-  [../]
+  []
 []
 
 [Kernels]
-  [./diff]
+  [diff]
     type = Diffusion
     variable = v
-  [../]
-  [./force]
+  []
+  [force]
     type = BodyForce
     variable = v
     function = force
-  [../]
+  []
 []
 
 [FVKernels]
-  [./diff]
+  [diff]
     type = FVDiffusion
     variable = u
     coeff = coeff
-  [../]
-  [./force]
+  []
+  [force]
     type = FVBodyForce
     variable = u
     function = force
-  [../]
+  []
 []
 
 [FVBCs]
-  [./right]
+  [right]
     type = FVDirichletBC
     variable = u
     boundary = right
     value = 1
-  [../]
-  [./left]
+  []
+  [left]
     type = FVDirichletBC
     variable = u
     boundary = left
     value = 0
-  [../]
+  []
 []
 
 [BCs]
-  [./right]
+  [right]
     type = DirichletBC
     variable = v
     boundary = right
     value = 1
-  [../]
-  [./left]
+  []
+  [left]
     type = DirichletBC
     variable = v
     boundary = left
     value = 0
-  [../]
+  []
 []
 
 [Materials]
@@ -100,15 +100,15 @@
 [Adaptivity]
   marker = box
   initial_steps = 1
-  [./Markers]
-    [./box]
+  [Markers]
+    [box]
       bottom_left = '0.3 0.3 0'
       inside = refine
       top_right = '0.6 0.6 0'
       outside = do_nothing
       type = BoxMarker
-    [../]
-  [../]
+    []
+  []
 []
 
 [Outputs]
