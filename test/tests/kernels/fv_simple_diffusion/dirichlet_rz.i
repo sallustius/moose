@@ -3,6 +3,9 @@
   dim = 2
   nx = 10
   ny = 10
+  # x can't start at zero because FV's weak dirichlet BCs need a non-zero area
+  # on the left so their numerical flux contribution isn't zero'd out -
+  # causing there to basically be no BC on the left.
   xmin = .1
   xmax = 1
 []
