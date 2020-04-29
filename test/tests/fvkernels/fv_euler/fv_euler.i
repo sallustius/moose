@@ -82,17 +82,19 @@
     type = ADCoupledVelocityMaterial
     vel_x = fv_vel
     rho = fv_rho
-    fv = true
     velocity = 'fv_velocity'
   []
 []
 
 [Executioner]
   type = Steady
-  solve_type = NEWTON
+  solve_type = PJFNK
   line_search = 'none'
 []
 
 [Outputs]
-  exodus = true
+  [out]
+    type = Exodus
+    execute_on = 'final'
+  []
 []
