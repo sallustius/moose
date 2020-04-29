@@ -317,6 +317,8 @@ ComputeFVFluxThread<RangeType>::reinitVariables(const FaceInfo & fi)
     _fe_problem.reinitMaterialsNeighbor(fi.neighbor().subdomain_id(), _tid);
   else
   {
+    _fe_problem.reinitMaterialsNeighborFake(fi.elem().subdomain_id(), _tid);
+
     // TODO: verify that this works as expected.
     // For computing residual contributions for dirichlet boundary conditions,
     // we use a "ghost" element approach.  To do this we need variables and
@@ -324,15 +326,15 @@ ComputeFVFluxThread<RangeType>::reinitVariables(const FaceInfo & fi)
     // though there is no actual neighbor element along a boundary.  So here,
     // we copy the just-computed element (face) material properties into the
     // neighbor (face) material properties data structure.
-    auto dst = _fe_problem.getMaterialData(Moose::NEIGHBOR_MATERIAL_DATA, _tid);
-    auto src = _fe_problem.getMaterialData(Moose::BOUNDARY_MATERIAL_DATA, _tid);
+    // auto dst = _fe_problem.getMaterialData(Moose::NEIGHBOR_MATERIAL_DATA, _tid);
+    // auto src = _fe_problem.getMaterialData(Moose::BOUNDARY_MATERIAL_DATA, _tid);
 
     // FIXME/TODO: This previously failed due to dst and src not being
     // initialized with same number of qps per property.  I'm not sure if that
     // should be the case - investigate this further.  If we can fix that
     // occurence, then the rezie operation inside copyPropsFrom should be
     // removed.
-    dst->copyPropsFrom(*src);
+    // dst->copyPropsFrom(*src);
   }
 
   // this is the swap-back object - don't forget to catch it into local var

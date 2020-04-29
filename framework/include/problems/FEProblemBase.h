@@ -697,6 +697,8 @@ public:
   virtual void
   reinitMaterialsNeighbor(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful = true);
   virtual void
+  reinitMaterialsNeighborFake(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful = true);
+  virtual void
   reinitMaterialsBoundary(BoundaryID boundary_id, THREAD_ID tid, bool swap_stateful = true);
   virtual void
   reinitMaterialsInterface(BoundaryID boundary_id, THREAD_ID tid, bool swap_stateful = true);
