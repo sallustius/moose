@@ -146,6 +146,7 @@ ComputeMortarFunctor::operator()()
       // still remember to swap back during stack unwinding.
       SwapBackSentinel face_sentinel(_fe_problem, &FEProblemBase::swapBackMaterialsFace, /*tid=*/0);
       _fe_problem.reinitMaterialsFace(slave_ip->subdomain_id(), /*tid=*/0);
+      _fe_problem.reinitMaterialsBoundary(_slave_boundary_id, /*tid=*/0);
     }
 
     if (_has_master)
