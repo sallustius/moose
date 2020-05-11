@@ -140,15 +140,6 @@ ComputeMortarFunctor::operator()()
     _fe_problem.reinitElemFaceRef(
         reinit_slave_elem, slave_side_id, _slave_boundary_id, TOLERANCE, &custom_xi1_pts);
 
-    // reinit higher-dimensional element face materials
-    {
-      // Set up Sentinels so that, even if one of the reinitMaterialsXXX() calls throws, we
-      // still remember to swap back during stack unwinding.
-      SwapBackSentinel face_sentinel(_fe_problem, &FEProblemBase::swapBackMaterialsFace, /*tid=*/0);
-      _fe_problem.reinitMaterialsFace(slave_ip->subdomain_id(), /*tid=*/0);
-      _fe_problem.reinitMaterialsBoundary(_slave_boundary_id, /*tid=*/0);
-    }
-
     if (_has_master)
     {
       //  Compute custom integration points for the master side
@@ -183,6 +174,17 @@ ComputeMortarFunctor::operator()()
     // the slave face. This must be done last after the dof indices have been prepared for the
     // slave (element) and master (neighbor)
     _subproblem.reinitLowerDElemRef(slave_face_elem, &custom_xi1_pts);
+
+    // reinit higher-dimensional slave face/boundary materials. Do this after we reinit lower-d
+    // variables in case we want to pull the lower-d variable values into the slave face/boundary
+    // materials
+    {
+      // Set up Sentinels so that, even if one of the reinitMaterialsXXX() calls throws, we
+      // still remember to swap back during stack unwinding.
+      SwapBackSentinel face_sentinel(_fe_problem, &FEProblemBase::swapBackMaterialsFace, /*tid=*/0);
+      _fe_problem.reinitMaterialsFace(slave_ip->subdomain_id(), /*tid=*/0);
+      _fe_problem.reinitMaterialsBoundary(_slave_boundary_id, /*tid=*/0);
+    }
 
     if (!_fe_problem.currentlyComputingJacobian())
     {
