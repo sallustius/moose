@@ -3092,13 +3092,22 @@ FEProblemBase::reinitMaterials(SubdomainID blk_id, THREAD_ID tid, bool swap_stat
 }
 
 void
-FEProblemBase::reinitMaterialsFace(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful)
+FEProblemBase::reinitMaterialsFace(SubdomainID /*blk_id*/, THREAD_ID tid, bool swap_stateful)
+{
+  reinitMaterialsFace(_assembly[tid]->elem(), _assembly[tid]->side(), tid, swap_stateful);
+}
+
+void
+FEProblemBase::reinitMaterialsFace(const Elem * elem,
+                                   const unsigned int side,
+                                   THREAD_ID tid,
+                                   bool swap_stateful)
 {
   if (hasActiveMaterialProperties(tid))
   {
-    auto && elem = _assembly[tid]->elem();
-    unsigned int side = _assembly[tid]->side();
-    unsigned int n_points = _assembly[tid]->qRuleFace()->n_points();
+    auto n_points = _assembly[tid]->qRuleFace()->n_points();
+
+    auto blk_id = elem->subdomain_id();
 
     _bnd_material_data[tid]->resize(n_points);
 
@@ -3147,13 +3156,25 @@ FEProblemBase::reinitMaterialsNeighborGhost(SubdomainID blk_id, THREAD_ID tid, b
 void
 FEProblemBase::reinitMaterialsNeighbor(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful)
 {
+  const Elem * neighbor = _assembly[tid]->neighbor();
+  mooseAssert(neighbor->subdomain_id() == blk_id,
+              "The element subdomain ID and the blk_id don't match");
+  reinitMaterialsNeighbor(
+      neighbor, neighbor->which_neighbor_am_i(_assembly[tid]->elem()), tid, swap_stateful);
+}
+
+void
+FEProblemBase::reinitMaterialsNeighbor(const Elem * neighbor,
+                                       const unsigned int neighbor_side,
+                                       THREAD_ID tid,
+                                       bool swap_stateful)
+{
   if (hasActiveMaterialProperties(tid))
   {
     // NOTE: this will not work with h-adaptivity
-    auto && neighbor = _assembly[tid]->neighbor();
-    unsigned int neighbor_side = neighbor->which_neighbor_am_i(_assembly[tid]->elem());
-    unsigned int n_points = _assembly[tid]->qRuleFace()->n_points();
+    auto n_points = _assembly[tid]->qRuleFace()->n_points();
     _neighbor_material_data[tid]->resize(n_points);
+    auto blk_id = neighbor->subdomain_id();
 
     // Only swap if requested
     if (swap_stateful)

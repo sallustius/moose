@@ -163,3 +163,9 @@ MortarData::getHigherDimSubdomainIDs(SubdomainID lower_d_subdomain_id) const
         "The lower dimensional ID ", lower_d_subdomain_id, " has not been added to MortarData yet");
   return _lower_d_sub_to_higher_d_subs.at(lower_d_subdomain_id);
 }
+
+bool
+MortarData::hasActiveBoundaryObjects(BoundaryID bnd_id) const
+{
+  return (_mortar_boundary_coverage.find(bnd_id) != _mortar_boundary_coverage.end());
+}

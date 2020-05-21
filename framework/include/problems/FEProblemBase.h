@@ -695,8 +695,25 @@ public:
 
   virtual void reinitMaterials(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful = true);
   virtual void reinitMaterialsFace(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful = true);
+
+  /**
+   * reinit face materials on given \p elem and \p side
+   */
+  virtual void reinitMaterialsFace(const Elem * elem,
+                                   unsigned int side,
+                                   THREAD_ID tid,
+                                   bool swap_stateful = true);
   virtual void
   reinitMaterialsNeighbor(SubdomainID blk_id, THREAD_ID tid, bool swap_stateful = true);
+
+  /**
+   * reinit neighbor face materials on given \p elem and \p side
+   */
+  virtual void reinitMaterialsNeighbor(const Elem * neighbor,
+                                       unsigned int neighbor_side,
+                                       THREAD_ID tid,
+                                       bool swap_stateful = true);
+
   /**
    * For finite volume bcs, we need to be able to initialize and compute
    * materials on ghost elements (elements that don't exist on the mesh - on

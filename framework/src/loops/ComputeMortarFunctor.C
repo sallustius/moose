@@ -166,7 +166,7 @@ ComputeMortarFunctor::operator()()
       {
         SwapBackSentinel neighbor_sentinel(
             _fe_problem, &FEProblemBase::swapBackMaterialsNeighbor, /*tid=*/0);
-        _fe_problem.reinitMaterialsNeighbor(master_ip->subdomain_id(), /*tid=*/0);
+        _fe_problem.reinitMaterialsNeighbor(reinit_master_elem, master_side_id, /*tid=*/0);
       }
     }
 
@@ -182,7 +182,7 @@ ComputeMortarFunctor::operator()()
       // Set up Sentinels so that, even if one of the reinitMaterialsXXX() calls throws, we
       // still remember to swap back during stack unwinding.
       SwapBackSentinel face_sentinel(_fe_problem, &FEProblemBase::swapBackMaterialsFace, /*tid=*/0);
-      _fe_problem.reinitMaterialsFace(slave_ip->subdomain_id(), /*tid=*/0);
+      _fe_problem.reinitMaterialsFace(reinit_slave_elem, slave_side_id, /*tid=*/0);
       _fe_problem.reinitMaterialsBoundary(_slave_boundary_id, /*tid=*/0);
     }
 

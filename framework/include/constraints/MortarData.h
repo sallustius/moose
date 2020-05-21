@@ -92,6 +92,8 @@ public:
    */
   const std::set<SubdomainID> & getHigherDimSubdomainIDs(SubdomainID lower_d_subdomain_id) const;
 
+  bool hasActiveBoundaryObjects(BoundaryID bnd_id) const;
+
 private:
   /**
    * Builds mortar segment mesh from specific AutomaticMortarGeneration object

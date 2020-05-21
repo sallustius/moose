@@ -3153,7 +3153,8 @@ NonlinearSystemBase::setMooseKSPNormType(MooseEnum kspnorm)
 bool
 NonlinearSystemBase::needBoundaryMaterialOnSide(BoundaryID bnd_id, THREAD_ID tid) const
 {
-  return _integrated_bcs.hasActiveBoundaryObjects(bnd_id, tid);
+  return _integrated_bcs.hasActiveBoundaryObjects(bnd_id, tid) ||
+         _fe_problem.mortarData().hasActiveBoundaryObjects(bnd_id);
 }
 
 bool
