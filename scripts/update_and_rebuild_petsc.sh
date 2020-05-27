@@ -93,7 +93,8 @@ if [ -z "$go_fast" ]; then
       --FCFLAGS='-fPIC -fopenmp' \
       --F90FLAGS='-fPIC -fopenmp' \
       --F77FLAGS='-fPIC -fopenmp' \
-      $* \
+      --LIBS='-lmpifort -lgfortran' \
+      $*
 
    make all
 else
