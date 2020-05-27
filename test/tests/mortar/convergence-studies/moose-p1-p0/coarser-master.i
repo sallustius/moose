@@ -1,5 +1,4 @@
 [Mesh]
-  second_order = true
   type = MeshGeneratorMesh
 []
 
@@ -11,8 +10,8 @@
     xmax = 0.5
     ymin = 0
     ymax = 1
-    nx = 80
-    ny = 80
+    nx = 10
+    ny = 20
     elem_type = QUAD4
   [../]
   [./left_block_sidesets]
@@ -33,8 +32,8 @@
     xmax = 1
     ymin = 0
     ymax = 1
-    nx = 80
-    ny = 176
+    nx = 10
+    ny = 10
     elem_type = QUAD4
   [../]
   [./right_block_id]
@@ -99,11 +98,11 @@
 [Variables]
   [./T]
     block = 'left_block right_block'
-    order = SECOND
   [../]
   [./lambda]
     block = 'slave_lower'
-    order = FIRST
+    order = CONSTANT
+    family = MONOMIAL
   [../]
 []
 

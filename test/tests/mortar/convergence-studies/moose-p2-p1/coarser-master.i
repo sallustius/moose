@@ -12,7 +12,7 @@
     ymin = 0
     ymax = 1
     nx = 80
-    ny = 80
+    ny = 176
     elem_type = QUAD4
   [../]
   [./left_block_sidesets]
@@ -34,7 +34,7 @@
     ymin = 0
     ymax = 1
     nx = 80
-    ny = 176
+    ny = 80
     elem_type = QUAD4
   [../]
   [./right_block_id]
