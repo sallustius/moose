@@ -156,12 +156,12 @@
 [Constraints]
   [./mortar]
     type = EqualValueConstraint
-    master_boundary = rb_left
-    slave_boundary = lb_right
-    master_subdomain = master_lower
-    slave_subdomain = slave_lower
-    slave_variable = T
-    variable = lambda
+    master_boundary_id = '1005'
+    slave_boundary_id = '1001'
+    master_subdomain_id = '10000'
+    slave_subdomain_id = '10001'
+    variable = T
+    lm_variable = lambda
   [../]
 []
 
