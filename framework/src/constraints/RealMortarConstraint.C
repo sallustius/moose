@@ -28,7 +28,20 @@ defineADBaseValidParams(
                                         "The id of the slave boundary sideset.");
     params.addRequiredParam<SubdomainID>("master_subdomain_id", "The id of the master subdomain.");
     params.addRequiredParam<SubdomainID>("slave_subdomain_id", "The id of the slave subdomain.");
-    params.registerRelationshipManagers("AugmentSparsityOnInterface");
+    params.addRelationshipManager(
+        "AugmentSparsityOnInterface",
+        Moose::RelationshipManagerType::GEOMETRIC | Moose::RelationshipManagerType::ALGEBRAIC,
+        [](const InputParameters & obj_params, InputParameters & rm_params) {
+          rm_params.set<BoundaryID>("slave_boundary_id") =
+              obj_params.get<BoundaryID>("slave_boundary_id");
+          rm_params.set<BoundaryID>("master_boundary_id") =
+              obj_params.get<BoundaryID>("master_boundary_id");
+          rm_params.set<SubdomainID>("slave_subdomain_id") =
+              obj_params.get<SubdomainID>("slave_subdomain_id");
+          rm_params.set<SubdomainID>("master_subdomain_id") =
+              obj_params.get<SubdomainID>("master_subdomain_id");
+        });
+
     params.addRequiredParam<NonlinearVariableName>("lm_variable",
                                                    "The lagrange multiplier variable"););
 

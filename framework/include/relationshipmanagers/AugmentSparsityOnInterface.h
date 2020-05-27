@@ -3,15 +3,15 @@
 
 // App includes
 #include "AutomaticMortarGeneration.h"
-#include "AlgebraicRelationshipManager.h"
+#include "RelationshipManager.h"
 
 // libMesh includes
 #include "libmesh/mesh_base.h"
 
+using libMesh::boundary_id_type;
 using libMesh::Elem;
 using libMesh::GhostingFunctor;
 using libMesh::MeshBase;
-using libMesh::boundary_id_type;
 using libMesh::processor_id_type;
 
 class AugmentSparsityOnInterface;
@@ -19,7 +19,7 @@ class AugmentSparsityOnInterface;
 template <>
 InputParameters validParams<AugmentSparsityOnInterface>();
 
-class AugmentSparsityOnInterface : public AlgebraicRelationshipManager
+class AugmentSparsityOnInterface : public RelationshipManager
 {
 public:
   AugmentSparsityOnInterface(const InputParameters &);
@@ -47,9 +47,9 @@ public:
    */
   virtual void redistribute() override { this->mesh_reinit(); }
 
-  void attachRelationshipManagersInternal(Moose::RelationshipManagerType rm_type) override;
-
   std::string getInfo() const override;
+
+  void internalInit() override;
 
 protected:
   /**

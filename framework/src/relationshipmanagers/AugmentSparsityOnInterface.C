@@ -15,7 +15,7 @@ template <>
 InputParameters
 validParams<AugmentSparsityOnInterface>()
 {
-  InputParameters params = validParams<AlgebraicRelationshipManager>();
+  InputParameters params = validParams<RelationshipManager>();
   params.addRequiredParam<BoundaryID>("master_boundary_id",
                                       "The id of the master boundary sideset.");
   params.addRequiredParam<BoundaryID>("slave_boundary_id", "The id of the slave boundary sideset.");
@@ -25,7 +25,7 @@ validParams<AugmentSparsityOnInterface>()
 }
 
 AugmentSparsityOnInterface::AugmentSparsityOnInterface(const InputParameters & params)
-  : AlgebraicRelationshipManager(params), _amg(nullptr), _has_attached_amg(false)
+  : RelationshipManager(params), _amg(nullptr), _has_attached_amg(false)
 {
   BoundaryID slave_boundary_id = getParam<BoundaryID>("slave_boundary_id");
   BoundaryID master_boundary_id = getParam<BoundaryID>("master_boundary_id");
@@ -38,20 +38,19 @@ AugmentSparsityOnInterface::AugmentSparsityOnInterface(const InputParameters & p
 }
 
 void
+AugmentSparsityOnInterface::internalInit()
+{
+  if (_mesh.isDistributedMesh())
+    mooseError(
+        "We need to first be able to run MeshModifiers before remote elements are deleted before "
+        "the AugmentSparsityOnInterface ghosting functor can work with DistributedMesh");
+}
+
+void
 AugmentSparsityOnInterface::mesh_reinit()
 {
   // This might eventually be where the mortar segment mesh and all the other data
   // structures get rebuilt?
-}
-
-void
-AugmentSparsityOnInterface::attachRelationshipManagersInternal(
-    Moose::RelationshipManagerType rm_type)
-{
-  if (rm_type == Moose::RelationshipManagerType::GEOMETRIC)
-    attachGeometricFunctorHelper(*this);
-  else
-    attachAlgebraicFunctorHelper(*this);
 }
 
 std::string

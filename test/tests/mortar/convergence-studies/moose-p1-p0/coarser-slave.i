@@ -10,8 +10,8 @@
     xmax = 0.5
     ymin = 0
     ymax = 1
-    nx = 40
-    ny = 40
+    nx = 20
+    ny = 20
     elem_type = QUAD4
   [../]
   [./left_block_sidesets]
@@ -32,8 +32,8 @@
     xmax = 1
     ymin = 0
     ymax = 1
-    nx = 40
-    ny = 80
+    nx = 20
+    ny = 40
     elem_type = QUAD4
   [../]
   [./right_block_id]
@@ -95,6 +95,10 @@
   []
 []
 
+[Problem]
+  kernel_coverage_check = false
+[]
+
 [Variables]
   [./T]
     block = 'left_block right_block'
@@ -145,7 +149,7 @@
   [../]
   [exact_soln_lambda]
     type = ParsedFunction
-    value = '4*x^3 + y^2'
+    value = '-4*x^3 - y^2'
   []
 []
 
@@ -155,13 +159,13 @@
 
 [Constraints]
   [./mortar]
-    type = EqualValueConstraint
-    master_boundary = rb_left
-    slave_boundary = lb_right
-    master_subdomain = master_lower
-    slave_subdomain = slave_lower
-    slave_variable = T
-    variable = lambda
+    type = SolutionContinuityTest
+    master_boundary_id = '1005'
+    slave_boundary_id = '1001'
+    master_subdomain_id = '10000'
+    slave_subdomain_id = '10001'
+    variable = T
+    lm_variable = lambda
   [../]
 []
 
