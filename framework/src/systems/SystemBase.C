@@ -927,6 +927,14 @@ SystemBase::closeTaggedMatrices(const std::set<TagID> & tags)
 }
 
 void
+SystemBase::flushTaggedMatrices(const std::set<TagID> & tags)
+{
+  for (auto tag : tags)
+    if (hasMatrix(tag))
+      getMatrix(tag).flush();
+}
+
+void
 SystemBase::associateMatrixToTag(SparseMatrix<Number> & matrix, TagID tag)
 {
   mooseAssert(_subproblem.matrixTagExists(tag),
