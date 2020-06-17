@@ -12,7 +12,7 @@ the screen and Moose will halt execution.
 
 ## Example
 
-The input file `two_block_new.i` is a test for the TensorMechanics master action, an action 
+The input file `two_block_new.i` is a test for the TensorMechanics primary action, an action 
 that sets up (aux)variables, (aux)kernels, and materials for mechanics probems. Let's
 see if we can examine what exactly a particular action block (`[./block2]`) in this file sets 
 up.

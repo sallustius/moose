@@ -58,7 +58,7 @@ public:
   /**
    * Removes multiapp parameters not associated with the supplied name.
    *
-   * When a sub-application is created the CommandLine object from the master application is
+   * When a sub-application is created the CommandLine object from the primary application is
    * copied and supplied to the sub-app. This method cleans up the copy so it is ready to
    * be used for a sub-application by removing parameters that are not associated with the provided
    * sub-application name.

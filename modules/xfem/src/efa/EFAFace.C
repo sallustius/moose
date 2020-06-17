@@ -130,27 +130,27 @@ EFAFace::switchNode(EFANode * new_node, EFANode * old_node)
 
 bool
 EFAFace::getMasterInfo(EFANode * node,
-                       std::vector<EFANode *> & master_nodes,
-                       std::vector<double> & master_weights) const
+                       std::vector<EFANode *> & primary_nodes,
+                       std::vector<double> & primary_weights) const
 {
   // Given a EFAnode, find the element edge or fragment edge that contains it
-  // Return its master nodes and weights
-  master_nodes.clear();
-  master_weights.clear();
-  bool masters_found = false;
+  // Return its primary nodes and weights
+  primary_nodes.clear();
+  primary_weights.clear();
+  bool primarys_found = false;
   for (unsigned int i = 0; i < _num_edges; ++i) // check element exterior edges
   {
     if (_edges[i]->containsNode(node))
     {
-      masters_found = _edges[i]->getNodeMasters(node, master_nodes, master_weights);
-      if (masters_found)
+      primarys_found = _edges[i]->getNodeMasters(node, primary_nodes, primary_weights);
+      if (primarys_found)
         break;
       else
-        EFAError("In getMasterInfo: cannot find master nodes in element edges");
+        EFAError("In getMasterInfo: cannot find primary nodes in element edges");
     }
   }
 
-  if (!masters_found) // check element interior embedded nodes
+  if (!primarys_found) // check element interior embedded nodes
   {
     for (unsigned int i = 0; i < _interior_nodes.size(); ++i)
     {
@@ -161,7 +161,7 @@ EFAFace::getMasterInfo(EFANode * node,
         emb_xi[1] = _interior_nodes[i]->getParametricCoordinates(1);
         for (unsigned int j = 0; j < _num_nodes; ++j)
         {
-          master_nodes.push_back(_nodes[j]);
+          primary_nodes.push_back(_nodes[j]);
           double weight = 0.0;
           if (_num_nodes == 4)
             weight = Efa::linearQuadShape2D(j, emb_xi);
@@ -169,14 +169,14 @@ EFAFace::getMasterInfo(EFANode * node,
             weight = Efa::linearTriShape2D(j, emb_xi);
           else
             EFAError("EFAface::getMasterInfo() only works for quad and tri EFAface");
-          master_weights.push_back(weight);
+          primary_weights.push_back(weight);
         }
-        masters_found = true;
+        primarys_found = true;
         break;
       }
     }
   }
-  return masters_found;
+  return primarys_found;
 }
 
 bool

@@ -90,7 +90,7 @@ protected:
 
   const OutOfPlaneDirection _out_of_plane_direction;
 
-  /// base name for the current master action block
+  /// base name for the current primary action block
   const std::string _base_name;
 
   /// use displaced mesh (true unless _strain is SMALL)

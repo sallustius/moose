@@ -152,7 +152,7 @@ FEProblemBase::validParams()
   params.addParam<bool>("force_restart",
                         false,
                         "EXPERIMENTAL: If true, a sub_app may use a "
-                        "restart file instead of using of using the master "
+                        "restart file instead of using of using the primary "
                         "backup file");
   params.addParam<bool>("skip_additional_restart_data",
                         false,
@@ -896,7 +896,7 @@ FEProblemBase::initialSetup()
   if (_displaced_mesh)
     _displaced_mesh->updateActiveSemiLocalNodeRange(_ghosted_elems);
 
-  // We need to move the mesh in order to build a map between mortar secondary and master
+  // We need to move the mesh in order to build a map between mortar secondary and primary
   // interfaces. This map will then be used by the AgumentSparsityOnInterface ghosting functor to
   // know which dofs we need ghosted when we call EquationSystems::reinit
   if (_displaced_problem && _mortar_data.hasDisplacedObjects())
@@ -2611,7 +2611,7 @@ FEProblemBase::addDGKernel(const std::string & dg_kernel_name,
       if (_displaced_neighbor_ref_pts == "invert_elem_phys")
         mooseError(
             "Cannot use elem-neighbor objects which rely on 1) undisplaced reference points and 2) "
-            "inversion of master elem physical points in the same simulation");
+            "inversion of primary elem physical points in the same simulation");
       else if (_displaced_neighbor_ref_pts == "unset")
         _displaced_neighbor_ref_pts = "use_undisplaced_ref";
       else if (_displaced_neighbor_ref_pts != "use_undisplaced_ref")
@@ -2623,7 +2623,7 @@ FEProblemBase::addDGKernel(const std::string & dg_kernel_name,
       if (_displaced_neighbor_ref_pts == "use_undisplaced_ref")
         mooseError(
             "Cannot use elem-neighbor objects which rely on 1) undisplaced reference points and 2) "
-            "inversion of master elem physical points in the same simulation");
+            "inversion of primary elem physical points in the same simulation");
       else if (_displaced_neighbor_ref_pts == "unset")
         _displaced_neighbor_ref_pts = "invert_elem_phys";
       else if (_displaced_neighbor_ref_pts != "invert_elem_phys")
@@ -2735,7 +2735,7 @@ FEProblemBase::addInterfaceKernel(const std::string & interface_kernel_name,
       if (_displaced_neighbor_ref_pts == "invert_elem_phys")
         mooseError(
             "Cannot use elem-neighbor objects which rely on 1) undisplaced reference points and 2) "
-            "inversion of master elem physical points in the same simulation");
+            "inversion of primary elem physical points in the same simulation");
       else if (_displaced_neighbor_ref_pts == "unset")
         _displaced_neighbor_ref_pts = "use_undisplaced_ref";
       else if (_displaced_neighbor_ref_pts != "use_undisplaced_ref")
@@ -2747,7 +2747,7 @@ FEProblemBase::addInterfaceKernel(const std::string & interface_kernel_name,
       if (_displaced_neighbor_ref_pts == "use_undisplaced_ref")
         mooseError(
             "Cannot use elem-neighbor objects which rely on 1) undisplaced reference points and 2) "
-            "inversion of master elem physical points in the same simulation");
+            "inversion of primary elem physical points in the same simulation");
       else if (_displaced_neighbor_ref_pts == "unset")
         _displaced_neighbor_ref_pts = "invert_elem_phys";
       else if (_displaced_neighbor_ref_pts != "invert_elem_phys")
@@ -5756,32 +5756,32 @@ FEProblemBase::updateMortarMesh()
 
 void
 FEProblemBase::createMortarInterface(
-    const std::pair<BoundaryID, BoundaryID> & master_secondary_boundary_pair,
-    const std::pair<SubdomainID, SubdomainID> & master_secondary_subdomain_pair,
+    const std::pair<BoundaryID, BoundaryID> & primary_secondary_boundary_pair,
+    const std::pair<SubdomainID, SubdomainID> & primary_secondary_subdomain_pair,
     bool on_displaced,
     bool periodic)
 {
   _has_mortar = true;
 
   if (on_displaced)
-    return _mortar_data.createMortarInterface(master_secondary_boundary_pair,
-                                              master_secondary_subdomain_pair,
+    return _mortar_data.createMortarInterface(primary_secondary_boundary_pair,
+                                              primary_secondary_subdomain_pair,
                                               *_displaced_problem,
                                               on_displaced,
                                               periodic);
   else
     return _mortar_data.createMortarInterface(
-        master_secondary_boundary_pair, master_secondary_subdomain_pair, *this, on_displaced, periodic);
+        primary_secondary_boundary_pair, primary_secondary_subdomain_pair, *this, on_displaced, periodic);
 }
 
 const AutomaticMortarGeneration &
 FEProblemBase::getMortarInterface(
-    const std::pair<BoundaryID, BoundaryID> & master_secondary_boundary_pair,
-    const std::pair<SubdomainID, SubdomainID> & master_secondary_subdomain_pair,
+    const std::pair<BoundaryID, BoundaryID> & primary_secondary_boundary_pair,
+    const std::pair<SubdomainID, SubdomainID> & primary_secondary_subdomain_pair,
     bool on_displaced) const
 {
   return _mortar_data.getMortarInterface(
-      master_secondary_boundary_pair, master_secondary_subdomain_pair, on_displaced);
+      primary_secondary_boundary_pair, primary_secondary_subdomain_pair, on_displaced);
 }
 
 const std::unordered_map<std::pair<BoundaryID, BoundaryID>, AutomaticMortarGeneration> &
@@ -6706,14 +6706,14 @@ FEProblemBase::addOutput(const std::string & object_type,
       !parameters.isParamSetByUser("file_base"))
   {
     if (parameters.get<bool>("_built_by_moose"))
-      // if this is a master app, file_base here will be input file name plus _out
+      // if this is a primary app, file_base here will be input file name plus _out
       // because otherwise this parameter has been set.
-      // if this is a subapp, file_base here will be the one generated by master in the master's
+      // if this is a subapp, file_base here will be the one generated by primary in the primary's
       // MulitApp.
       parameters.set<std::string>("file_base") = _app.getOutputFileBase();
     else
-      // if this is a master app, file_bsse here will be input file name.
-      // if this is a subapp, file_base will be the one generated by master in the master's
+      // if this is a primary app, file_bsse here will be input file name.
+      // if this is a subapp, file_base will be the one generated by primary in the primary's
       // MultiApp. file_base for a subapp here is identical with those of _built_by_moose.
       parameters.set<std::string>("file_base") = _app.getOutputFileBase(true) + "_" + object_name;
   }

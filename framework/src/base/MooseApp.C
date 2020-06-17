@@ -135,7 +135,7 @@ MooseApp::validParams()
       "list_constructed_objects",
       "--list-constructed-objects",
       false,
-      "List all moose object type names constructed by the master app factory.");
+      "List all moose object type names constructed by the primary app factory.");
 
   params.addCommandLineParam<unsigned int>(
       "n_threads", "--n-threads=<n>", 1, "Runs the specified number of threads per process");
@@ -261,8 +261,8 @@ MooseApp::validParams()
   params.addPrivateParam<std::shared_ptr<Parallel::Communicator>>("_comm");
   params.addPrivateParam<unsigned int>("_multiapp_level");
   params.addPrivateParam<unsigned int>("_multiapp_number");
-  params.addPrivateParam<const MooseMesh *>("_master_mesh");
-  params.addPrivateParam<const MooseMesh *>("_master_displaced_mesh");
+  params.addPrivateParam<const MooseMesh *>("_primary_mesh");
+  params.addPrivateParam<const MooseMesh *>("_primary_displaced_mesh");
 
   params.addParam<bool>(
       "use_legacy_dirichlet_bc",
@@ -324,10 +324,10 @@ MooseApp::MooseApp(InputParameters parameters)
         isParamValid("_multiapp_level") ? parameters.get<unsigned int>("_multiapp_level") : 0),
     _multiapp_number(
         isParamValid("_multiapp_number") ? parameters.get<unsigned int>("_multiapp_number") : 0),
-    _master_mesh(isParamValid("_master_mesh") ? parameters.get<const MooseMesh *>("_master_mesh")
+    _primary_mesh(isParamValid("_primary_mesh") ? parameters.get<const MooseMesh *>("_primary_mesh")
                                               : nullptr),
-    _master_displaced_mesh(isParamValid("_master_displaced_mesh")
-                               ? parameters.get<const MooseMesh *>("_master_displaced_mesh")
+    _primary_displaced_mesh(isParamValid("_primary_displaced_mesh")
+                               ? parameters.get<const MooseMesh *>("_primary_displaced_mesh")
                                : nullptr),
     _setup_timer(_perf_graph.registerSection("MooseApp::setup", 2)),
     _setup_options_timer(_perf_graph.registerSection("MooseApp::setupOptions", 5)),
@@ -446,11 +446,11 @@ MooseApp::MooseApp(InputParameters parameters)
     std::this_thread::sleep_for(std::chrono::seconds(getParam<unsigned int>("stop_for_debugger")));
   }
 
-  if (_master_mesh && _multiapp_level == 0)
+  if (_primary_mesh && _multiapp_level == 0)
     mooseError("Mesh can be passed in only for sub-apps");
 
-  if (_master_displaced_mesh && !_master_mesh)
-    mooseError("_master_mesh should have been set when _master_displaced_mesh is set");
+  if (_primary_displaced_mesh && !_primary_mesh)
+    mooseError("_primary_mesh should have been set when _primary_displaced_mesh is set");
 
   // Data specifically associated with the mesh (meta-data) that will read from the restart
   // file early during the simulation setup so that they are available to Actions and other objects
@@ -841,7 +841,7 @@ MooseApp::setupOptions()
       }
       else if (isUltimateMaster())
       {
-        // if this app is a master, we use the input file name as the default file base
+        // if this app is a primary, we use the input file name as the default file base
         std::string base = getInputFileName();
         size_t pos = base.find_last_of('.');
         _output_file_base = base.substr(0, pos);

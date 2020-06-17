@@ -39,8 +39,8 @@ public:
   EFANode * getNode(unsigned int node_id) const;
   void switchNode(EFANode * new_node, EFANode * old_node);
   bool getMasterInfo(EFANode * node,
-                     std::vector<EFANode *> & master_nodes,
-                     std::vector<double> & master_weights) const;
+                     std::vector<EFANode *> & primary_nodes,
+                     std::vector<double> & primary_weights) const;
   bool getEdgeNodeParametricCoords(EFANode * node, std::vector<double> & xi_2d) const;
   bool getFaceNodeParametricCoords(EFANode * node, std::vector<double> & xi_2d) const;
   unsigned int numInteriorNodes() const;

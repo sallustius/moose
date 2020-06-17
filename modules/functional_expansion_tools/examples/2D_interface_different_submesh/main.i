@@ -1,6 +1,6 @@
 # Derived from the example '2D_interface' with the following differences:
 #
-#   1) The number of y divisions in the sub app is not the same as the master app
+#   1) The number of y divisions in the sub app is not the same as the primary app
 #   2) The subapp mesh is skewed in y
 #   3) The Functional Expansion order for the flux term was increased to 7
 [Mesh]

@@ -19,7 +19,7 @@
 class KDTree
 {
 public:
-  KDTree(std::vector<Point> & master_points, unsigned int max_leaf_size);
+  KDTree(std::vector<Point> & primary_points, unsigned int max_leaf_size);
 
   virtual ~KDTree() = default;
 

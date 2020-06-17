@@ -111,12 +111,12 @@
     requirement = "Eigenvalue system should be able to handle DG kernels"
   []
 
-  [./ne_coupled_picard_eigen_master]
+  [./ne_coupled_picard_eigen_primary]
     type = 'CSVDiff'
     input = 'ne_coupled_picard.i'
     csvdiff = 'ne_coupled_picard_out_eigenvalues_0001.csv'
     slepc_version = '>=3.12.0'
-    requirement = "Eigenvalue system shall support Picard iteration using eigenvalue executioner as a master"
+    requirement = "Eigenvalue system shall support Picard iteration using eigenvalue executioner as a primary"
   []
 
   [./ne_coupled_picard_eigen_sub]

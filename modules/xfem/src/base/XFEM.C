@@ -1498,27 +1498,27 @@ XFEM::getEFANodeCoords(EFANode * CEMnode,
                        MeshBase * displaced_mesh) const
 {
   Point node_coor(0.0, 0.0, 0.0);
-  std::vector<EFANode *> master_nodes;
-  std::vector<Point> master_points;
-  std::vector<double> master_weights;
+  std::vector<EFANode *> primary_nodes;
+  std::vector<Point> primary_points;
+  std::vector<double> primary_weights;
 
-  CEMElem->getMasterInfo(CEMnode, master_nodes, master_weights);
-  for (std::size_t i = 0; i < master_nodes.size(); ++i)
+  CEMElem->getMasterInfo(CEMnode, primary_nodes, primary_weights);
+  for (std::size_t i = 0; i < primary_nodes.size(); ++i)
   {
-    if (master_nodes[i]->category() == EFANode::N_CATEGORY_PERMANENT)
+    if (primary_nodes[i]->category() == EFANode::N_CATEGORY_PERMANENT)
     {
-      unsigned int local_node_id = CEMElem->getLocalNodeIndex(master_nodes[i]);
+      unsigned int local_node_id = CEMElem->getLocalNodeIndex(primary_nodes[i]);
       const Node * node = elem->node_ptr(local_node_id);
       if (displaced_mesh)
         node = displaced_mesh->node_ptr(node->id());
       Point node_p((*node)(0), (*node)(1), (*node)(2));
-      master_points.push_back(node_p);
+      primary_points.push_back(node_p);
     }
     else
-      mooseError("master nodes must be permanent");
+      mooseError("primary nodes must be permanent");
   }
-  for (std::size_t i = 0; i < master_nodes.size(); ++i)
-    node_coor += master_weights[i] * master_points[i];
+  for (std::size_t i = 0; i < primary_nodes.size(); ++i)
+    node_coor += primary_weights[i] * primary_points[i];
 
   return node_coor;
 }

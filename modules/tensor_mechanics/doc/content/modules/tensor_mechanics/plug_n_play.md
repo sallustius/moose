@@ -33,7 +33,7 @@ For small strains, use [ComputeSmallStrain](/ComputeSmallStrain.md) in which $\b
 [ComputeFiniteStrain](/ComputeFiniteStrain.md) in which an incremental form is employed such that the
 strain_increment and rotation_increment are calculated.
 
-With the TensorMechanics master action, the strain formulation can be set with the `strain= SMALL |
+With the TensorMechanics primary action, the strain formulation can be set with the `strain= SMALL |
 FINITE` parameter, as shown below.
 
 !listing modules/tensor_mechanics/test/tests/finite_strain_elastic/finite_strain_elastic_new_test.i
@@ -116,8 +116,8 @@ computes the thermal strain as a linear function of temperature.  The input file
          block=Materials/thermal_expansion_strain
 
 The eigenstrain material block name must also be added as an input parameter, `eigenstrain_names` to
-the strain material or TensorMechanics master action block. An example of the additional parameter in
-the TensorMechanics master action is shown below.
+the strain material or TensorMechanics primary action block. An example of the additional parameter in
+the TensorMechanics primary action is shown below.
 
 !listing modules/tensor_mechanics/test/tests/thermal_expansion/constant_expansion_coeff.i
          block=Modules/TensorMechanics

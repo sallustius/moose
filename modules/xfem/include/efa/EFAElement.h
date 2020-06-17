@@ -72,8 +72,8 @@ public:
   virtual void switchEmbeddedNode(EFANode * new_node, EFANode * old_node) = 0;
   virtual void updateFragmentNode() = 0;
   virtual void getMasterInfo(EFANode * node,
-                             std::vector<EFANode *> & master_nodes,
-                             std::vector<double> & master_weights) const = 0;
+                             std::vector<EFANode *> & primary_nodes,
+                             std::vector<double> & primary_weights) const = 0;
   virtual unsigned int numInteriorNodes() const = 0;
 
   virtual unsigned int getNeighborIndex(const EFAElement * neighbor_elem) const = 0;

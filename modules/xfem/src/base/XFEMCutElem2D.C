@@ -36,26 +36,26 @@ Point
 XFEMCutElem2D::getNodeCoordinates(EFANode * CEMnode, MeshBase * displaced_mesh) const
 {
   Point node_coor(0.0, 0.0, 0.0);
-  std::vector<EFANode *> master_nodes;
-  std::vector<Point> master_points;
-  std::vector<double> master_weights;
+  std::vector<EFANode *> primary_nodes;
+  std::vector<Point> primary_points;
+  std::vector<double> primary_weights;
 
-  _efa_elem2d.getMasterInfo(CEMnode, master_nodes, master_weights);
-  for (unsigned int i = 0; i < master_nodes.size(); ++i)
+  _efa_elem2d.getMasterInfo(CEMnode, primary_nodes, primary_weights);
+  for (unsigned int i = 0; i < primary_nodes.size(); ++i)
   {
-    if (master_nodes[i]->category() == EFANode::N_CATEGORY_LOCAL_INDEX)
+    if (primary_nodes[i]->category() == EFANode::N_CATEGORY_LOCAL_INDEX)
     {
-      Node * node = _nodes[master_nodes[i]->id()];
+      Node * node = _nodes[primary_nodes[i]->id()];
       if (displaced_mesh)
         node = displaced_mesh->node_ptr(node->id());
       Point node_p((*node)(0), (*node)(1), 0.0);
-      master_points.push_back(node_p);
+      primary_points.push_back(node_p);
     }
     else
-      mooseError("master nodes must be local");
+      mooseError("primary nodes must be local");
   }
-  for (unsigned int i = 0; i < master_nodes.size(); ++i)
-    node_coor += master_weights[i] * master_points[i];
+  for (unsigned int i = 0; i < primary_nodes.size(); ++i)
+    node_coor += primary_weights[i] * primary_points[i];
   return node_coor;
 }
 

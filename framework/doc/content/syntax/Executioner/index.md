@@ -12,13 +12,13 @@ Executioner block. Please see the online
 detailed information about these options.
 
 MOOSE provides Picard iterations in all its executioners for tightly-coupled multiphysics simulations.
-MultiApps of two groups of before and after master app and master app are solved sequentially within one Picard iteration.
+MultiApps of two groups of before and after primary app and primary app are solved sequentially within one Picard iteration.
 The execution order of MutliApps within one group is undefined.
 Relevant data transfers happen before and after each of the two groups of MultiApps runs.
 Because MultiApp allows wrapping another levels of MultiApps, the design enables multi-level Picard iterations automatically.
 Picard iterations can be relaxed to improve the stability of the convergence.
-When a MultiApp is a subapp of a master and a master of its own subapps, MOOSE allows relaxation of the MultiApp solution
-within the master Picard iterations and within the Picard iterations, where the MultiApp is the master, independently.
+When a MultiApp is a subapp of a primary and a primary of its own subapps, MOOSE allows relaxation of the MultiApp solution
+within the primary Picard iterations and within the Picard iterations, where the MultiApp is the primary, independently.
 
 ## Automatic and Default Preconditioning
 

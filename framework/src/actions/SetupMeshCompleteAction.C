@@ -76,8 +76,8 @@ SetupMeshCompleteAction::act()
     if (_app.isUseSplit())
       return;
 
-    // uniform refinement has been done on master, so skip
-    if (_app.masterMesh())
+    // uniform refinement has been done on primary, so skip
+    if (_app.primaryMesh())
       return;
 
     /**

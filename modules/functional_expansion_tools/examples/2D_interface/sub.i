@@ -1,7 +1,7 @@
-# Basic example coupling a master and sub app at an interface in a 2D model.
-# The master app provides a flux term to the sub app via Functional Expansions, which then performs
+# Basic example coupling a primary and sub app at an interface in a 2D model.
+# The primary app provides a flux term to the sub app via Functional Expansions, which then performs
 # its calculations.  The sub app's interface conditions, both value and flux, are transferred back
-# to the master app
+# to the primary app
 [Mesh]
   type = GeneratedMesh
   dim = 2

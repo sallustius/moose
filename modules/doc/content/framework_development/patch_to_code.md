@@ -53,8 +53,8 @@ If there are more features that need to be added to your code before it's accept
 At the point where a MOOSE developer believes your code is fit for inclusion in MOOSE they will "merge" your code into the `next` branch in the main MOOSE repository.  That act of merging automatically kicks off a set of processes:
 
 1.  [CIVET](http://civet.inl.gov) is signaled and more testing is done across multiple platforms.
-2.  If #1 passes then the code change is automatically merged into the `master` branch in the main MOOSE repo (that is our "stable" branch).
-3.  The automated merge to `master` cues CIVET to spawn jobs that automatically build:
+2.  If #1 passes then the code change is automatically merged into the `primary` branch in the main MOOSE repo (that is our "stable" branch).
+3.  The automated merge to `primary` cues CIVET to spawn jobs that automatically build:
 
 - [Doxygen Documentation](http://www.mooseframework.com/docs/doxygen/moose/classes.html)
 - [Browseable Input File Syntax](http://mooseframework.com/docs/syntax/moose/)

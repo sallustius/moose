@@ -32,7 +32,7 @@
 []
 
 [Modules/TensorMechanics/Master]
-  [./master]
+  [./primary]
     use_displaced_mesh = true
     strain = FINITE
     decomposition_method = EigenSolution #Necessary for exact solution

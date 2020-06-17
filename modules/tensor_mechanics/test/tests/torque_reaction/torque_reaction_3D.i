@@ -62,7 +62,7 @@
 []
 
 [Modules/TensorMechanics/Master]
-  [master]
+  [primary]
     strain = SMALL
     generate_output = 'stress_xx stress_yy stress_zz'
     add_variables = true

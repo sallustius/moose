@@ -39,7 +39,7 @@ if different mesh subdomain has different generalized plane strain model, multip
 
 !listing modules/tensor_mechanics/test/tests/generalized_plane_strain/generalized_plane_strain_squares.i block=Modules/TensorMechanics/GeneralizedPlaneStrain
 
-An example of using generalized plane strain action through the Tensor Mechanics master action with a different `out_of_plane_direction` than the default of $z$  is given by:
+An example of using generalized plane strain action through the Tensor Mechanics primary action with a different `out_of_plane_direction` than the default of $z$  is given by:
 
 !listing modules/tensor_mechanics/test/tests/2D_different_planes/gps_xz.i block=Modules/TensorMechanics/Master/generalized_plane_strain
 

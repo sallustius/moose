@@ -37,7 +37,7 @@ SetupRecoverFileBaseAction::act()
     _app.checkMetaDataIntegrity();
 
   // Do nothing if the App is not recovering
-  // Don't look for a checkpoint file unless we're the ultimate master app
+  // Don't look for a checkpoint file unless we're the ultimate primary app
   if (!_app.isRecovering() || !_app.isUltimateMaster())
     return;
 

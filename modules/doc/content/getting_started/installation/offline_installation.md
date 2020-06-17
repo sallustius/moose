@@ -52,7 +52,7 @@ Next, enter the offline directory, and perform the cloning operation to obtain a
 cd ~/offline
 git clone https://github.com/idaholab/moose.git
 cd moose
-git checkout master
+git checkout primary
 git submodule update --init
 git submodule foreach --recursive git submodule update --init
 ```

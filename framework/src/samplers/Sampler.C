@@ -92,7 +92,7 @@ Sampler::init()
   // Set the next row iterator index
   _next_local_row = _local_row_begin;
 
-  // Seed the "master" seed generator
+  // Seed the "primary" seed generator
   const unsigned int seed = getParam<unsigned int>("seed");
   MooseRandom seed_generator;
   seed_generator.seed(0, seed);

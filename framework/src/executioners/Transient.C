@@ -112,7 +112,7 @@ Transient::validParams()
                         false,
                         "If true then the dt for the simulation will be "
                         "chosen by the MultiApps.  If false (the "
-                        "default) then the minimum over the master dt "
+                        "default) then the minimum over the primary dt "
                         "and the MultiApps is used");
 
   params.addParamNamesToGroup(
@@ -377,7 +377,7 @@ Transient::incrementStepOrReject()
 
       /*
        * Ensure that we increment the sub-application time steps so that
-       * when dt selection is made in the master application, we are using
+       * when dt selection is made in the primary application, we are using
        * the correct time step information
        */
       _problem.incrementMultiAppTStep(EXEC_TIMESTEP_BEGIN);

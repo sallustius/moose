@@ -561,7 +561,7 @@ void
 TensorMechanicsAction::actGatherActionParameters()
 {
 
-  // Gather info about all other master actions when we add variables
+  // Gather info about all other primary actions when we add variables
   if (_current_task == "validate_coordinate_systems" && getParam<bool>("add_variables"))
   {
     auto actions = _awh.getActions<TensorMechanicsAction>();

@@ -99,7 +99,7 @@ For a complete list see the Doxygen page for Checkpoint. * You should always set
 
 ## MultiApp Restart
 
-When running a multiapp simulation you do +not+ need to enable checkpoint output in each sub app input file. The master app stores the restart data for all sub apps in its file.
+When running a multiapp simulation you do +not+ need to enable checkpoint output in each sub app input file. The primary app stores the restart data for all sub apps in its file.
 
 ## Time Control on Restart
 

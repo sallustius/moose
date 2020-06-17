@@ -422,7 +422,7 @@ void
 LineElementAction::actGatherActionParameters()
 {
   //
-  // Gather info about all other master actions when we add variables
+  // Gather info about all other primary actions when we add variables
   //
   if (getParam<bool>("add_variables"))
   {

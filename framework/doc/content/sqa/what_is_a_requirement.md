@@ -33,7 +33,7 @@ accompanying `design` markdown file.
 The definition of the SRS being "correct" necessitates that each requirement be satisfied, a
 one-to-one relationship between a test and a requirement makes verify the correctness a
 trivial operation that may be automated. Within MOOSE all tests must pass, thus all requirements
-are met, for the code to be merged into the stable (master) branch.
+are met, for the code to be merged into the stable (primary) branch.
 
 ## Complete
 
@@ -61,7 +61,7 @@ valid, if they are not testing fails until these references are defined.
 The SRS and all associated documents that reference a requirement within MOOSE are automatically
 generated within the MooseDocs system. The system maintains the interconnection of these documents,
 if they are not in agreement an error is generated prior to the document being merged and released
-into the stable (master) branch.
+into the stable (primary) branch.
 
 ## Unambiguous
 

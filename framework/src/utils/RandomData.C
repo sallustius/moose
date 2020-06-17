@@ -30,8 +30,8 @@ RandomData::RandomData(FEProblemBase & fe_problem,
     _rd_mesh(fe_problem.mesh()),
     _is_nodal(is_nodal),
     _reset_on(reset_on),
-    _master_seed(seed),
-    _current_master_seed(std::numeric_limits<unsigned int>::max()),
+    _primary_seed(seed),
+    _current_primary_seed(std::numeric_limits<unsigned int>::max()),
     _new_seed(0)
 {
 }
@@ -51,12 +51,12 @@ RandomData::updateSeeds(ExecFlagType exec_flag)
   /**
    * Set the seed. This part is critical! If this is done incorrectly, it may lead to difficult to
    * detect patterns in your random numbers either within a single run or over the course of
-   * several runs.  We will default to _master_seed + the current time step.
+   * several runs.  We will default to _primary_seed + the current time step.
    */
   if (exec_flag == EXEC_INITIAL)
-    _new_seed = _master_seed;
+    _new_seed = _primary_seed;
   else
-    _new_seed = _master_seed + _rd_problem.timeStep();
+    _new_seed = _primary_seed + _rd_problem.timeStep();
   /**
    * case EXEC_TIMESTEP_BEGIN:   // reset and advance every timestep
    * case EXEC_TIMESTEP_END:     // reset and advance every timestep
@@ -65,9 +65,9 @@ RandomData::updateSeeds(ExecFlagType exec_flag)
    */
 
   // If the _new_seed has been updated, we need to update all of the generators
-  if (_new_seed != _current_master_seed)
+  if (_new_seed != _current_primary_seed)
   {
-    _current_master_seed = _new_seed;
+    _current_primary_seed = _new_seed;
     updateGenerators();
     _generator.saveState(); // Save states so that we can reset on demand
   }
@@ -79,14 +79,14 @@ RandomData::updateSeeds(ExecFlagType exec_flag)
 void
 RandomData::updateGenerators()
 {
-  //  Set the master seed and repopulate all of the child generators
-  _generator.seed(MASTER, _current_master_seed);
+  //  Set the primary seed and repopulate all of the child generators
+  _generator.seed(MASTER, _current_primary_seed);
 
   /**
    * When using parallel mesh it's not worth generating parallel consistent numbers.
    * Each processor may not be aware of which entities belong on another mesh. We do have
    * to be careful to *not* generate the same patterns on different processors however.
-   * To do that, we will use the MASTER generator to generate new master seeds for each
+   * To do that, we will use the MASTER generator to generate new primary seeds for each
    * processor based on their individual processor ids before generating seeds for
    * the mesh entities.
    */

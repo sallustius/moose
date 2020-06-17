@@ -41,7 +41,7 @@ are listed in [gallery-settings].
 !gallery!
 !card level_set/example_circle_64.gif title=Translation
 
-!card level_set/circle_rotate_master_out.gif title=Rotation
+!card level_set/circle_rotate_primary_out.gif title=Rotation
 
 !card level_set/vortex_out.gif title=Vortex
 !gallery-end!

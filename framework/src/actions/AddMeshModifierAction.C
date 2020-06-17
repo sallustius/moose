@@ -29,8 +29,8 @@ AddMeshModifierAction::AddMeshModifierAction(InputParameters params) : MooseObje
 void
 AddMeshModifierAction::act()
 {
-  // Don't do mesh modifiers when recovering or using master mesh!
-  if (_app.isRecovering() || _app.masterMesh())
+  // Don't do mesh modifiers when recovering or using primary mesh!
+  if (_app.isRecovering() || _app.primaryMesh())
     return;
 
   // Add a pointer to the mesh, this is required for this MeshModifier to inherit from the
