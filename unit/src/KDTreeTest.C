@@ -18,10 +18,10 @@
 TEST(KDTree, radiusSearch)
 {
   std::vector<Point> primary_points = {Point(0.0, -0.2, 0.1),
-                                      Point(0.0, 0.0, 0.1),
-                                      Point(0.2, 0.3, 0.1),
-                                      Point(0.2, 0.3, 0.2),
-                                      Point(1.0, 0.3, 0.2)};
+                                       Point(0.0, 0.0, 0.1),
+                                       Point(0.2, 0.3, 0.1),
+                                       Point(0.2, 0.3, 0.2),
+                                       Point(1.0, 0.3, 0.2)};
   KDTree _kd_tree(primary_points, 50);
   std::vector<std::pair<std::size_t, Real>> indices_dist;
 

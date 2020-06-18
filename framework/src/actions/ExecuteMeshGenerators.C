@@ -26,9 +26,9 @@ ExecuteMeshGenerators::ExecuteMeshGenerators(InputParameters params) : Action(pa
 void
 ExecuteMeshGenerators::act()
 {
-  // Don't do mesh generators when recovering as the primary app or using primary mesh! We do need to
-  // run MeshGenerators for sub-apps because we don't currently have checkpoint/restart information
-  // for the sub-app meshes; e.g. we just need to re-build them
+  // Don't do mesh generators when recovering as the primary app or using primary mesh! We do need
+  // to run MeshGenerators for sub-apps because we don't currently have checkpoint/restart
+  // information for the sub-app meshes; e.g. we just need to re-build them
   if ((_app.isRecovering() && _app.isUltimateMaster()) || _app.primaryMesh())
     return;
 

@@ -325,10 +325,10 @@ MooseApp::MooseApp(InputParameters parameters)
     _multiapp_number(
         isParamValid("_multiapp_number") ? parameters.get<unsigned int>("_multiapp_number") : 0),
     _primary_mesh(isParamValid("_primary_mesh") ? parameters.get<const MooseMesh *>("_primary_mesh")
-                                              : nullptr),
+                                                : nullptr),
     _primary_displaced_mesh(isParamValid("_primary_displaced_mesh")
-                               ? parameters.get<const MooseMesh *>("_primary_displaced_mesh")
-                               : nullptr),
+                                ? parameters.get<const MooseMesh *>("_primary_displaced_mesh")
+                                : nullptr),
     _setup_timer(_perf_graph.registerSection("MooseApp::setup", 2)),
     _setup_options_timer(_perf_graph.registerSection("MooseApp::setupOptions", 5)),
     _run_input_file_timer(_perf_graph.registerSection("MooseApp::runInputFile", 3)),
