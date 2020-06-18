@@ -18,7 +18,7 @@ RandomData::RandomData(FEProblemBase & fe_problem, const RandomInterface & rando
   : RandomData(fe_problem,
                random_interface.isNodal(),
                random_interface.getResetOnTime(),
-               random_interface.getMasterSeed())
+               random_interface.getPrimarySeed())
 {
 }
 

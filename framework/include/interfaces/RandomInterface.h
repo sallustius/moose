@@ -68,7 +68,7 @@ public:
   /**************************************************
    *                Data Accessors                  *
    **************************************************/
-  unsigned int getMasterSeed() const { return _primary_seed; }
+  unsigned int getPrimarySeed() const { return _primary_seed; }
   bool isNodal() const { return _is_nodal; }
   ExecFlagType getResetOnTime() const { return _reset_on; }
 

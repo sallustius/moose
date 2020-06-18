@@ -35,7 +35,7 @@ EqualValueNodalConstraint::computeQpResidual(Moose::ConstraintType type)
 {
   switch (type)
   {
-    case Moose::Master:
+    case Moose::Primary:
       return (_u_primary[_j] - _u_secondary[_i]) * _penalty;
 
     case Moose::Secondary:
@@ -50,16 +50,16 @@ EqualValueNodalConstraint::computeQpJacobian(Moose::ConstraintJacobianType type)
 {
   switch (type)
   {
-    case Moose::MasterMaster:
+    case Moose::PrimaryMaster:
       return _penalty;
 
-    case Moose::MasterSecondary:
+    case Moose::PrimarySecondary:
       return -_penalty;
 
     case Moose::SecondarySecondary:
       return _penalty;
 
-    case Moose::SecondaryMaster:
+    case Moose::SecondaryPrimary:
       return -_penalty;
 
     default:
