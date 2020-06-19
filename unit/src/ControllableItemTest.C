@@ -169,7 +169,7 @@ TEST(ControllableItem, errors)
   catch (const std::exception & e)
   {
     std::string msg(e.what());
-    EXPECT_NE(msg.find("The primary parameter (System/Object/control"), std::string::npos);
+    EXPECT_NE(msg.find("The master parameter (System/Object/control"), std::string::npos);
   }
 }
 
