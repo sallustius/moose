@@ -11,7 +11,7 @@
 
 #include "ReferenceResidualProblem.h"
 #include "NodeFaceConstraint.h"
-#include "ContactPrimary.h"
+#include "ContactMaster.h"
 #include "MechanicalContactConstraint.h"
 
 /**

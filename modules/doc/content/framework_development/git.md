@@ -33,7 +33,7 @@ source ~/git_prompt.sh
 export PS1='$(__git_ps1 "(%s)")$ '
 ```
 
-Assuming your prompt is just '$ ', adding this line to your `.bash_profile` will cause it to look like `(primary)$` whenever you `cd` into a directory containing a git repo in where the `primary` branch is checked out.
+Assuming your prompt is just '$ ', adding this line to your `.bash_profile` will cause it to look like `(master)$` whenever you `cd` into a directory containing a git repo in where the `master` branch is checked out.
 
 
 ## Git Config

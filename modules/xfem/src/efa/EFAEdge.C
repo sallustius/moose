@@ -67,17 +67,17 @@ EFAEdge::containsEdge(const EFAEdge & other) const
 
 bool
 EFAEdge::getNodeMasters(EFANode * node,
-                        std::vector<EFANode *> & primary_nodes,
-                        std::vector<double> & primary_weights) const
+                        std::vector<EFANode *> & master_nodes,
+                        std::vector<double> & master_weights) const
 {
-  primary_nodes.clear();
-  primary_weights.clear();
-  bool primarys_found = false;
+  master_nodes.clear();
+  master_weights.clear();
+  bool masters_found = false;
   if (_edge_node1 == node || _edge_node2 == node)
   {
-    primary_nodes.push_back(node);
-    primary_weights.push_back(1.0);
-    primarys_found = true;
+    master_nodes.push_back(node);
+    master_weights.push_back(1.0);
+    masters_found = true;
   }
   else
   {
@@ -85,16 +85,16 @@ EFAEdge::getNodeMasters(EFANode * node,
     {
       if (_embedded_nodes[i] == node)
       {
-        primary_nodes.push_back(_edge_node1);
-        primary_nodes.push_back(_edge_node2);
-        primary_weights.push_back(1.0 - _intersection_x[i]);
-        primary_weights.push_back(_intersection_x[i]);
-        primarys_found = true;
+        master_nodes.push_back(_edge_node1);
+        master_nodes.push_back(_edge_node2);
+        master_weights.push_back(1.0 - _intersection_x[i]);
+        master_weights.push_back(_intersection_x[i]);
+        masters_found = true;
         break;
       }
     }
   }
-  return primarys_found;
+  return masters_found;
 }
 
 // TODO: Saving because I don't want to throw it away, but it needs more work to be used.

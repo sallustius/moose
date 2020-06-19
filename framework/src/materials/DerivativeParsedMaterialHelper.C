@@ -155,16 +155,16 @@ DerivativeParsedMaterialHelperTempl<is_ad>::assembleDerivatives()
   // work
   if (_tid > 0)
   {
-    // get the primary object from thread 0
+    // get the master object from thread 0
     const MaterialWarehouse & material_warehouse = _fe_problem.getMaterialWarehouse();
     const MooseObjectWarehouse<MaterialBase> & warehouse = material_warehouse[_material_data_type];
 
-    MooseSharedPointer<DerivativeParsedMaterialHelperTempl> primary =
+    MooseSharedPointer<DerivativeParsedMaterialHelperTempl> master =
         MooseSharedNamespace::dynamic_pointer_cast<DerivativeParsedMaterialHelperTempl>(
             warehouse.getActiveObject(name()));
 
     // copy parsers and declare properties
-    for (const auto & D : primary->_derivatives)
+    for (const auto & D : master->_derivatives)
     {
       Derivative newderivative;
       newderivative._mat_prop =
@@ -175,17 +175,17 @@ DerivativeParsedMaterialHelperTempl<is_ad>::assembleDerivatives()
 
     // copy coupled material properties
     auto start = _mat_prop_descriptors.size();
-    for (MooseIndex(primary->_mat_prop_descriptors) i = start;
-         i < primary->_mat_prop_descriptors.size();
+    for (MooseIndex(master->_mat_prop_descriptors) i = start;
+         i < master->_mat_prop_descriptors.size();
          ++i)
     {
-      FunctionMaterialPropertyDescriptor<is_ad> newdescriptor(primary->_mat_prop_descriptors[i],
+      FunctionMaterialPropertyDescriptor<is_ad> newdescriptor(master->_mat_prop_descriptors[i],
                                                               this);
       _mat_prop_descriptors.push_back(newdescriptor);
     }
 
     // size parameter buffer
-    _func_params.resize(primary->_func_params.size());
+    _func_params.resize(master->_func_params.size());
     return;
   }
 

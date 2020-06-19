@@ -28,7 +28,7 @@ class VariadicTable;
 #define MAX_STACK_SIZE 100
 
 /**
- * The PerfGraph will hold the primary list of all registered performance segments and
+ * The PerfGraph will hold the master list of all registered performance segments and
  * the head PerfNode
  */
 class PerfGraph
@@ -284,4 +284,3 @@ protected:
   // Here so PerfGuard is the only thing that can call push/pop
   friend class PerfGuard;
 };
-

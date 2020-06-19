@@ -12,7 +12,7 @@
 []
 
 [Modules/TensorMechanics/Master]
-  [primary]
+  [master]
     strain = FINITE
     generate_output = 'stress_xx stress_yy stress_zz vonmises_stress'
     add_variables = true

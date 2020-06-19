@@ -94,7 +94,7 @@ MechanicsActionPD::act()
   }
   else if (_current_task == "create_problem_complete")
   {
-    // Gather info about all other primary actions for adding (aux)variables
+    // Gather info about all other master actions for adding (aux)variables
     auto actions = _awh.getActions<MechanicsActionPD>();
     for (const auto & action : actions)
     {

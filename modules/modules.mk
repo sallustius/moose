@@ -68,7 +68,7 @@ ifeq ($(CONTACT),yes)
         TENSOR_MECHANICS            := yes
 endif
 
-# The primary list of all moose modules
+# The master list of all moose modules
 MODULE_NAMES := "chemical_reactions contact external_petsc_solver fluid_properties functional_expansion_tools geochemistry heat_conduction level_set misc navier_stokes peridynamics phase_field porous_flow rdg richards solid_mechanics stochastic_tools tensor_mechanics xfem"
 
 ################################################################################

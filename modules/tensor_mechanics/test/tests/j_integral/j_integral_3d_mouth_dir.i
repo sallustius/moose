@@ -49,7 +49,7 @@
 []
 
 [Modules/TensorMechanics/Master]
-  [./primary]
+  [./master]
     strain = FINITE
     add_variables = true
     incremental = true

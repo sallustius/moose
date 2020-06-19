@@ -14,7 +14,7 @@ calculation of the residual and of the jacobian, as defined in [eq-tensor_mechan
 
 The `StressDivergenceRZTensors` kernel can be automatically created with the
 [TensorMechanics Master Action](/Modules/TensorMechanics/Master/index.md). Use of the tensor
-mechanics primary action is recommended to ensure the consistent setting of the `use_displaced_mesh`
+mechanics master action is recommended to ensure the consistent setting of the `use_displaced_mesh`
 parameter for the strain formulation selected.  For a detailed explanation of the settings for
 _use_displaced_mesh_ in mechanics problems and the TensorMechanics Master Action usage, see the
 [Introduction/Stress Divergence](/tensor_mechanics/StressDivergence.md) page.
@@ -51,7 +51,7 @@ input files and when adding extra stresses.
 The coordinate type in the Problem block of the input file must be set to
 +`COORD_TYPE = RZ`+.
 
-Using the tensor mechanics primary action, as shown
+Using the tensor mechanics master action, as shown
 
 !listing modules/tensor_mechanics/test/tests/2D_geometries/2D-RZ_finiteStrain_test.i block=Modules/TensorMechanics/Master
 

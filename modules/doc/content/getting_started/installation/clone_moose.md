@@ -9,9 +9,9 @@ mkdir ~/projects
 cd ~/projects
 git clone https://github.com/idaholab/moose.git
 cd moose
-git checkout primary
+git checkout master
 ```
 
 !alert note
-The primary branch of MOOSE is the stable branch that will only be updated after all tests are
+The master branch of MOOSE is the stable branch that will only be updated after all tests are
 passing. This protects you from the day-to-day changes in the MOOSE repository.

@@ -14,7 +14,7 @@ ServerAliveInterval 240
 Host *
   User doejohn
   ControlMaster auto
-  ControlPath ~/.ssh/primary-%r@%h:%p
+  ControlPath ~/.ssh/master-%r@%h:%p
 
 ## HPC Entry Point
 Host hpclogin

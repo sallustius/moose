@@ -33,8 +33,8 @@ public:
   bool isPartialOverlap(const EFAEdge & other) const;
   bool containsEdge(const EFAEdge & other) const;
   bool getNodeMasters(EFANode * node,
-                      std::vector<EFANode *> & primary_nodes,
-                      std::vector<double> & primary_weights) const;
+                      std::vector<EFANode *> & master_nodes,
+                      std::vector<double> & master_weights) const;
   //  bool operator < (const EFAEdge & other) const;
 
   void addIntersection(double position, EFANode * embedded_node_tmp, EFANode * from_node);

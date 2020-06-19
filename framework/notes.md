@@ -13,7 +13,7 @@ Questions:
 - Are there duplicate instances of objects for each thread (I think so)?
 - Currently the warehouse doesn't know about threading-copy relationships between objects.  We
     need to store this information somehow so we can query objects as a set (maybe?).  Actually
-    we need some sort of ThreadedInterface that keeps a pointer to the primary thread object
+    we need some sort of ThreadedInterface that keeps a pointer to the master thread object
     pointer for joining.
 
 - How to deal with partial queries but still be able to cache them?

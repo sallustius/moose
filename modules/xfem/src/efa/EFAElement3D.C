@@ -371,26 +371,26 @@ EFAElement3D::updateFragmentNode()
 
 void
 EFAElement3D::getMasterInfo(EFANode * node,
-                            std::vector<EFANode *> & primary_nodes,
-                            std::vector<double> & primary_weights) const
+                            std::vector<EFANode *> & master_nodes,
+                            std::vector<double> & master_weights) const
 {
-  // Given a EFAnode, return its primary nodes and weights
-  primary_nodes.clear();
-  primary_weights.clear();
-  bool primarys_found = false;
+  // Given a EFAnode, return its master nodes and weights
+  master_nodes.clear();
+  master_weights.clear();
+  bool masters_found = false;
   for (unsigned int i = 0; i < _num_faces; ++i) // check element exterior faces
   {
     if (_faces[i]->containsNode(node))
     {
-      primarys_found = _faces[i]->getMasterInfo(node, primary_nodes, primary_weights);
-      if (primarys_found)
+      masters_found = _faces[i]->getMasterInfo(node, master_nodes, master_weights);
+      if (masters_found)
         break;
       else
-        EFAError("In getMasterInfo: cannot find primary nodes in element faces");
+        EFAError("In getMasterInfo: cannot find master nodes in element faces");
     }
   }
 
-  if (!primarys_found) // check element interior embedded nodes
+  if (!masters_found) // check element interior embedded nodes
   {
     for (unsigned int i = 0; i < _interior_nodes.size(); ++i)
     {
@@ -401,7 +401,7 @@ EFAElement3D::getMasterInfo(EFANode * node,
           xi_3d[j] = _interior_nodes[i]->getParametricCoordinates(j);
         for (unsigned int j = 0; j < _num_nodes; ++j)
         {
-          primary_nodes.push_back(_nodes[j]);
+          master_nodes.push_back(_nodes[j]);
           double weight = 0.0;
           if (_num_nodes == 8)
             weight = Efa::linearHexShape3D(j, xi_3d);
@@ -409,15 +409,15 @@ EFAElement3D::getMasterInfo(EFANode * node,
             weight = Efa::linearTetShape3D(j, xi_3d);
           else
             EFAError("unknown 3D element");
-          primary_weights.push_back(weight);
+          master_weights.push_back(weight);
         }
-        primarys_found = true;
+        masters_found = true;
         break;
       }
     }
   }
 
-  if (!primarys_found)
+  if (!masters_found)
     EFAError("In EFAelement3D::getMaterInfo, cannot find the given EFAnode");
 }
 
@@ -1028,15 +1028,15 @@ EFAElement3D::createChild(const std::set<EFAElement *> & CrackTipElements,
       {
         for (unsigned int i = 0; i < cut_plane_nodes[0].size(); ++i)
         {
-          std::vector<EFANode *> primary_nodes;
-          std::vector<double> primary_weights;
+          std::vector<EFANode *> master_nodes;
+          std::vector<double> master_weights;
 
-          this->getMasterInfo(cut_plane_nodes[0][i], primary_nodes, primary_weights);
+          this->getMasterInfo(cut_plane_nodes[0][i], master_nodes, master_weights);
           EFAPoint coor(0.0, 0.0, 0.0);
-          for (unsigned int i = 0; i < primary_nodes.size(); ++i)
+          for (unsigned int i = 0; i < master_nodes.size(); ++i)
           {
-            EFANode * local = this->createLocalNodeFromGlobalNode(primary_nodes[i]);
-            coor += _local_node_coor[local->id()] * primary_weights[i];
+            EFANode * local = this->createLocalNodeFromGlobalNode(master_nodes[i]);
+            coor += _local_node_coor[local->id()] * master_weights[i];
             delete local;
           }
           cut_plane_points.push_back(coor);

@@ -56,7 +56,7 @@ determinant of the deformation matrix.
 Volumetric locking correction is set to false by default in tensor mechanics. When dealing with
 problems involving plasticity or incompressible materials, it can be turned on by setting
 `volumetric_locking_correction=true` in both the stress divergence kernel and the strain calculator
-or in the Tensor Mechanics primary action.
+or in the Tensor Mechanics master action.
 
 When volumetric locking correction is turned on, using a SMP preconditioner with coupled displacement
 variables may help with convergence. For a 3-D problem with only displacement as unknown variables,

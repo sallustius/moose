@@ -95,7 +95,7 @@ This fixes some broken paths in `$PETSC_DIR/$PETSC_ARCH/lib/petsc/conf/petscvari
 # libMesh
 
 !alert note
-libmesh requires a patch to enable using an external netcdf installation. That patch is not in the primary branch or submodule yet.
+libmesh requires a patch to enable using an external netcdf installation. That patch is not in the master branch or submodule yet.
 
 Set the `LIBMESH_DIR` environment variable
 

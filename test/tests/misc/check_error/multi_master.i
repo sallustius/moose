@@ -48,7 +48,7 @@
 
 [MultiApps]
   [./full_solve]
-    # not setting app_type to use the same app type of primary, i.e. MooseTestApp
+    # not setting app_type to use the same app type of master, i.e. MooseTestApp
     type = FullSolveMultiApp
     execute_on = initial
     positions = '0 0 0'

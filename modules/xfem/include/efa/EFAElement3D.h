@@ -47,8 +47,8 @@ public:
   virtual void switchEmbeddedNode(EFANode * new_node, EFANode * old_node);
   virtual void updateFragmentNode();
   virtual void getMasterInfo(EFANode * node,
-                             std::vector<EFANode *> & primary_nodes,
-                             std::vector<double> & primary_weights) const;
+                             std::vector<EFANode *> & master_nodes,
+                             std::vector<double> & master_weights) const;
   virtual unsigned int numInteriorNodes() const;
 
   bool overlaysElement(const EFAElement3D * other_elem) const;

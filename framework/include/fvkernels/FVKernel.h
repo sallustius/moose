@@ -25,7 +25,7 @@ class SubProblem;
 /// broadly devided into two subgroups: numerical flux or surface integral
 /// kernels (the FVFluxKernel class) and cell/volume integral kernels (the
 /// FVElementalKernel class).  These FVKernels are stored in the moose app's
-/// primary "TheWarehouse" warehouse under the "FVFluxKernel" or
+/// master "TheWarehouse" warehouse under the "FVFluxKernel" or
 /// "FVElementalKernel" system names respectively.  FVKernels are generally
 /// created by the CreateFVKernelsAction triggered by entries in the
 /// "[FVKernels]" input file block.  FVKernels can only operate on and work

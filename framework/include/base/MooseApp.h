@@ -191,7 +191,7 @@ public:
    * Note: for_non_moose_build_output does not affect the returned value when this is a subapp.
    *       for_non_moose_build_output also does not affect the returned value when Outputs/file_base
    *       parameter is available. When for_non_moose_build_output does affect the returned value,
-   *       i.e. primary without Outputs/file_base, the suffix _out is removed.
+   *       i.e. master without Outputs/file_base, the suffix _out is removed.
    */
   std::string getOutputFileBase(bool for_non_moose_build_output = false) const;
 

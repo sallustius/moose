@@ -36,7 +36,7 @@
 []
 
 [Modules/TensorMechanics/Master]
-  [./primary]
+  [./master]
     use_displaced_mesh = true
     strain = FINITE
     eigenstrain_names = eigenstrain
