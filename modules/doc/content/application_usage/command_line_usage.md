@@ -30,7 +30,7 @@ Options:
   -i <input_file>                                   Specify an input file
   --json                                            Dumps input file syntax in JSON format.
   --keep-cout                                       Keep standard output from all processors when running in parallel
-  --list-constructed-objects                        List all moose object type names constructed by the primary app factory.
+  --list-constructed-objects                        List all moose object type names constructed by the master app factory.
   --mesh-only [mesh_file_name]                      Setup and Output the input mesh only (Default: "<input_file_name>_in.e")
   --minimal                                         Ignore input file and build a minimal application with Transient executioner.
   --n-threads=<n>                                   Runs the specified number of threads per process

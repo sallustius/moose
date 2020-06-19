@@ -31,7 +31,7 @@ FileOutput::validParams()
       "file_base",
       "The desired solution output name without an extension. If not provided, MOOSE sets it "
       "with Outputs/file_base when available. Otherwise, MOOSE uses input file name and this "
-      "object name for a primary input or uses primary file_base, the subapp name and this object "
+      "object name for a master input or uses master file_base, the subapp name and this object "
       "name for a subapp input to set it.");
   params.addParam<bool>(
       "append_date", false, "When true the date and time are appended to the output filename.");

@@ -68,7 +68,7 @@ public:
   /**************************************************
    *                Data Accessors                  *
    **************************************************/
-  unsigned int getPrimarySeed() const { return _primary_seed; }
+  unsigned int getMasterSeed() const { return _master_seed; }
   bool isNodal() const { return _is_nodal; }
   ExecFlagType getResetOnTime() const { return _reset_on; }
 
@@ -81,7 +81,7 @@ private:
   FEProblemBase & _ri_problem;
   const std::string _ri_name;
 
-  unsigned int _primary_seed;
+  unsigned int _master_seed;
   bool _is_nodal;
   ExecFlagType _reset_on;
 

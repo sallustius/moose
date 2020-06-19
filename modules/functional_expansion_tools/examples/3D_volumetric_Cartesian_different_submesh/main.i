@@ -1,6 +1,6 @@
 # Derived from the example '3D_volumetric_Cartesian' with the following differences:
 #
-#   1) The number of x and y divisions in the sub app is not the same as the primary app
+#   1) The number of x and y divisions in the sub app is not the same as the master app
 #   2) The subapp mesh is skewed in x and z
 [Mesh]
   type = GeneratedMesh

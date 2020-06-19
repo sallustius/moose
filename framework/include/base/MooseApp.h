@@ -559,7 +559,7 @@ public:
 
   /**
    * The MultiApp Level
-   * @return The current number of levels from the primary app
+   * @return The current number of levels from the master app
    */
   unsigned int multiAppLevel() const { return _multiapp_level; }
 
@@ -570,19 +570,19 @@ public:
   unsigned int multiAppNumber() const { return _multiapp_number; }
 
   /**
-   * Whether or not this app is the ultimate primary app. (ie level == 0)
+   * Whether or not this app is the ultimate master app. (ie level == 0)
    */
   bool isUltimateMaster() { return !_multiapp_level; }
 
   /**
-   * Returns a pointer to the primary mesh
+   * Returns a pointer to the master mesh
    */
-  const MooseMesh * primaryMesh() const { return _primary_mesh; }
+  const MooseMesh * masterMesh() const { return _master_mesh; }
 
   /**
-   * Returns a pointer to the primary mesh
+   * Returns a pointer to the master mesh
    */
-  const MooseMesh * primaryDisplacedMesh() const { return _primary_displaced_mesh; }
+  const MooseMesh * masterDisplacedMesh() const { return _master_displaced_mesh; }
 
   /**
    * Add a mesh modifier that will act on the meshes in the system
@@ -1017,17 +1017,17 @@ private:
   /// The combined warehouse for storing any MooseObject based object
   std::unique_ptr<TheWarehouse> _the_warehouse;
 
-  /// Level of multiapp, the primary is level 0. This used by the Console to indent output
+  /// Level of multiapp, the master is level 0. This used by the Console to indent output
   unsigned int _multiapp_level;
 
   /// Numbering in all the sub-apps on the same level
   unsigned int _multiapp_number;
 
-  /// The mesh from primary app
-  const MooseMesh * _primary_mesh;
+  /// The mesh from master app
+  const MooseMesh * _master_mesh;
 
-  /// The displaced mesh from primary app
-  const MooseMesh * _primary_displaced_mesh;
+  /// The displaced mesh from master app
+  const MooseMesh * _master_displaced_mesh;
 
   /// Holds the mesh modifiers until they have completed, then this structure is cleared
   std::map<std::string, std::shared_ptr<MeshModifier>> _mesh_modifiers;

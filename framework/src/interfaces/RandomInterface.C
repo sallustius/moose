@@ -21,7 +21,7 @@ RandomInterface::validParams()
 {
 
   InputParameters params = emptyInputParameters();
-  params.addParam<unsigned int>("seed", 0, "The seed for the primary random number generator");
+  params.addParam<unsigned int>("seed", 0, "The seed for the master random number generator");
 
   params.addParamNamesToGroup("seed", "Advanced");
   return params;
@@ -35,7 +35,7 @@ RandomInterface::RandomInterface(const InputParameters & parameters,
     _generator(nullptr),
     _ri_problem(problem),
     _ri_name(parameters.get<std::string>("_object_name")),
-    _primary_seed(parameters.get<unsigned int>("seed")),
+    _master_seed(parameters.get<unsigned int>("seed")),
     _is_nodal(is_nodal),
     _reset_on(EXEC_LINEAR),
     _curr_node(problem.assembly(tid).node()),

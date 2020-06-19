@@ -156,7 +156,7 @@ PicardSolve::solve()
   _problem.backupMultiApps(EXEC_TIMESTEP_BEGIN);
   _problem.backupMultiApps(EXEC_TIMESTEP_END);
 
-  // Prepare to relax variables as a primary
+  // Prepare to relax variables as a master
   std::set<dof_id_type> relaxed_dofs;
   if (_relax_factor != 1.0)
   {

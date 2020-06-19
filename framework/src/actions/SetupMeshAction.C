@@ -226,8 +226,8 @@ SetupMeshAction::act()
   // Create the mesh object and tell it to build itself
   if (_current_task == "setup_mesh")
   {
-    if (_app.primaryMesh())
-      _mesh = _app.primaryMesh()->safeClone();
+    if (_app.masterMesh())
+      _mesh = _app.masterMesh()->safeClone();
     else
     {
       const auto & generator_actions = _awh.getActionListByName("add_mesh_generator");
@@ -277,12 +277,12 @@ SetupMeshAction::act()
 
   else if (_current_task == "set_mesh_base")
   {
-    if (!_app.primaryMesh() && !_mesh->hasMeshBase())
+    if (!_app.masterMesh() && !_mesh->hasMeshBase())
     {
       // We want to set the MeshBase object to that coming from mesh generators when the following
       // conditions are met:
       // 1. We have mesh generators
-      // 2. We are recovering/restarting AND we are not the primary application, e.g. we are a
+      // 2. We are recovering/restarting AND we are not the master application, e.g. we are a
       //    sub-application
       if (!_app.getMeshGeneratorNames().empty() &&
           !((_app.isRecovering() || _app.isRestarting()) && _app.isUltimateMaster()))
@@ -294,10 +294,10 @@ SetupMeshAction::act()
 
   else if (_current_task == "init_mesh")
   {
-    if (_app.primaryMesh())
+    if (_app.masterMesh())
     {
-      if (_app.primaryDisplacedMesh())
-        _displaced_mesh = _app.primaryDisplacedMesh()->safeClone();
+      if (_app.masterDisplacedMesh())
+        _displaced_mesh = _app.masterDisplacedMesh()->safeClone();
     }
     else
     {

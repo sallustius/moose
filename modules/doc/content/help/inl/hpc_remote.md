@@ -13,7 +13,7 @@ ServerAliveInterval 240
 
 Host *
   ControlMaster auto
-  ControlPath ~/.ssh/primary-%r@%h:%p
+  ControlPath ~/.ssh/master-%r@%h:%p
 
 ## HPC Entry Point
 Host hpclogin

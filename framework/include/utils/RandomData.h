@@ -57,10 +57,9 @@ private:
   bool _is_nodal;
   ExecFlagType _reset_on;
 
-  unsigned int _primary_seed;
-  unsigned int _current_primary_seed;
+  unsigned int _master_seed;
+  unsigned int _current_master_seed;
   unsigned int _new_seed;
 
   std::unordered_map<dof_id_type, unsigned int> _seeds;
 };
-

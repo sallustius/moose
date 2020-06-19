@@ -21,7 +21,7 @@ Build issues are normally caused by an invalid environment, or perhaps an update
 
   ```bash
   cd moose
-  git checkout primary
+  git checkout master
   git clean -xfd
 
   <output snipped>

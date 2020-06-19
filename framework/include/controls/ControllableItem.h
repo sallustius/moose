@@ -18,7 +18,7 @@
  * An intermediate object for building a "controllable item", where an "item" can refer to multiple
  * input parameters with different names.
  *
- * The name supplied to the constructor is considered the "primary" parameter. The parameter(s)
+ * The name supplied to the constructor is considered the "master" parameter. The parameter(s)
  * added via the connect method are considered the secondarys.
  *
  * In general, an ControllableItem will have a one-to-one relationship with an input parameter
@@ -71,7 +71,7 @@ public:
 
   ///@{
   /**
-   * Use the primary name for comparison operators to allow object to work within a set/map.
+   * Use the master name for comparison operators to allow object to work within a set/map.
    */
   bool operator==(const ControllableItem & rhs) const { return name() == rhs.name(); }
   bool operator!=(const ControllableItem & rhs) const { return name() != rhs.name(); }
@@ -79,12 +79,12 @@ public:
   ///@}
 
   /**
-   * Return the name of the primary parameter.
+   * Return the name of the master parameter.
    */
   virtual const MooseObjectParameterName & name() const;
 
   /**
-   * Return the type of the primary parameter.
+   * Return the type of the master parameter.
    */
   std::string type() const;
 
@@ -196,4 +196,3 @@ public:
 private:
   MooseObjectParameterName _name;
 };
-

@@ -26,7 +26,7 @@ ControllableItem::connect(ControllableItem * item, bool type_check)
   for (const auto & pair : item->_pairs)
   {
     if (type_check && type() != pair.second->type())
-      mooseError("The primary parameter (",
+      mooseError("The master parameter (",
                  name(),
                  ") has a type '",
                  type(),
@@ -50,7 +50,7 @@ ControllableItem::dump(unsigned int indent /*=0*/) const
   std::ostringstream oss;
   for (const auto & pair : _pairs)
   {
-    if (index == 0) // primary parameter
+    if (index == 0) // master parameter
       oss << ConsoleUtils::indent(indent) << COLOR_GREEN << pair.first << COLOR_DEFAULT << " = ";
     else // secondary parameters
       oss << ConsoleUtils::indent(indent + 2) << COLOR_YELLOW << pair.first << COLOR_DEFAULT

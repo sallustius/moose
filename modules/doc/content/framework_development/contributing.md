@@ -100,7 +100,7 @@ The main thing to remember when issuing a PR for MOOSE is that all PRs should be
 
 ## What Now?
 
-The next phase is covered in [How a Patch Becomes Code](framework_development/patch_to_code.md)... that will take you through the process of a PR ultimately making it's way into the `primary` branch in MOOSE...
+The next phase is covered in [How a Patch Becomes Code](framework_development/patch_to_code.md)... that will take you through the process of a PR ultimately making it's way into the `master` branch in MOOSE...
 
 ## Autotools
 

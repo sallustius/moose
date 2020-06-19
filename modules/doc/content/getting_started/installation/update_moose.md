@@ -16,7 +16,7 @@ To update your MOOSE repository use the following commands.
 ```bash
 cd ~/projects/moose
 git fetch origin
-git rebase origin/primary
+git rebase origin/master
 ```
 
 Then return to your application, re-compile, and test.

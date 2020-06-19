@@ -1,8 +1,8 @@
-# Basic example coupling a primary and sub app in a 3D cylindrical mesh from an input file
+# Basic example coupling a master and sub app in a 3D cylindrical mesh from an input file
 #
-# The primary app provides field values to the sub app via Functional Expansions, which then performs
-# its calculations. The sub app's solution field values are then transferred back to the primary app
-# and coupled into the solution of the primary app solution.
+# The master app provides field values to the sub app via Functional Expansions, which then performs
+# its calculations. The sub app's solution field values are then transferred back to the master app
+# and coupled into the solution of the master app solution.
 #
 # This example couples Functional Expansions via AuxVariable, the recommended approach.
 #
