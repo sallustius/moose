@@ -87,7 +87,10 @@ ReferenceResidualProblem::ReferenceResidualProblem(const InputParameters & param
                  ")");
   }
   else if (params.isParamValid("reference_vector"))
+  {
     _reference_vector = &_nl->getVector(getVectorTagID(getParam<TagName>("reference_vector")));
+    _reference_vector->attach_transform(&std::abs);
+  }
   else
     mooseInfo("Neither the `reference_residual_variables` nor `reference_vector` parameter is "
               "specified for `ReferenceResidualProblem`, which means that no reference "

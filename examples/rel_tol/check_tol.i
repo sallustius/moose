@@ -4,26 +4,38 @@
 
 [Mesh]
   [./fm]
-    type = FileMeshGenerator
-    file = '2DSquare.e'
+    type = GeneratedMeshGenerator
+    dim = 2
+    nx = 2
+    ny = 2
+    xmin = -82.5
+    xmax = 82.5
+    ymin = -82.5
+    ymax = 82.5
   [../]
   [./extra_nodes_x]
     type = ExtraNodesetGenerator
     input = 'fm'
     new_boundary = 'no_x'
-    nodes = '10' # globalnodeid - 1
+    coord = '0 82.5 0'
   [../]
   [./extra_nodes_y]
     type = ExtraNodesetGenerator
     input = 'extra_nodes_x'
     new_boundary = 'no_y'
-    nodes = '50' # globalnodeid - 1
+    coord = '-82.5 0 0'
   [../]
 []
 
+# [Problem]
+#   type = ReferenceResidualProblem
+#   reference_vector = 'ref'
+#   extra_tag_vectors = 'ref'
+# []
+
 [Problem]
-  type = ReferenceResidualProblem
-  reference_vector = 'ref'
+  type = DumpObjectsProblem
+  dump_path = 'Modules/TensorMechanics/Master/fuel'
   extra_tag_vectors = 'ref'
 []
 
@@ -36,7 +48,6 @@
   # FINITE strain when strain is large, i.e., visible movement.
   # SMALL strain when things are stressed, but may not move.
   [./fuel]
-    block = 1
     add_variables = true
     strain = FINITE
     temperature = temp
@@ -68,13 +79,11 @@
 [Materials]
   [./elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
-    block = 1
     youngs_modulus = 3e10   # Pa
     poissons_ratio = 0.33    # unitless
   [../]
   [./thermal_strains]
     type = ComputeThermalExpansionEigenstrain
-    block = 1
     temperature = temp
     thermal_expansion_coeff = 2e-6 # 1/K
     stress_free_temperature = 500 # K
@@ -82,7 +91,6 @@
   [../]
   [./stress_finite] # goes with FINITE strain formulation
     type = ComputeFiniteStrainElasticStress
-    block = 1
   [../]
 []
 
@@ -133,7 +141,7 @@
 
   # 3) Set an nl_abs_tol the problem converges
   # Note: this is about a 12 order of magnitude reduction from initial nonlinear residual
-  # nl_abs_tol = 5e-03
+  nl_abs_tol = 1e-13
 
   # 4) Set an nl_abs_tol && nl_rel_tol, the problem converges
   # using the nl_abs_tol to trigger
