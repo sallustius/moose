@@ -83,8 +83,11 @@ protected:
   /// face); this value often will have been computed using a call to the
   /// non-advective interpolate function.
   template <typename T>
-  void interpolate(
-      InterpMethod m, T & result, const T & elem, const T & neighbor, ADRealVectorValue advector)
+  void interpolate(InterpMethod m,
+                   T & result,
+                   const T & elem,
+                   const T & neighbor,
+                   const ADRealVectorValue & advector)
   {
     switch (m)
     {
