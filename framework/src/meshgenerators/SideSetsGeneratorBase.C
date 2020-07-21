@@ -75,9 +75,10 @@ SideSetsGeneratorBase::finalize()
 
 void
 SideSetsGeneratorBase::flood(const Elem * elem,
-                             Point normal,
-                             boundary_id_type side_id,
-                             MeshBase & mesh)
+                             const Point & normal,
+                             const boundary_id_type side_id,
+                             MeshBase & mesh,
+                             const bool recurse)
 {
   if (elem == nullptr || (_visited[side_id].find(elem) != _visited[side_id].end()))
     return;
@@ -98,6 +99,10 @@ SideSetsGeneratorBase::flood(const Elem * elem,
         mesh.get_boundary_info().remove_side(elem, side);
 
       mesh.get_boundary_info().add_side(elem, side, side_id);
+
+      if (!recurse)
+        return;
+
       for (unsigned int neighbor = 0; neighbor < elem->n_sides(); ++neighbor)
       {
         // Flood to the neighboring elements using the current matching side normal from this

@@ -18,7 +18,8 @@ template <>
 InputParameters validParams<SideSetsFromPointsGenerator>();
 
 /**
- *
+ * Adds a new sideset starting at the specified point optionally containing all connected element
+ * faces with the same normal
  */
 class SideSetsFromPointsGenerator : public SideSetsGeneratorBase
 {
@@ -35,5 +36,7 @@ protected:
   std::vector<BoundaryName> _boundary_names;
 
   std::vector<Point> _points;
-};
 
+  /// Whether to add all connected elements with the same normal
+  const bool _add_connected;
+};

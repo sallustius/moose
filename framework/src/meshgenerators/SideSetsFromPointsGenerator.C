@@ -35,12 +35,17 @@ SideSetsFromPointsGenerator::validParams()
   InputParameters params = SideSetsGeneratorBase::validParams();
 
   params.addRequiredParam<MeshGeneratorName>("input", "The mesh we want to modify");
-  params.addClassDescription("Adds a new sideset starting at the specified point containing all "
-                             "connected element faces with the same normal.");
+  params.addClassDescription(
+      "Adds a new sideset starting at the specified point optionally containing all "
+      "connected element faces with the same normal.");
   params.addRequiredParam<std::vector<BoundaryName>>("new_boundary",
                                                      "The name of the boundary to create");
   params.addRequiredParam<std::vector<Point>>(
       "points", "A list of points from which to start painting sidesets");
+  params.addParam<bool>(
+      "add_connected",
+      true,
+      "Whether to add all the connected elements with the same normal to the sideset.");
 
   return params;
 }
@@ -49,7 +54,8 @@ SideSetsFromPointsGenerator::SideSetsFromPointsGenerator(const InputParameters &
   : SideSetsGeneratorBase(parameters),
     _input(getMesh("input")),
     _boundary_names(getParam<std::vector<BoundaryName>>("new_boundary")),
-    _points(getParam<std::vector<Point>>("points"))
+    _points(getParam<std::vector<Point>>("points")),
+    _add_connected(getParam<bool>("add_connected"))
 {
   if (typeid(_input).name() == typeid(std::unique_ptr<DistributedMesh>).name())
     mooseError("GenerateAllSideSetsByNormals only works with ReplicatedMesh.");
@@ -92,7 +98,7 @@ SideSetsFromPointsGenerator::generate()
         const std::vector<Point> & normals = _fe_face->get_normals();
         _fe_face->reinit(elem, side);
 
-        flood(elem, normals[0], boundary_ids[i], *mesh);
+        flood(elem, normals[0], boundary_ids[i], *mesh, _add_connected);
       }
     }
   }

@@ -53,7 +53,11 @@ protected:
    * This method implements a recursive flood routine to paint a sideset of
    * mesh to neighboring faces given a starting element and normal.
    */
-  void flood(const Elem * elem, Point normal, boundary_id_type side_id, MeshBase & mesh);
+  void flood(const Elem * elem,
+             const Point & normal,
+             boundary_id_type side_id,
+             MeshBase & mesh,
+             bool recurse = true);
 
   boundary_id_type getNextBoundaryID() const;
 
