@@ -541,7 +541,7 @@ MooseVariableDataFV<OutputType>::computeGhostValuesFace(
   if (_need_ad_u_dot)
     _ad_u_dot.resize(nqp);
 
-  if (bcs.size() > 0)
+  if (_has_dirichlet_bc)
   {
     // extrapolate from the boundary element across the boundary face using
     // the given BC face value to determine a ghost cell value for u.  Be sure
