@@ -54,7 +54,8 @@ FVKernel::FVKernel(const InputParameters & params)
     SetupInterface(this),
     _subproblem(*getCheckedPointerParam<SubProblem *>("_subproblem")),
     _tid(params.get<THREAD_ID>("_tid")),
-    _assembly(_subproblem.assembly(_tid))
+    _assembly(_subproblem.assembly(_tid)),
+    _mesh(_subproblem.mesh())
 {
   _subproblem.haveADObjects(true);
   if (getParam<bool>("use_displaced_mesh"))
