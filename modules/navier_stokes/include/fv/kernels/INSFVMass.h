@@ -16,4 +16,10 @@ class INSFVMass : public FVMatAdvection
 public:
   static InputParameters validParams();
   INSFVMass(const InputParameters & params);
+
+  void initialSetup() override;
+
+private:
+  /// Whether to constrain the pressure
+  const bool _constrain_pressure;
 };
