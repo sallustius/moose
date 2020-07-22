@@ -388,7 +388,8 @@ PicardSolve::autoAdvance() const
   // if (dynamic_cast<EigenExecutionerBase *>(&_executioner) && _has_picard_its)
   //   auto_advance = true;
 
-  bool auto_advance = false;
+  // Apparently FullSolveMultiApp is not compatabile with `auto_advance = false`
+  bool auto_advance = !_problem.isTransient();
 
   if (_auto_advance_set_by_user)
     auto_advance = _auto_advance_user_value;
