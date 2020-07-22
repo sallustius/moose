@@ -383,10 +383,12 @@ PicardSolve::solve()
 bool
 PicardSolve::autoAdvance() const
 {
-  bool auto_advance = !(_has_picard_its && _problem.isTransient());
+  // bool auto_advance = !(_has_picard_its && _problem.isTransient());
 
-  if (dynamic_cast<EigenExecutionerBase *>(&_executioner) && _has_picard_its)
-    auto_advance = true;
+  // if (dynamic_cast<EigenExecutionerBase *>(&_executioner) && _has_picard_its)
+  //   auto_advance = true;
+
+  bool auto_advance = false;
 
   if (_auto_advance_set_by_user)
     auto_advance = _auto_advance_user_value;
