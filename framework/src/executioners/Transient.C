@@ -313,6 +313,10 @@ Transient::execute()
 
   if (lastSolveConverged())
   {
+    // We increment this value because multi-apps use it to determine whether to finish their own
+    // steps
+    _time_old = _time;
+
     _t_step++;
 
     /*

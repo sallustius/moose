@@ -542,6 +542,18 @@ TransientMultiApp::finishStep(bool recurse_through_multiapp_levels)
     for (unsigned int i = 0; i < _my_num_apps; i++)
     {
       Transient * ex = _transient_executioners[i];
+
+      // The App might have a different local time from the rest of the problem
+      Real app_time_offset = _apps[i]->getGlobalTimeOffset();
+
+      // At this point the master application has actually already moved its state forward in time,
+      // so we need to compare to the old state because that's what we are on
+      auto target_time = _fe_problem.timeOld();
+
+      if ((ex->getTime() + app_time_offset + 2e-14 >= target_time) ||
+          (ex->getTime() >= ex->endTime()))
+        continue;
+
       ex->endStep();
       ex->postStep();
       if (recurse_through_multiapp_levels)
