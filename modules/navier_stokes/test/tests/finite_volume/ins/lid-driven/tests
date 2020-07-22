@@ -1,0 +1,18 @@
+[Tests]
+  design = 'navier_stokes/index.md'
+  issues = '#15640'
+  [exo]
+    type = 'Exodiff'
+    input = 'lid-driven.i'
+    exodiff = 'lid-driven_out.e'
+    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in a lid-driven cavity using the finite volume method.'
+  []
+  [nonsingular]
+    type = 'RunApp'
+    input = 'lid-driven.i'
+    cli_args = 'Mesh/gen/nx=4 Mesh/gen/ny=4 -pc_type svd -pc_svd_monitor'
+    expect_out = '0 of 48 singular values'
+    absent_out = '\s+[1-9]+[0-9]* of 48 singular values'
+    requirement = 'The system shall be able to solve an incompressible Navier-Stokes problem with dirichlet boundary conditions for all the normal components of velocity, using the finite volume method, and have a nonsingular system matrix.'
+  []
+[]
