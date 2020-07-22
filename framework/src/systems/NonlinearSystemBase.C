@@ -72,6 +72,8 @@
 #include "TimedPrint.h"
 #include "ConsoleStream.h"
 #include "MooseError.h"
+#include "FVElementalKernel.h"
+#include "FVFluxKernel.h"
 
 // libMesh
 #include "libmesh/nonlinear_solver.h"
@@ -272,7 +274,31 @@ NonlinearSystemBase::initialSetup()
       _element_dampers.initialSetup(tid);
       _nodal_dampers.initialSetup(tid);
       _integrated_bcs.initialSetup(tid);
+
+      if (_fe_problem.haveFV())
+      {
+        std::vector<FVElementalKernel *> fv_elemental_kernels;
+        _fe_problem.theWarehouse()
+            .query()
+            .template condition<AttribSystem>("FVElementalKernel")
+            .template condition<AttribThread>(tid)
+            .queryInto(fv_elemental_kernels);
+
+        for (auto * fv_kernel : fv_elemental_kernels)
+          fv_kernel->initialSetup();
+
+        std::vector<FVFluxKernel *> fv_flux_kernels;
+        _fe_problem.theWarehouse()
+            .query()
+            .template condition<AttribSystem>("FVFluxKernel")
+            .template condition<AttribThread>(tid)
+            .queryInto(fv_flux_kernels);
+
+        for (auto * fv_kernel : fv_flux_kernels)
+          fv_kernel->initialSetup();
+      }
     }
+
     _scalar_kernels.initialSetup();
     _constraints.initialSetup();
     _general_dampers.initialSetup();
