@@ -41,6 +41,7 @@
   [mass]
     type = INSFVMass
     variable = pressure
+    constrain_pressure = true
   []
 
   [u_advection]
