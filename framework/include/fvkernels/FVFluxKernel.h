@@ -42,6 +42,8 @@ public:
     Average,
     /// weighted
     Upwind,
+    // Rhie-Chow
+    RhieChow
   };
 
   static InputParameters validParams();
