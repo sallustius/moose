@@ -34,18 +34,33 @@ public:
   ADReal coeffCalculator(const Elem & elem);
 
 protected:
-  ADRealVectorValue interpolateVelocity();
+  /**
+   * interpolation overload for the velocity
+   */
+  void interpolate(InterpMethod m,
+                   ADRealVectorValue & interp_v,
+                   const ADRealVectorValue & elem_v,
+                   const ADRealVectorValue & neighbor_v);
 
   ADReal computeQpResidual() override;
 
 private:
+  /// pressure variable
   const MooseVariableFV<Real> * const _p_var;
+  /// x-velocity
   const MooseVariableFV<Real> * const _u_var;
+  /// y-velocity
   const MooseVariableFV<Real> * const _v_var;
+  /// z-velocity
   const MooseVariableFV<Real> * const _w_var;
 
+  /// The viscosity
   const Real _mu;
+  /// The density
   const Real _rho;
+
+  /// The interpolation method to use for the velocity
+  InterpMethod _velocity_interp_method;
 };
 
 #endif

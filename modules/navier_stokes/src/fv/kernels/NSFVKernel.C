@@ -42,6 +42,14 @@ NSFVKernel::validParams()
 
   params.suppressParameter<MooseEnum>("advected_interp_method");
 
+  MooseEnum velocity_interp_method("average rc", "rc");
+
+  params.addParam<MooseEnum>(
+      "velocity_interp_method",
+      velocity_interp_method,
+      "The interpolation to use for the velocity. Options are "
+      "'average' and 'rc' which stands for Rhie-Chow. The default is Rhie-Chow.");
+
   params.addParam<Real>("mu", 1, "The viscosity");
   params.addParam<Real>("rho", 1, "The density");
   return params;
@@ -71,6 +79,15 @@ NSFVKernel::NSFVKernel(const InputParameters & params)
   if (_mesh.dimension() >= 3 && !isParamValid("w"))
     mooseError("In three-dimensions, the w velocity must be supplied and it must be a finite "
                "volume variable.");
+
+  const auto & velocity_interp_method = getParam<MooseEnum>("velocity_interp_method");
+  if (velocity_interp_method == "average")
+    _velocity_interp_method = InterpMethod::Average;
+  else if (velocity_interp_method == "rc")
+    _velocity_interp_method = InterpMethod::RhieChow;
+  else
+    mooseError("Unrecognized interpolation type ",
+               static_cast<std::string>(velocity_interp_method));
 }
 
 ADReal
@@ -109,7 +126,7 @@ NSFVKernel::coeffCalculator(const Elem & elem)
       elem_velocity(2) = _w_var->getElemValue(neighbor);
 
     ADRealVectorValue interp_v;
-    interpolate(InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity);
+    FVFluxKernel::interpolate(InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity);
 
     const ADReal mass_flow = _rho * interp_v * surface_vector;
 
@@ -125,50 +142,55 @@ NSFVKernel::coeffCalculator(const Elem & elem)
   return coeff;
 }
 
-ADRealVectorValue
-NSFVKernel::interpolateVelocity()
+void
+NSFVKernel::interpolate(InterpMethod m,
+                        ADRealVectorValue & v,
+                        const ADRealVectorValue & elem_v,
+                        const ADRealVectorValue & neighbor_v)
 {
-  ADRealVectorValue v;
+  FVFluxKernel::interpolate(InterpMethod::Average, v, elem_v, neighbor_v);
 
-  // Currently only Average is supported for the velocity
-  interpolate(InterpMethod::Average, v, _vel_elem[_qp], _vel_neighbor[_qp]);
-
-  // Get pressure gradient
-  const VectorValue<ADReal> & grad_p = _p_var->adGradSln(*_face_info);
-
-  // Get uncorrected pressure gradient
-  const VectorValue<ADReal> & unc_grad_p = _p_var->uncorrectedAdGradSln(*_face_info);
-
-  // Now we need to perform the computations of D
-  const ADReal & elem_a = _p_var->adCoeff(&_face_info->elem(), this, &::coeffCalculator);
-  ADReal face_a = elem_a;
-  Real face_volume = _face_info->elemVolume();
-
-  if (_face_info->neighborPtr())
+  if (m == InterpMethod::RhieChow)
   {
-    const ADReal & neighbor_a =
-        _p_var->adCoeff(_face_info->neighborPtr(), this, &::coeffCalculator);
-    interpolate(InterpMethod::Average, face_a, elem_a, neighbor_a);
-    interpolate(
-        InterpMethod::Average, face_volume, _face_info->elemVolume(), _face_info->neighborVolume());
+    // Get pressure gradient
+    const VectorValue<ADReal> & grad_p = _p_var->adGradSln(*_face_info);
+
+    // Get uncorrected pressure gradient
+    const VectorValue<ADReal> & unc_grad_p = _p_var->uncorrectedAdGradSln(*_face_info);
+
+    // Now we need to perform the computations of D
+    const ADReal & elem_a = _p_var->adCoeff(&_face_info->elem(), this, &::coeffCalculator);
+    ADReal face_a = elem_a;
+    Real face_volume = _face_info->elemVolume();
+
+    if (_face_info->neighborPtr())
+    {
+      const ADReal & neighbor_a =
+          _p_var->adCoeff(_face_info->neighborPtr(), this, &::coeffCalculator);
+      FVFluxKernel::interpolate(InterpMethod::Average, face_a, elem_a, neighbor_a);
+      FVFluxKernel::interpolate(InterpMethod::Average,
+                                face_volume,
+                                _face_info->elemVolume(),
+                                _face_info->neighborVolume());
+    }
+
+    mooseAssert(face_a > 0, "face_a should be greater than zero");
+    const ADReal face_D = face_volume / face_a;
+
+    // perform the pressure correction
+    v -= face_D * (grad_p - unc_grad_p);
   }
-
-  mooseAssert(face_a > 0, "face_a should be greater than zero");
-  const ADReal face_D = face_volume / face_a;
-
-  // perform the pressure correction
-  v -= face_D * (grad_p - unc_grad_p);
-
-  return v;
 }
 
 ADReal
 NSFVKernel::computeQpResidual()
 {
-  ADRealVectorValue v = interpolateVelocity();
+  ADRealVectorValue v;
   ADReal u_interface;
 
-  interpolate(InterpMethod::Upwind, u_interface, _adv_quant_elem[_qp], _adv_quant_neighbor[_qp], v);
+  interpolate(_velocity_interp_method, v, _vel_elem[_qp], _vel_neighbor[_qp]);
+  FVFluxKernel::interpolate(
+      InterpMethod::Upwind, u_interface, _adv_quant_elem[_qp], _adv_quant_neighbor[_qp], v);
   return _normal * v * u_interface;
 }
 

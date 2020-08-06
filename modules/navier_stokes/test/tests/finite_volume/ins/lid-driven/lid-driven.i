@@ -1,5 +1,6 @@
 [GlobalParams]
   vel = 'velocity'
+  velocity_interp_method = 'rc'
 []
 
 [Mesh]
