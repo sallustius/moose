@@ -1,6 +1,10 @@
+mu=.01
+rho=1
+
 [GlobalParams]
   vel = 'velocity'
   velocity_interp_method = 'rc'
+  advected_interp_method = 'average'
 []
 
 [Mesh]
@@ -8,11 +12,11 @@
     type = GeneratedMeshGenerator
     dim = 2
     xmin = 0
-    xmax = 1.0
+    xmax = .1
     ymin = 0
-    ymax = 1.0
-    nx = 16
-    ny = 16
+    ymax = .1
+    nx = 20
+    ny = 20
   []
 []
 
@@ -38,6 +42,23 @@
   []
 []
 
+[AuxVariables]
+  [U]
+    order = CONSTANT
+    family = MONOMIAL
+    fv = true
+  []
+[]
+
+[AuxKernels]
+  [mag]
+    type = VectorMagnitudeAux
+    variable = U
+    x = u
+    y = v
+  []
+[]
+
 [FVKernels]
   [mass]
     type = INSFVMass
@@ -46,6 +67,8 @@
     pressure = pressure
     u = u
     v = v
+    mu = ${mu}
+    rho = ${rho}
   []
 
   [u_advection]
@@ -55,12 +78,14 @@
     pressure = pressure
     u = u
     v = v
+    mu = ${mu}
+    rho = ${rho}
   []
 
   [u_viscosity]
     type = FVDiffusion
     variable = u
-    coeff = 1
+    coeff = ${mu}
   []
 
   [u_pressure]
@@ -76,12 +101,14 @@
     pressure = pressure
     u = u
     v = v
+    mu = ${mu}
+    rho = ${rho}
   []
 
   [v_viscosity]
     type = FVDiffusion
     variable = v
-    coeff = 1
+    coeff = ${mu}
   []
 
   [v_pressure]
@@ -119,7 +146,7 @@
   [rho]
     type = ADGenericConstantMaterial
     prop_names = 'rho'
-    prop_values = 1
+    prop_values = ${rho}
   []
   [ins_fv]
     type = INSFVMaterial
