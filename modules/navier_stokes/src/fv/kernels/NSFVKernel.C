@@ -40,8 +40,6 @@ NSFVKernel::validParams()
   params.addCoupledVar("v", "The velocity in the y direction.");
   params.addCoupledVar("w", "The velocity in the z direction.");
 
-  params.suppressParameter<MooseEnum>("advected_interp_method");
-
   MooseEnum velocity_interp_method("average rc", "rc");
 
   params.addParam<MooseEnum>(
@@ -190,7 +188,7 @@ NSFVKernel::computeQpResidual()
 
   interpolate(_velocity_interp_method, v, _vel_elem[_qp], _vel_neighbor[_qp]);
   FVFluxKernel::interpolate(
-      InterpMethod::Upwind, u_interface, _adv_quant_elem[_qp], _adv_quant_neighbor[_qp], v);
+      _advected_interp_method, u_interface, _adv_quant_elem[_qp], _adv_quant_neighbor[_qp], v);
   return _normal * v * u_interface;
 }
 
