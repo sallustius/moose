@@ -5422,6 +5422,18 @@ FEProblemBase::computeJacobianSys(NonlinearImplicitSystem & /*sys*/,
                                   const NumericVector<Number> & soln,
                                   SparseMatrix<Number> & jacobian)
 {
+#ifdef LIBMESH_HAVE_PETSC
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+  if (haveFV())
+    // PETSc algorithms require diagonal allocations regardless of whether there is non-zero
+    // diagonal dependence. For finite volumes with global AD indexing we only add non-zero
+    // dependence, so PETSc will scream at us unless we artificially add the diagonals. We will have
+    // to remove the haveFV() check when we implement global indexing for finite elements
+    for (auto index : make_range(jacobian.row_start(), jacobian.row_stop()))
+      jacobian.add(index, index, 0);
+#endif
+#endif
+
   computeJacobian(soln, jacobian);
 }
 
