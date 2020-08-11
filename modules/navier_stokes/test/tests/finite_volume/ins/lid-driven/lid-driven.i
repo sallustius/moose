@@ -42,12 +42,18 @@
     type = INSFVMass
     variable = pressure
     constrain_pressure = true
+    pressure = pressure
+    u = u
+    v = v
   []
 
   [u_advection]
-    type = FVMatAdvection
+    type = NSFVKernel
     variable = u
     advected_quantity = 'rhou'
+    pressure = pressure
+    u = u
+    v = v
   []
 
   [u_viscosity]
@@ -63,9 +69,12 @@
   []
 
   [v_advection]
-    type = FVMatAdvection
+    type = NSFVKernel
     variable = v
     advected_quantity = 'rhov'
+    pressure = pressure
+    u = u
+    v = v
   []
 
   [v_viscosity]
@@ -129,4 +138,8 @@
 
 [Outputs]
   exodus = true
+  [dof]
+    type = DOFMap
+    execute_on = 'initial'
+  []
 []

@@ -8,6 +8,9 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "INSFVMass.h"
+
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+
 #include "NS.h"
 #include "SubProblem.h"
 #include "SystemBase.h"
@@ -21,7 +24,7 @@ registerMooseObject("NavierStokesApp", INSFVMass);
 InputParameters
 INSFVMass::validParams()
 {
-  InputParameters params = FVMatAdvection::validParams();
+  InputParameters params = NSFVKernel::validParams();
   params.addClassDescription("Enforces the divergence free condition of the velocity field.");
   params.set<MaterialPropertyName>("advected_quantity") = std::to_string(1);
   params.set<MaterialPropertyName>("vel") = NS::velocity;
@@ -33,7 +36,7 @@ INSFVMass::validParams()
 }
 
 INSFVMass::INSFVMass(const InputParameters & params)
-  : FVMatAdvection(params), _constrain_pressure(getParam<bool>("constrain_pressure"))
+  : NSFVKernel(params), _constrain_pressure(getParam<bool>("constrain_pressure"))
 {
 }
 
@@ -81,3 +84,5 @@ INSFVMass::initialSetup()
     dof_map.add_constraint_row(dof_to_constrain, DofConstraintRow{}, 0, true);
   }
 }
+
+#endif

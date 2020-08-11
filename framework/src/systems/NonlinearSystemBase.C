@@ -1380,6 +1380,7 @@ NonlinearSystemBase::computeResidualInternal(const std::set<TagID> & tags)
     _element_dampers.residualSetup(tid);
     _nodal_dampers.residualSetup(tid);
     _integrated_bcs.residualSetup(tid);
+    _vars[tid].residualSetup();
   }
   _scalar_kernels.residualSetup();
   _constraints.residualSetup();
@@ -2330,6 +2331,7 @@ NonlinearSystemBase::computeJacobianInternal(const std::set<TagID> & tags)
     _element_dampers.jacobianSetup(tid);
     _nodal_dampers.jacobianSetup(tid);
     _integrated_bcs.jacobianSetup(tid);
+    _vars[tid].jacobianSetup();
   }
   _scalar_kernels.jacobianSetup();
   _constraints.jacobianSetup();

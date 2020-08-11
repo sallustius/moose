@@ -46,6 +46,7 @@ public:
 
 protected:
   SubProblem & _subproblem;
+  const SystemBase & _sys;
   THREAD_ID _tid;
   Assembly & _assembly;
   const MooseMesh & _mesh;

@@ -14,6 +14,8 @@
 #include "DisplacedSystem.h"
 #include "Assembly.h"
 
+#include "libmesh/numeric_vector.h"
+
 registerMooseObject("MooseApp", MooseVariableFVReal);
 
 template <typename OutputType>
@@ -25,7 +27,7 @@ MooseVariableFV<OutputType>::validParams()
 
 template <typename OutputType>
 MooseVariableFV<OutputType>::MooseVariableFV(const InputParameters & parameters)
-  : MooseVariableField<OutputType>(parameters)
+  : MooseVariableField<OutputType>(parameters), _solution(_sys.currentSolution())
 {
   _element_data = libmesh_make_unique<MooseVariableDataFV<OutputType>>(
       *this, _sys, _tid, Moose::ElementType::Element, this->_assembly.elem());
@@ -331,6 +333,210 @@ bool
 MooseVariableFV<OutputType>::isVector() const
 {
   return std::is_same<OutputType, RealVectorValue>::value;
+}
+
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+
+template <typename OutputType>
+ADReal
+MooseVariableFV<OutputType>::getElemValue(const Elem * const elem) const
+{
+  std::vector<dof_id_type> dof_indices;
+  _dof_map.dof_indices(elem, dof_indices, _var_num);
+
+  mooseAssert(
+      dof_indices.size() == 1,
+      "There should only be one dof-index for a constant monomial variable on any given element");
+
+  dof_id_type index = dof_indices[0];
+
+  ADReal value = (*_solution)(index);
+
+  if (ADReal::do_derivatives)
+    Moose::derivInsert(value.derivatives(), index, 1.);
+
+  return value;
+}
+
+template <typename OutputType>
+const VectorValue<ADReal> &
+MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
+{
+  auto it = _elem_to_grad.find(elem);
+
+  if (it != _elem_to_grad.end())
+    return it->second;
+
+  // Returns a pair with the first being an iterator pointing to the key-value pair and the second a
+  // boolean denoting whether a new insertion took place
+  auto emplace_ret = _elem_to_grad.emplace(elem, 0);
+
+  mooseAssert(emplace_ret.second, "We should have inserted a new key-value pair");
+
+  VectorValue<ADReal> & grad = emplace_ret.first->second;
+
+  bool volume_set = false;
+  Real volume = 0;
+
+  ADReal elem_value = getElemValue(elem);
+
+  for (const auto side : elem->side_index_range())
+  {
+    const Elem * const neighbor = elem->neighbor_ptr(side);
+    if (!neighbor)
+      continue;
+
+    bool elem_has_info = elem->id() < neighbor->id();
+
+    const FaceInfo * const fi = elem_has_info
+                                    ? _mesh.faceInfo(elem, side)
+                                    : _mesh.faceInfo(neighbor, neighbor->which_neighbor_am_i(elem));
+
+    mooseAssert(fi, "We should have found a FaceInfo");
+
+    ADReal neighbor_value = getElemValue(neighbor);
+
+    const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
+    const Point surface_vector = elem_normal * fi->faceArea();
+
+    // Below uses notation from Moukalled's Finite Volume Method in Computational Fluid Dynamics,
+    // Green-Gauss computation of the gradient
+
+    const Real g_C = fi->gC();
+
+    const ADReal face_value = g_C * elem_value + (1. - g_C) * neighbor_value;
+
+    grad += face_value * surface_vector;
+
+    if (!volume_set)
+    {
+      volume = elem_has_info ? fi->elemVolume() : fi->neighborVolume();
+      volume_set = true;
+    }
+  }
+
+  mooseAssert(volume_set && volume > 0, "We should have set the volume");
+
+  grad /= volume;
+
+  return grad;
+}
+
+template <typename OutputType>
+const VectorValue<ADReal> &
+MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
+{
+  auto it = _face_to_unc_grad.find(&fi);
+
+  if (it != _face_to_unc_grad.end())
+    return it->second;
+
+  const VectorValue<ADReal> & elem_grad = adGradSln(&fi.elem());
+
+  // Returns a pair with the first being an iterator pointing to the key-value pair and the second a
+  // boolean denoting whether a new insertion took place
+  auto emplace_ret = _face_to_unc_grad.emplace(&fi, elem_grad);
+
+  mooseAssert(emplace_ret.second, "We should have inserted a new key-value pair");
+
+  VectorValue<ADReal> & unc_face_grad = emplace_ret.first->second;
+
+  const Elem * const neighbor = fi.neighborPtr();
+
+  if (neighbor)
+  {
+    const VectorValue<ADReal> & neighbor_grad = adGradSln(neighbor);
+
+    const Real g_C = fi.gC();
+
+    // Uncorrected gradient value
+    unc_face_grad = g_C * elem_grad + (1. - g_C) * neighbor_grad;
+  }
+
+  return unc_face_grad;
+}
+
+template <typename OutputType>
+const VectorValue<ADReal> &
+MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi) const
+{
+  auto it = _face_to_grad.find(&fi);
+
+  if (it != _face_to_grad.end())
+    return it->second;
+
+  // Returns a pair with the first being an iterator pointing to the key-value pair and the second a
+  // boolean denoting whether a new insertion took place
+  auto emplace_ret = _face_to_grad.emplace(&fi, uncorrectedAdGradSln(fi));
+
+  mooseAssert(emplace_ret.second, "We should have inserted a new key-value pair");
+
+  VectorValue<ADReal> & face_grad = emplace_ret.first->second;
+
+  const Elem * const neighbor = fi.neighborPtr();
+
+  if (neighbor)
+  {
+    // perform the correction
+    const Point d_CF_vec = fi.neighborCentroid() - fi.elemCentroid();
+    const Real d_CF = d_CF_vec.norm();
+
+    const Point e_CF = d_CF_vec / d_CF;
+
+    const ADReal elem_value = getElemValue(&fi.elem());
+    const ADReal neighbor_value = getElemValue(neighbor);
+
+    face_grad += ((neighbor_value - elem_value) / d_CF - face_grad * e_CF) * e_CF;
+  }
+
+  return face_grad;
+}
+
+#endif
+
+template <typename OutputType>
+void
+MooseVariableFV<OutputType>::residualSetup()
+{
+  clearCaches();
+}
+
+template <typename OutputType>
+void
+MooseVariableFV<OutputType>::jacobianSetup()
+{
+  clearCaches();
+}
+
+template <typename OutputType>
+void
+MooseVariableFV<OutputType>::clearCaches()
+{
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+  _elem_to_grad.clear();
+  _face_to_unc_grad.clear();
+  _face_to_grad.clear();
+#endif
+}
+
+template <typename OutputType>
+const ADReal &
+MooseVariableFV<OutputType>::adCoeff(const Elem * const elem,
+                                     void * context,
+                                     ADReal (*fn)(const Elem &, void *)) const
+{
+  auto it = _elem_to_coeff.find(elem);
+
+  if (it != _elem_to_coeff.end())
+    return it->second;
+
+  // Returns a pair with the first being an iterator pointing to the key-value pair and the second a
+  // boolean denoting whether a new insertion took place
+  auto emplace_ret = _elem_to_coeff.emplace(elem, (*fn)(*elem, context));
+
+  mooseAssert(emplace_ret.second, "We should have inserted a new key-value pair");
+
+  return emplace_ret.first->second;
 }
 
 template class MooseVariableFV<Real>;
