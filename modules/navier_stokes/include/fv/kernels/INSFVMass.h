@@ -9,9 +9,11 @@
 
 #pragma once
 
-#include "FVMatAdvection.h"
+#include "NSFVKernel.h"
 
-class INSFVMass : public FVMatAdvection
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+
+class INSFVMass : public NSFVKernel
 {
 public:
   static InputParameters validParams();
@@ -23,3 +25,5 @@ private:
   /// Whether to constrain the pressure
   const bool _constrain_pressure;
 };
+
+#endif

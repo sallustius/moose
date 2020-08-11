@@ -62,7 +62,11 @@
 static const int GRAIN_SIZE =
     1; // the grain_size does not have much influence on our execution speed
 
-FaceInfo::FaceInfo(const Elem * elem, unsigned int side, const Elem * neighbor)
+FaceInfo::FaceInfo(const Elem * elem,
+                   unsigned int side,
+                   const Elem * neighbor,
+                   const MooseMesh & mesh)
+  : _mesh(mesh)
 {
   _elem = elem;
   _neighbor = neighbor;
@@ -100,6 +104,17 @@ FaceInfo::FaceInfo(const Elem * elem, unsigned int side, const Elem * neighbor)
     _neighbor_centroid = neighbor->centroid();
     _neighbor_volume = neighbor->volume();
   }
+
+  _gc = (_neighbor_centroid - _face_centroid).norm() / (_neighbor_centroid - _elem_centroid).norm();
+}
+
+Real
+FaceInfo::gC() const
+{
+  mooseAssert(!_mesh.isDisplaced(),
+              "Currently all our FaceInfo geometric information is hard-coded for a static mesh.");
+
+  return _gc;
 }
 
 defineLegacyParams(MooseMesh);
@@ -257,7 +272,8 @@ MooseMesh::MooseMesh(const InputParameters & parameters)
     _read_recovered_mesh_timer(registerTimedSection("readRecoveredMesh", 2)),
     _ghost_ghosted_boundaries_timer(registerTimedSection("GhostGhostedBoundaries", 3)),
     _need_delete(false),
-    _need_ghost_ghosted_boundaries(true)
+    _need_ghost_ghosted_boundaries(true),
+    _is_displaced(false)
 {
   if (isParamValid("ghosting_patch_size") && (_patch_update_strategy != Moose::Iteration))
     mooseError("Ghosting patch size parameter has to be set in the mesh block "
@@ -3124,6 +3140,7 @@ MooseMesh::buildFaceInfo()
   }
 
   _face_info.clear();
+  _elem_side_to_face_info.clear();
 
   // loop over all active, local elements. Note that by looping over just *local* elements and by
   // performing the element ID comparison check in the below loop, we are ensuring that we never
@@ -3177,8 +3194,14 @@ MooseMesh::buildFaceInfo()
            (elem_id < neighbor->id())) ||
           (neighbor->level() < elem->level()))
       {
-        _face_info.emplace_back(elem, side, neighbor);
+        _face_info.emplace_back(elem, side, neighbor, *this);
         auto & fi = _face_info.back();
+
+#ifndef NDEBUG
+        auto pair_it =
+#endif
+            _elem_side_to_face_info.emplace(std::make_pair(elem, side), &fi);
+        mooseAssert(pair_it.second, "We should be adding unique FaceInfo objects.");
 
         // get all the sidesets that this face is contained in and cache them
         // in the face info.
@@ -3197,5 +3220,19 @@ MooseMesh::buildFaceInfo()
         }
       }
     }
+  }
+}
+
+const FaceInfo *
+MooseMesh::faceInfo(const Elem * elem, unsigned int side) const
+{
+  auto it = _elem_side_to_face_info.find(std::make_pair(elem, side));
+
+  if (it == _elem_side_to_face_info.end())
+    return nullptr;
+  else
+  {
+    mooseAssert(it->second, "For some reason, the FaceInfo object is NULL!");
+    return it->second;
   }
 }

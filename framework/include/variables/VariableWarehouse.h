@@ -154,6 +154,16 @@ public:
    */
   const std::vector<MooseVariableScalar *> & scalars() const;
 
+  /**
+   * Call residualSetup for all variables
+   */
+  void residualSetup();
+
+  /**
+   * Call jacobianSetup for all variables
+   */
+  void jacobianSetup();
+
 protected:
   /// list of variable names
   std::vector<VariableName> _names;

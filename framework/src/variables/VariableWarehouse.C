@@ -230,6 +230,20 @@ VariableWarehouse::getActualFieldVariable<RealEigenVector>(unsigned int var_numb
   return getFieldVariable<RealEigenVector>(var_number);
 }
 
+void
+VariableWarehouse::jacobianSetup()
+{
+  for (auto & pair : _all_objects)
+    pair.second->jacobianSetup();
+}
+
+void
+VariableWarehouse::residualSetup()
+{
+  for (auto & pair : _all_objects)
+    pair.second->residualSetup();
+}
+
 template MooseVariableField<Real> *
 VariableWarehouse::getActualFieldVariable<Real>(const std::string & var_name);
 template MooseVariableField<Real> *

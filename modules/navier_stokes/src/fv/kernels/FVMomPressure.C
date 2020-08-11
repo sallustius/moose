@@ -8,6 +8,7 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "FVMomPressure.h"
+
 #include "NS.h"
 
 registerMooseObject("NavierStokesApp", FVMomPressure);
@@ -23,7 +24,6 @@ FVMomPressure::validParams()
                              momentum_component,
                              "The component of the momentum equation that this BC applies to.");
   params.set<MaterialPropertyName>("advected_quantity") = NS::pressure;
-  params.set<MooseEnum>("advected_interp_method") = "average";
   return params;
 }
 
@@ -35,13 +35,9 @@ FVMomPressure::FVMomPressure(const InputParameters & params)
 ADReal
 FVMomPressure::computeQpResidual()
 {
-  ADRealVectorValue v;
   ADReal p_interface;
-  interpolate(InterpMethod::Average, v, _vel_elem[_qp], _vel_neighbor[_qp]);
-  interpolate(
-      _advected_interp_method, p_interface, _adv_quant_elem[_qp], _adv_quant_neighbor[_qp], v);
 
-  // The difference between this residual computation and that in FVMatAdvection is:
-  // _normal * v -> _normal(_index)
+  interpolate(InterpMethod::Average, p_interface, _adv_quant_elem[_qp], _adv_quant_neighbor[_qp]);
+
   return _normal(_index) * p_interface;
 }

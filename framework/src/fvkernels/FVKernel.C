@@ -53,6 +53,7 @@ FVKernel::FVKernel(const InputParameters & params)
     PostprocessorInterface(this),
     SetupInterface(this),
     _subproblem(*getCheckedPointerParam<SubProblem *>("_subproblem")),
+    _sys(*getCheckedPointerParam<SystemBase *>("_sys")),
     _tid(params.get<THREAD_ID>("_tid")),
     _assembly(_subproblem.assembly(_tid)),
     _mesh(_subproblem.mesh())

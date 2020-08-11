@@ -27,6 +27,12 @@ class MooseVariableFV;
 
 typedef MooseVariableFV<Real> MooseVariableFVReal;
 
+namespace libMesh
+{
+template <typename>
+class NumericVector;
+}
+
 /// This class provides variable solution values for other classes/objects to
 /// bind to when looping over faces or elements.  It provides both
 /// elem and neighbor values when accessed in flux/face object calculations.
@@ -250,6 +256,28 @@ public:
     checkIndexingScalingCompatibility();
     return _element_data->adGradSln();
   }
+
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+  /**
+   * Retrieve (or potentially compute) the gradient on the provided element
+   * @param elem The element for which to retrieve the gradient
+   */
+  const VectorValue<ADReal> & adGradSln(const Elem * const elem) const;
+
+  /**
+   * Retrieve (or potentially compute) the gradient on the provided face
+   * @param face The face for which to retrieve the gradient
+   */
+  const VectorValue<ADReal> & adGradSln(const FaceInfo & fi) const;
+
+  /**
+   * Retrieve (or potentially compute) the uncorrected gradient on the provided face
+   * @param face The face for which to retrieve the gradient
+   */
+  const VectorValue<ADReal> & uncorrectedAdGradSln(const FaceInfo & fi) const;
+
+#endif
+
   const ADTemplateVariableSecond<OutputType> & adSecondSln() const override
   {
     checkIndexingScalingCompatibility();
@@ -365,7 +393,31 @@ public:
     return _element_data->hasDirichletBC() || _neighbor_data->hasDirichletBC();
   }
 
+  void residualSetup() override;
+  void jacobianSetup() override;
+
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+  /**
+   * Get the solution value for the provided element and seed the derivative for the corresponding
+   * dof index
+   * @param elem The element to retrieive the solution value for
+   */
+  ADReal getElemValue(const Elem * elem) const;
+
+  /**
+   * Get custom coefficients on a per-element basis. These should correspond to \p a coefficients in
+   * the notation of Moukallad's "Finite Volume Method in Computational Fluid Dynamics"
+   */
+  const ADReal &
+  adCoeff(const Elem * elem, void * context, ADReal (*fn)(const Elem &, void *)) const;
+#endif
+
 protected:
+  /**
+   * clear finite volume caches
+   */
+  void clearCaches();
+
   usingMooseVariableBaseMembers;
 
   /// Holder for all the data associated with the "main" element
@@ -384,9 +436,24 @@ private:
    */
   void checkIndexingScalingCompatibility() const;
 
+  /// The current (ghosted) solution. Note that this needs to be stored as a reference to a pointer because the solution might not exist at the time that this variable is constructed, so we cannot safely dereference at that time
+  const NumericVector<Number> * const & _solution;
+
 #ifdef MOOSE_GLOBAL_AD_INDEXING
   /// Whether we've already performed a scaling factor check for this variable
   mutable bool _scaling_params_checked = false;
+
+  /// A cache for storing gradients on elements
+  mutable std::unordered_map<const Elem *, VectorValue<ADReal>> _elem_to_grad;
+
+  /// A cache for storing uncorrected gradients on faces
+  mutable std::unordered_map<const FaceInfo *, VectorValue<ADReal>> _face_to_unc_grad;
+
+  /// A cache for storing gradients on faces
+  mutable std::unordered_map<const FaceInfo *, VectorValue<ADReal>> _face_to_grad;
+
+  /// A cache for storing FV \p a coefficients on elements
+  mutable std::unordered_map<const Elem *, ADReal> _elem_to_coeff;
 #endif
 };
 

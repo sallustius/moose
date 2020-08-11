@@ -77,7 +77,7 @@ public:
 class FaceInfo
 {
 public:
-  FaceInfo(const Elem * elem, unsigned int side, const Elem * neighbor);
+  FaceInfo(const Elem * elem, unsigned int side, const Elem * neighbor, const MooseMesh & mesh);
 
   /// This enum is used to indicate which side(s) of a face a particular
   /// variable is defined on.  This is important for certain BC-related finite
@@ -185,6 +185,15 @@ public:
   /// Returns the set of boundary ids for all boundaries that include this face.
   std::set<BoundaryID> & boundaryIDs() { return _boundary_ids; }
 
+  /// Return the element volume
+  Real elemVolume() const { return _elem_volume; }
+
+  /// Return the neighbor volume
+  Real neighborVolume() const { return _neighbor_volume; }
+
+  /// Return the geometric weighting factor
+  Real gC() const;
+
 private:
   Real _face_area;
   Real _face_coord = 0;
@@ -204,6 +213,9 @@ private:
   Point _neighbor_centroid;
   Point _face_centroid;
 
+  /// Geometric weighting factor
+  Real _gc;
+
   /// cached locations of variables in solution vectors
   /// TODO: make this more efficient by not using a map if possible
   std::map<std::string, std::vector<dof_id_type>> _elem_dof_indices;
@@ -214,6 +226,9 @@ private:
 
   /// the set of boundary ids that this face is associated with
   std::set<BoundaryID> _boundary_ids;
+
+  /// The MooseMesh that owns us
+  const MooseMesh & _mesh;
 };
 
 /**
@@ -1137,8 +1152,19 @@ public:
     buildFaceInfo();
     return _face_info;
   }
+  const FaceInfo * faceInfo(const Elem * elem, unsigned int side) const;
   // const
   ///@}
+
+  /**
+   * Set whether this mesh is displaced
+   */
+  void isDisplaced(bool is_displaced) { _is_displaced = is_displaced; }
+
+  /**
+   * whether this mesh is displaced
+   */
+  bool isDisplaced() const { return _is_displaced; }
 
 protected:
   /// Deprecated (DO NOT USE)
@@ -1309,6 +1335,9 @@ protected:
 
   /// FaceInfo object storing information for face based loops
   std::vector<FaceInfo> _face_info;
+
+  /// Map from elem-side pair to FaceInfo
+  std::unordered_map<std::pair<const Elem *, unsigned int>, FaceInfo *> _elem_side_to_face_info;
 
   void cacheInfo();
   void freeBndNodes();
@@ -1498,6 +1527,9 @@ private:
 
   /// Build extra data for faster access to the information of extra element integers
   void buildElemIDInfo();
+
+  /// Whether this mesh is displaced
+  bool _is_displaced;
 };
 
 /**
