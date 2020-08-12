@@ -392,10 +392,8 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
   for (const auto side : elem->side_index_range())
   {
     const Elem * const neighbor = elem->neighbor_ptr(side);
-    if (!neighbor)
-      continue;
 
-    bool elem_has_info = elem->id() < neighbor->id();
+    bool elem_has_info = neighbor ? (elem->id() < neighbor->id()) : true;
 
     const FaceInfo * const fi = elem_has_info
                                     ? _mesh.faceInfo(elem, side)
@@ -403,7 +401,7 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
 
     mooseAssert(fi, "We should have found a FaceInfo");
 
-    ADReal neighbor_value = getElemValue(neighbor);
+    ADReal neighbor_value = neighbor ? getElemValue(neighbor) : elem_value;
 
     const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
     const Point surface_vector = elem_normal * fi->faceArea();
