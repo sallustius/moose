@@ -18,6 +18,12 @@ rho=1
     nx = 20
     ny = 20
   []
+  [pin]
+    type = ExtraNodesetGenerator
+    input = gen
+    new_boundary = 'pin'
+    nodes = '0'
+  []
 []
 
 [Problem]
@@ -61,11 +67,11 @@ rho=1
 
 [FVKernels]
   [mass]
-    type = INSFVMass
+    type = NSFVKernel
     variable = pressure
-    constrain_pressure = true
+    advected_quantity = 1
     pressure = pressure
-    u = u
+    u = v
     v = v
     mu = ${mu}
     rho = ${rho}
@@ -115,6 +121,15 @@ rho=1
     type = FVMomPressure
     variable = v
     momentum_component = 'y'
+  []
+[]
+
+[BCs]
+  [pin]
+    type = FVPressurePin
+    variable = pressure
+    boundary = 'pin'
+    value = 0
   []
 []
 

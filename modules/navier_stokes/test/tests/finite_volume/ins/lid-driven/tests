@@ -15,4 +15,11 @@
     absent_out = '\s+[1-9]+[0-9]* of 48 singular values'
     requirement = 'The system shall be able to solve an incompressible Navier-Stokes problem with dirichlet boundary conditions for all the normal components of velocity, using the finite volume method, and have a nonsingular system matrix.'
   []
+  [jacobian]
+    type = 'PetscJacobianTester'
+    input = 'lid-driven.i'
+    cli_args = 'Mesh/gen/nx=4 Mesh/gen/ny=4'
+    requirement = 'The system shall be able to compute a perfect Jacobian when solving a lid-driven incompressible Navier-Stokes problem with the finite volume method.'
+    run_sim = True
+  []
 []
