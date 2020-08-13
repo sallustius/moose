@@ -519,19 +519,50 @@ MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi) const
 
   const Elem * const neighbor = fi.neighborPtr();
 
-  if (neighbor)
-  {
-    // perform the correction
-    const Point d_CF_vec = fi.neighborCentroid() - fi.elemCentroid();
-    const Real d_CF = d_CF_vec.norm();
+  // perform the correction
+  const Point d_CF_vec = neighbor ? fi.neighborCentroid() - fi.elemCentroid()
+                                  : (2. * (fi.faceCentroid() - fi.elemCentroid()));
+  const Real d_CF = d_CF_vec.norm();
 
-    const Point e_CF = d_CF_vec / d_CF;
+  const Point e_CF = d_CF_vec / d_CF;
 
-    const ADReal elem_value = getElemValue(&fi.elem());
-    const ADReal neighbor_value = getElemValue(neighbor);
+  const ADReal elem_value = getElemValue(&fi.elem());
 
-    face_grad += ((neighbor_value - elem_value) / d_CF - face_grad * e_CF) * e_CF;
-  }
+  auto neighbor_value_functor = [&]() {
+    if (neighbor)
+      return getElemValue(neighbor);
+    else
+    {
+      // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
+      std::vector<FVDirichletBC *> bcs;
+
+      _subproblem.getMooseApp()
+          .theWarehouse()
+          .query()
+          .template condition<AttribSystem>("FVDirichletBC")
+          .template condition<AttribThread>(_tid)
+          .template condition<AttribBoundaries>(fi.boundaryIDs())
+          .template condition<AttribVar>(_var_num)
+          .queryInto(bcs);
+      mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
+
+      bool has_dirichlet_bc = bcs.size() > 0;
+
+      if (has_dirichlet_bc)
+      {
+        const FVDirichletBC & bc = *bcs[0];
+
+        // Linear interpolation: face_value = (elem_value + neighbor_value) / 2
+        return 2. * bc.boundaryValue(fi) - elem_value;
+      }
+      else
+        // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
+        // face value is equivalent to the element value
+        return elem_value;
+    }
+  };
+
+  face_grad += ((neighbor_value_functor() - elem_value) / d_CF - face_grad * e_CF) * e_CF;
 
   return face_grad;
 }
