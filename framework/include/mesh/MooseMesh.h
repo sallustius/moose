@@ -1166,6 +1166,14 @@ public:
    */
   bool isDisplaced() const { return _is_displaced; }
 
+  /**
+   * @return A map from nodeset ids to the vector of node ids in the nodeset
+   */
+  const std::map<boundary_id_type, std::vector<dof_id_type>> & nodeSetNodes() const
+  {
+    return _node_set_nodes;
+  }
+
 protected:
   /// Deprecated (DO NOT USE)
   std::vector<std::unique_ptr<GhostingFunctor>> _ghosting_functors;
