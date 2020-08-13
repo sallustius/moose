@@ -401,19 +401,56 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
 
     mooseAssert(fi, "We should have found a FaceInfo");
 
-    ADReal neighbor_value = neighbor ? getElemValue(neighbor) : elem_value;
+    // Below uses notation from Moukalled's Finite Volume Method in Computational Fluid Dynamics,
+    // Green-Gauss computation of the gradient
+
+    auto face_value_functor = [&]() {
+      if (neighbor)
+      {
+        ADReal neighbor_value = getElemValue(neighbor);
+
+        const Real g_C = fi->gC();
+
+        return g_C * elem_value + (1. - g_C) * neighbor_value;
+      }
+      else
+      {
+        // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
+
+        std::vector<FVDirichletBC *> bcs;
+
+        // TODO: this query probably (maybe?)needs to also filter based on the
+        // active tags - these currently live in the flux thread loop object and I'm
+        // not sure how best to get them here.
+        _subproblem.getMooseApp()
+            .theWarehouse()
+            .query()
+            .template condition<AttribSystem>("FVDirichletBC")
+            .template condition<AttribThread>(_tid)
+            .template condition<AttribBoundaries>(fi->boundaryIDs())
+            .template condition<AttribVar>(_var_num)
+            .queryInto(bcs);
+        mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
+
+        bool has_dirichlet_bc = bcs.size() > 0;
+
+        if (has_dirichlet_bc)
+        {
+          const FVDirichletBC & bc = *bcs[0];
+
+          return ADReal(bc.boundaryValue(*fi));
+        }
+        else
+          // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
+          // face value is equivalent to the element value
+          return elem_value;
+      }
+    };
 
     const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
     const Point surface_vector = elem_normal * fi->faceArea();
 
-    // Below uses notation from Moukalled's Finite Volume Method in Computational Fluid Dynamics,
-    // Green-Gauss computation of the gradient
-
-    const Real g_C = fi->gC();
-
-    const ADReal face_value = g_C * elem_value + (1. - g_C) * neighbor_value;
-
-    grad += face_value * surface_vector;
+    grad += face_value_functor() * surface_vector;
 
     if (!volume_set)
     {
