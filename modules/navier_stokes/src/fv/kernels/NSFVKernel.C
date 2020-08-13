@@ -148,8 +148,7 @@ NSFVKernel::interpolate(InterpMethod m,
 {
   FVFluxKernel::interpolate(InterpMethod::Average, v, elem_v, neighbor_v);
 
-  // Use latter check to enforce a zero gradient condition on the pressure on the boundaries
-  if (m == InterpMethod::RhieChow && !_face_info->isBoundary())
+  if (m == InterpMethod::RhieChow)
   {
     // Get pressure gradient
     const VectorValue<ADReal> & grad_p = _p_var->adGradSln(*_face_info);
