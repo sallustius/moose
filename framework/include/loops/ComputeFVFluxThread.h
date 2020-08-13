@@ -18,6 +18,7 @@
 #include "FVFluxBC.h"
 #include "FEProblem.h"
 #include "SwapBackSentinel.h"
+#include "MaterialBase.h"
 #include "libmesh/libmesh_exceptions.h"
 #include "libmesh/elem.h"
 
@@ -451,6 +452,19 @@ ComputeFVFluxThread<RangeType>::subdomainChanged()
     const auto & mdeps = k->getMatPropDependencies();
     needed_mat_props.insert(mdeps.begin(), mdeps.end());
   }
+
+  // lindsayad: When a user is using an FVFluxKernel, then it's clear that when they couple any kind
+  // of variable in, then we should reinit it. However, with a Material, it's not clear whether a
+  // coupled variable needs to be computed for FE or FV calcs. For performance reasons, I am only
+  // going to request reinit for variables coupled into materials that are actually FV variables.
+  // Later, we may revisit this
+  std::set<MooseVariableFieldBase *> required_material_vars;
+  const auto & materials = _fe_problem.getMaterialWarehouse();
+  materials.updateBlockVariableDependency(_subdomain, required_material_vars, _tid);
+
+  for (auto * const var : required_material_vars)
+    if (var->isFV())
+      _needed_fv_vars.insert(var);
 
   _fe_problem.setActiveElementalMooseVariables(needed_fe_vars, _tid);
   _fe_problem.setActiveMaterialProperties(needed_mat_props, _tid);
