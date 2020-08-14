@@ -496,6 +496,29 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
     // Uncorrected gradient value
     unc_face_grad = g_C * elem_grad + (1. - g_C) * neighbor_grad;
   }
+  else // we're on a boundary
+  {
+    // Do we have any Dirichlet BCs?
+    std::vector<FVDirichletBC *> bcs;
+
+    _subproblem.getMooseApp()
+        .theWarehouse()
+        .query()
+        .template condition<AttribSystem>("FVDirichletBC")
+        .template condition<AttribThread>(_tid)
+        .template condition<AttribBoundaries>(fi.boundaryIDs())
+        .template condition<AttribVar>(_var_num)
+        .queryInto(bcs);
+    mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
+
+    if (bcs.size() == 0)
+      // If we don't have a Dirichlet BC, then we should be prescribing some value for the gradient.
+      // For now we just prescribe a zero gradient
+      unc_face_grad = 0;
+    // else
+    // We do have a Dirichlet BC. I don't know what we want to do in this case. For now I just use
+    // the cell value as the face value
+  }
 
   return unc_face_grad;
 }
