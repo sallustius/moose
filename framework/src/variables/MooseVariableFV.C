@@ -617,6 +617,7 @@ MooseVariableFV<OutputType>::clearCaches()
 #endif
 }
 
+#ifdef MOOSE_GLOBAL_AD_INDEXING
 template <typename OutputType>
 const ADReal &
 MooseVariableFV<OutputType>::adCoeff(const Elem * const elem,
@@ -636,6 +637,7 @@ MooseVariableFV<OutputType>::adCoeff(const Elem * const elem,
 
   return emplace_ret.first->second;
 }
+#endif
 
 template class MooseVariableFV<Real>;
 // TODO: implement vector fv variable support. This will require some template
