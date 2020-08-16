@@ -203,8 +203,33 @@ rho=1.1
 
 [Outputs]
   exodus = true
+  csv = true
   [dof]
     type = DOFMap
     execute_on = 'initial'
   []
+[]
+
+[Postprocessors]
+  [./L2u]
+    type = ElementL2Error
+    variable = u
+    function = exact_u
+    outputs = 'console csv'
+    execute_on = 'timestep_end'
+  [../]
+  [./L2v]
+    variable = v
+    function = exact_v
+    type = ElementL2Error
+    outputs = 'console csv'
+    execute_on = 'timestep_end'
+  [../]
+  [./L2p]
+    variable = pressure
+    function = exact_p
+    type = ElementL2Error
+    outputs = 'console csv'
+    execute_on = 'timestep_end'
+  [../]
 []
