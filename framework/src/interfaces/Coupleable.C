@@ -1019,7 +1019,7 @@ Coupleable::coupledDotDotDu(const std::string & var_name, unsigned int comp) con
 const VariableGradient &
 Coupleable::coupledGradient(const std::string & var_name, unsigned int comp) const
 {
-  const auto * var = getVar(var_name, comp);
+  const auto * const var = getVarHelper<MooseVariableField<Real>>(var_name, comp);
   if (!var)
     return _default_gradient;
   checkFuncType(var_name, VarType::Gradient, FuncAge::Curr);

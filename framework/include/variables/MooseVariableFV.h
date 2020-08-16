@@ -240,7 +240,14 @@ public:
   const FieldVariableValue & sln() const override { return _element_data->sln(Moose::Current); }
   const FieldVariableValue & slnOld() const override { return _element_data->sln(Moose::Old); }
   const FieldVariableValue & slnOlder() const override { return _element_data->sln(Moose::Older); }
-  const FieldVariableGradient & gradSln() const { return _element_data->gradSln(Moose::Current); }
+  const FieldVariableGradient & gradSln() const override
+  {
+    return _element_data->gradSln(Moose::Current);
+  }
+  const FieldVariableGradient & gradSlnOld() const override
+  {
+    return _element_data->gradSln(Moose::Old);
+  }
   const FieldVariableValue & uDotNeighbor() const { return _neighbor_data->uDot(); }
   const FieldVariableValue & slnNeighbor() const override
   {
@@ -250,9 +257,13 @@ public:
   {
     return _neighbor_data->sln(Moose::Old);
   }
-  const FieldVariableGradient & gradSlnNeighbor() const
+  const FieldVariableGradient & gradSlnNeighbor() const override
   {
     return _neighbor_data->gradSln(Moose::Current);
+  }
+  const FieldVariableGradient & gradSlnOldNeighbor() const override
+  {
+    return _neighbor_data->gradSln(Moose::Old);
   }
 
   const VariableValue & duDotDu() const { return _element_data->duDotDu(); }
