@@ -170,6 +170,14 @@ public:
    */
   virtual const FieldVariableValue & slnOlder() const = 0;
 
+  /// element gradients
+  virtual const FieldVariableGradient & gradSln() const = 0;
+  virtual const FieldVariableGradient & gradSlnOld() const = 0;
+
+  /// neighbor solution gradients
+  virtual const FieldVariableGradient & gradSlnNeighbor() const = 0;
+  virtual const FieldVariableGradient & gradSlnOldNeighbor() const = 0;
+
   /**
    * Return the variable's elemental shape functions
    */

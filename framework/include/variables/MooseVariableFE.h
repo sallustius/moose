@@ -274,8 +274,14 @@ public:
   const FieldVariableValue & slnPreviousNL() const { return _element_data->sln(Moose::PreviousNL); }
 
   /// element gradients
-  const FieldVariableGradient & gradSln() const { return _element_data->gradSln(Moose::Current); }
-  const FieldVariableGradient & gradSlnOld() const { return _element_data->gradSln(Moose::Old); }
+  const FieldVariableGradient & gradSln() const override
+  {
+    return _element_data->gradSln(Moose::Current);
+  }
+  const FieldVariableGradient & gradSlnOld() const override
+  {
+    return _element_data->gradSln(Moose::Old);
+  }
   const FieldVariableGradient & gradSlnOlder() const
   {
     return _element_data->gradSln(Moose::Older);
@@ -366,11 +372,11 @@ public:
   }
 
   /// neighbor solution gradients
-  const FieldVariableGradient & gradSlnNeighbor() const
+  const FieldVariableGradient & gradSlnNeighbor() const override
   {
     return _neighbor_data->gradSln(Moose::Current);
   }
-  const FieldVariableGradient & gradSlnOldNeighbor() const
+  const FieldVariableGradient & gradSlnOldNeighbor() const override
   {
     return _neighbor_data->gradSln(Moose::Old);
   }
