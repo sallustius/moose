@@ -37,37 +37,23 @@ FVAdvectionFunctionBC::FVAdvectionFunctionBC(const InputParameters & parameters)
 {
   const auto & advected_interp_method = getParam<MooseEnum>("advected_interp_method");
   if (advected_interp_method == "average")
-    _advected_interp_method = FVFluxKernel::InterpMethod::Average;
+    _advected_interp_method = InterpMethod::Average;
   else if (advected_interp_method == "upwind")
-    _advected_interp_method = FVFluxKernel::InterpMethod::Upwind;
+    _advected_interp_method = InterpMethod::Upwind;
   else
     mooseError("Unrecognized interpolation type ",
                static_cast<std::string>(advected_interp_method));
 }
 
 ADReal
-FVAdvectionFunctionBC::interpolate() const
-{
-  switch (_advected_interp_method)
-  {
-    case FVFluxKernel::InterpMethod::Average:
-      return (_u[_qp] + _exact_solution.value(
-                            _t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid())) /
-             2.;
-    case FVFluxKernel::InterpMethod::Upwind:
-      if (_velocity * _normal > 0)
-        return _u[_qp];
-      else
-        return _exact_solution.value(_t,
-                                     2. * _face_info->faceCentroid() - _face_info->elemCentroid());
-
-    default:
-      mooseError("unsupported interpolation method in FVAdvectionFunctionBC::interpolate");
-  }
-}
-
-ADReal
 FVAdvectionFunctionBC::computeQpResidual()
 {
-  return _normal * _velocity * interpolate();
+  ADReal u_face;
+  interpolate(
+      _advected_interp_method,
+      u_face,
+      _u[_qp],
+      _exact_solution.value(_t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid()),
+      _velocity);
+  return _normal * _velocity * u_face;
 }

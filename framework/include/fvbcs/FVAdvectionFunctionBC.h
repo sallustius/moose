@@ -10,7 +10,6 @@
 #pragma once
 
 #include "FVFluxBC.h"
-#include "FVFluxKernel.h"
 
 class Function;
 
@@ -24,11 +23,8 @@ public:
 protected:
   ADReal computeQpResidual() override;
 
-  ADReal interpolate() const;
-
   const Function & _exact_solution;
   const RealVectorValue _velocity;
 
-  /// The interpolation method to use for the advected quantity
-  FVFluxKernel::InterpMethod _advected_interp_method;
+  InterpMethod _advected_interp_method;
 };
