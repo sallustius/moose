@@ -9,19 +9,26 @@
 
 #pragma once
 
+#include "FVFluxBC.h"
 #include "FVFluxKernel.h"
 
-class FVAdvection : public FVFluxKernel
+class Function;
+
+class FVAdvectionFunctionBC : public FVFluxBC
 {
 public:
+  FVAdvectionFunctionBC(const InputParameters & parameters);
+
   static InputParameters validParams();
-  FVAdvection(const InputParameters & params);
 
 protected:
-  virtual ADReal computeQpResidual() override;
+  ADReal computeQpResidual() override;
 
+  ADReal interpolate() const;
+
+  const Function & _exact_solution;
   const RealVectorValue _velocity;
 
   /// The interpolation method to use for the advected quantity
-  InterpMethod _advected_interp_method;
+  FVFluxKernel::InterpMethod _advected_interp_method;
 };

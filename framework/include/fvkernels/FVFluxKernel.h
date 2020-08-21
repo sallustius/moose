@@ -84,12 +84,9 @@ protected:
   /// the face that is doing the advecting (e.g. the flow velocity at the
   /// face); this value often will have been computed using a call to the
   /// non-advective interpolate function.
-  template <typename T>
-  void interpolate(InterpMethod m,
-                   T & result,
-                   const T & elem,
-                   const T & neighbor,
-                   const ADRealVectorValue & advector)
+  template <typename T, typename Vector>
+  void interpolate(
+      InterpMethod m, T & result, const T & elem, const T & neighbor, const Vector & advector)
   {
     switch (m)
     {
