@@ -46,28 +46,14 @@ FVAdvectionFunctionBC::FVAdvectionFunctionBC(const InputParameters & parameters)
 }
 
 ADReal
-FVAdvectionFunctionBC::interpolate() const
-{
-  switch (_advected_interp_method)
-  {
-    case InterpMethod::Average:
-      return (_u[_qp] + _exact_solution.value(
-                            _t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid())) /
-             2.;
-    case InterpMethod::Upwind:
-      if (_velocity * _normal > 0)
-        return _u[_qp];
-      else
-        return _exact_solution.value(_t,
-                                     2. * _face_info->faceCentroid() - _face_info->elemCentroid());
-
-    default:
-      mooseError("unsupported interpolation method in FVAdvectionFunctionBC::interpolate");
-  }
-}
-
-ADReal
 FVAdvectionFunctionBC::computeQpResidual()
 {
-  return _normal * _velocity * interpolate();
+  ADReal u_face;
+  interpolate(
+      _advected_interp_method,
+      u_face,
+      _u[_qp],
+      _exact_solution.value(_t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid()),
+      _velocity);
+  return _normal * _velocity * u_face;
 }

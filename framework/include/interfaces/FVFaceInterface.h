@@ -37,8 +37,8 @@ protected:
   /// face value needs to be computed using elem and neighbor information (e.g. a
   /// material property, solution value, etc.).  elem and neighbor represent the
   /// property/value to compute the face value for.
-  template <typename T>
-  void interpolate(InterpMethod m, T & result, const T & elem, const T & neighbor)
+  template <typename T, typename T2, typename T3>
+  void interpolate(InterpMethod m, T & result, const T2 & elem, const T3 & neighbor)
   {
     switch (m)
     {
@@ -58,9 +58,9 @@ protected:
   /// the face that is doing the advecting (e.g. the flow velocity at the
   /// face); this value often will have been computed using a call to the
   /// non-advective interpolate function.
-  template <typename T, typename Vector>
+  template <typename T, typename T2, typename T3, typename Vector>
   void interpolate(
-      InterpMethod m, T & result, const T & elem, const T & neighbor, const Vector & advector)
+      InterpMethod m, T & result, const T2 & elem, const T3 & neighbor, const Vector & advector)
   {
     switch (m)
     {

@@ -23,8 +23,6 @@ public:
 protected:
   ADReal computeQpResidual() override;
 
-  ADReal interpolate() const;
-
   const Function & _exact_solution;
   const RealVectorValue _velocity;
 
