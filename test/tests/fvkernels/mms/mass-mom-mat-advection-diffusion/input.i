@@ -17,8 +17,6 @@
 []
 
 [Variables]
-  # we have to impose non-zero initial conditions in order to avoid an initially
-  # singular matrix
   [fv_rho]
     order = CONSTANT
     family = MONOMIAL
@@ -74,22 +72,6 @@
 []
 
 [FVBCs]
-  # [boundary_rho]
-  #   type = FVMatAdvectionFunctionBC
-  #   variable = fv_rho
-  #   vel = 'fv_velocity'
-  #   boundary = 'left right'
-  #   flux_variable_exact_solution = 'exact_rho'
-  #   vel_x_exact_solution = 'exact_vel'
-  # []
-  # [boundary_vel]
-  #   type = FVMatAdvectionFunctionBC
-  #   variable = fv_vel
-  #   vel = 'fv_velocity'
-  #   boundary = 'left right'
-  #   flux_variable_exact_solution = 'exact_rhou'
-  #   vel_x_exact_solution = 'exact_vel'
-  # []
   [boundary_rho]
     type = FVFunctionDirichletBC
     boundary = 'left right'
@@ -130,26 +112,6 @@
 []
 
 [Functions]
-  # [forcing_rho]
-  #   type = ParsedFunction
-  #   value = '-1.331*sin(1.1*x)^2 + 1.331*cos(1.1*x)^2'
-  # []
-  # [exact_rho]
-  #   type = ParsedFunction
-  #   value = '1.1*sin(1.1*x)'
-  # []
-  # [forcing_vel]
-  #   type = ParsedFunction
-  #   value = '-2.9282*sin(1.1*x)^2*cos(1.1*x) + 1.4641*cos(1.1*x)^3'
-  # []
-  # [exact_vel]
-  #   type = ParsedFunction
-  #   value = '1.1*cos(1.1*x)'
-  # []
-  # [exact_rhou]
-  #   type = ParsedFunction
-  #   value = '1.1 * 1.1 * sin(1.1 * x) * cos(1.1 * x)'
-  # []
   [forcing_rho]
     type = ParsedFunction
     value = '-1.331*sin(1.1*x)^2 + 1.331*sin(1.1*x) + 1.331*cos(1.1*x)^2'
