@@ -1879,6 +1879,8 @@ public:
                                      const std::vector<Real> * const weights = nullptr,
                                      THREAD_ID tid = 0) override;
 
+  bool fvBCsIntegrityCheck() const { return _fv_bcs_integrity_check; }
+
 protected:
   /// Create extra tagged vectors and matrices
   void createTagVectors();
@@ -2092,6 +2094,9 @@ protected:
 
   /// Determines whether a check to verify an active material on every subdomain
   bool _material_coverage_check;
+
+  /// Whether to check overlapping Dirichlet and Flux BCs and/or multiple DirichletBCs per sideset
+  const bool _fv_bcs_integrity_check;
 
   /// Determines whether a check to verify material dependencies on every subdomain
   const bool _material_dependency_check;
