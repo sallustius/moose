@@ -31,11 +31,11 @@ rho=1.1
   #   fv = true
   #   initial_condition = 1
   # []
-  # [pressure]
-  #   order = CONSTANT
-  #   family = MONOMIAL
-  #   fv = true
-  # []
+  [pressure]
+    order = CONSTANT
+    family = MONOMIAL
+    fv = true
+  []
 []
 
 # [AuxVariables]
@@ -56,22 +56,29 @@ rho=1.1
 # []
 
 [FVKernels]
-  # # pressure
+  [placeholder_p]
+    type = FVDiffusion
+    variable = pressure
+    coeff = 1
+  []
   # [mass]
-  #   type = NSFVKernel
+  #   # type = NSFVKernel
+  #   type = FVMatAdvection
   #   variable = pressure
   #   advected_quantity = 1
-  #   pressure = pressure
-  #   u = v
-  #   v = v
-  #   mu = ${mu}
-  #   rho = ${rho}
+  #   advected_interp_method = 'average'
+  #   vel = 'velocity'
+  #   # pressure = pressure
+  #   # u = v
+  #   # v = v
+  #   # mu = ${mu}
+  #   # rho = ${rho}
   # []
-  # [mass_forcing]
-  #   type = FVBodyForce
-  #   variable = pressure
-  #   function = forcing_p
-  # []
+  [mass_forcing]
+    type = FVBodyForce
+    variable = pressure
+    function = forcing_p
+  []
 
   # [u_advection]
   #   type = NSFVKernel
@@ -95,11 +102,17 @@ rho=1.1
     variable = u
     coeff = ${mu}
   []
-  # [u_pressure]
-  #   type = FVMomPressure
-  #   variable = u
-  #   momentum_component = 'x'
-  # []
+  [u_pressure]
+    # FVMomPressure inherits from FVMatAdvection and in FVMomPressure::validParams we set
+    # 'advected_quantity = NS::prssure'
+    type = FVMomPressure
+    variable = u
+    momentum_component = 'x'
+
+    # these parameters shouldn't be used for anything but are still required
+    vel = 'velocity'
+    advected_interp_method = 'average'
+  []
   [u_forcing]
     type = FVBodyForce
     variable = u
@@ -155,14 +168,15 @@ rho=1.1
     coeff = '${mu}'
     coeff_function = '${mu}'
   []
-  # [u_pressure]
-  #   type = FVMomPressureFunctionBC
-  #   boundary = 'left right top bottom'
-  #   variable = u
-  #   momentum_component = 'x'
-  #   p = pressure
-  #   pressure_exact_solution = 'exact_p'
-  # []
+  [u_pressure]
+    type = FVMomPressureFunctionBC
+    # boundary = 'left right top bottom'
+    boundary = 'left right'
+    variable = u
+    momentum_component = 'x'
+    p = pressure
+    pressure_exact_solution = 'exact_p'
+  []
 
   # [v_advection]
   #   type = FVMatAdvectionFunctionBC
@@ -193,13 +207,23 @@ rho=1.1
   # [mass_continuity_flux]
   #   type = FVMatAdvectionFunctionBC
   #   variable = pressure
-  #   boundary = 'top bottom left right'
+  #   # boundary = 'top bottom left right'
+  #   boundary = 'left right'
   #   advected_quantity = 1
   #   vel = 'velocity'
   #   flux_variable_exact_solution = 1
   #   vel_x_exact_solution = 'exact_u'
-  #   vel_y_exact_solution = 'exact_v'
+  #   # vel_y_exact_solution = 'exact_v'
   # []
+  [placeholder_p]
+    type = FVDiffusionFunctionBC
+    # boundary = 'left right top bottom'
+    boundary = 'left right'
+    variable = pressure
+    exact_solution = 'exact_p'
+    coeff = '1'
+    coeff_function = '1'
+  []
 []
 
 [Materials]
@@ -212,7 +236,8 @@ rho=1.1
     type = INSFVMaterial
     u = 'u'
     v = '1'
-    pressure = '1'
+    # we need to compute this here for advection in FVMomPressure
+    pressure = 'pressure'
   []
 []
 
@@ -229,30 +254,18 @@ rho=1.1
 []
 [forcing_u]
   type = ParsedFunction
-  value = '1.331*mu*sin(1.1*x) + 2.662*rho*sin(1.1*x)*cos(1.1*x)'
+  value = '1.331*mu*sin(1.1*x) + 2.662*rho*sin(1.1*x)*cos(1.1*x) - 1.21*sin(1.1*x)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
-  # [exact_v]
-  #   type = ParsedFunction
-  #   value = '0.6*sin(0.8*pi*x) + 0.3*sin(0.3*pi*y) + 0.2*sin(0.3*pi*x*y) + 0.3'
-  # []
-  # [exact_p]
-  #   type = ParsedFunction
-  #   value = '0.5*sin(pi*x/2) + 1.0*sin(0.3*pi*y) + 0.5*sin(0.2*pi*x*y) + 0.5'
-  # []
-  # [forcing_v]
-  #   type = ParsedFunction
-  #   value = '-${mu}*(-0.018*pi^2*x^2*sin(0.3*pi*x*y) - 0.018*pi^2*y^2*sin(0.3*pi*x*y) - 0.384*pi^2*sin(0.8*pi*x) - 0.027*pi^2*sin(0.3*pi*y)) + ${rho}*(0.06*pi*x*cos(0.3*pi*x*y) + 0.09*pi*cos(0.3*pi*y))*(0.6*sin(0.8*pi*x) + 0.3*sin(0.3*pi*y) + 0.2*sin(0.3*pi*x*y) + 0.3) + ${rho}*(0.06*pi*y*cos(0.3*pi*x*y) + 0.48*pi*cos(0.8*pi*x))*(0.4*sin(pi*x/2) + 0.4*sin(pi*y) + 0.7*sin(0.2*pi*x*y) + 0.5) + 0.1*pi*x*cos(0.2*pi*x*y) + 0.3*pi*cos(0.3*pi*y)'
-  # []
-  # [forcing_p]
-  #   type = ParsedFunction
-  #   value = '-0.06*pi*x*cos(0.3*pi*x*y) - 0.14*pi*y*cos(0.2*pi*x*y) - 0.2*pi*cos(pi*x/2) - 0.09*pi*cos(0.3*pi*y)'
-  # []
-  # [exact_rhov]
-  #   type = ParsedFunction
-  #   value = '${rho} * (0.6*sin(0.8*pi*x) + 0.3*sin(0.3*pi*y) + 0.2*sin(0.3*pi*x*y) + 0.3)'
-  # []
+[exact_p]
+  type = ParsedFunction
+  value = '1.1*cos(1.1*x)'
+[]
+[forcing_p]
+  type = ParsedFunction
+  value = '1.331*cos(1.1*x)'
+[]
 []
 
 [Executioner]
@@ -291,11 +304,11 @@ rho=1.1
   #   outputs = 'console csv'
   #   execute_on = 'timestep_end'
   # [../]
-  # [./L2p]
-  #   variable = pressure
-  #   function = exact_p
-  #   type = ElementL2Error
-  #   outputs = 'console csv'
-  #   execute_on = 'timestep_end'
-  # [../]
+  [./L2p]
+    variable = pressure
+    function = exact_p
+    type = ElementL2Error
+    outputs = 'console csv'
+    execute_on = 'timestep_end'
+  [../]
 []
