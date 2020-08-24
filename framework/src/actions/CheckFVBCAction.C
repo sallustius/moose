@@ -26,7 +26,7 @@ CheckFVBCAction::CheckFVBCAction(InputParameters params) : Action(params) {}
 void
 CheckFVBCAction::act()
 {
-  if (_current_task == "check_integrity")
+  if (_current_task == "check_integrity" && _problem->fvBCsIntegrityCheck())
   {
     // check that boundary conditions follow these rules:
     // 1. One variable cannot define Dirichlet & Flux BCs

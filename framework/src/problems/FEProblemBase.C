@@ -180,6 +180,11 @@ FEProblemBase::validParams()
   params.addParam<bool>("material_coverage_check",
                         true,
                         "Set to false to disable material->subdomain coverage check");
+  params.addParam<bool>("fv_bcs_integrity_check",
+                        true,
+                        "Set to false to disable checking of overlapping Dirichlet and Flux BCs "
+                        "and/or multiple DirichletBCs per sideset");
+
   params.addParam<bool>(
       "material_dependency_check", true, "Set to false to disable material dependency check");
   params.addParam<bool>("parallel_barrier_messaging",
@@ -265,6 +270,7 @@ FEProblemBase::FEProblemBase(const InputParameters & parameters)
     _calculate_jacobian_in_uo(false),
     _kernel_coverage_check(getParam<bool>("kernel_coverage_check")),
     _material_coverage_check(getParam<bool>("material_coverage_check")),
+    _fv_bcs_integrity_check(getParam<bool>("fv_bcs_integrity_check")),
     _material_dependency_check(getParam<bool>("material_dependency_check")),
     _max_qps(std::numeric_limits<unsigned int>::max()),
     _max_shape_funcs(std::numeric_limits<unsigned int>::max()),
