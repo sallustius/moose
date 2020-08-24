@@ -16,7 +16,7 @@ InputParameters
 FVFunctionDirichletBC::validParams()
 {
   InputParameters params = FVDirichletBC::validParams();
-  params.addRequiredParam<FunctionName>("function", "The forcing function.");
+  params.addRequiredParam<FunctionName>("function", "The exact solution function.");
   params.addClassDescription(
       "Imposes the essential boundary condition $u=g(t,\\vec{x})$, where $g$ "
       "is a (possibly) time and space-dependent MOOSE Function.");
