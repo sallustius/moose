@@ -56,24 +56,19 @@ rho=1.1
 # []
 
 [FVKernels]
-  [placeholder_p]
-    type = FVDiffusion
+  [mass]
+    # type = NSFVKernel
+    type = FVMatAdvection
     variable = pressure
-    coeff = 1
+    advected_quantity = 1
+    advected_interp_method = 'average'
+    vel = 'velocity'
+    # pressure = pressure
+    # u = v
+    # v = v
+    # mu = ${mu}
+    # rho = ${rho}
   []
-  # [mass]
-  #   # type = NSFVKernel
-  #   type = FVMatAdvection
-  #   variable = pressure
-  #   advected_quantity = 1
-  #   advected_interp_method = 'average'
-  #   vel = 'velocity'
-  #   # pressure = pressure
-  #   # u = v
-  #   # v = v
-  #   # mu = ${mu}
-  #   # rho = ${rho}
-  # []
   [mass_forcing]
     type = FVBodyForce
     variable = pressure
@@ -204,25 +199,16 @@ rho=1.1
   #   pressure_exact_solution = 'exact_p'
   # []
 
-  # [mass_continuity_flux]
-  #   type = FVMatAdvectionFunctionBC
-  #   variable = pressure
-  #   # boundary = 'top bottom left right'
-  #   boundary = 'left right'
-  #   advected_quantity = 1
-  #   vel = 'velocity'
-  #   flux_variable_exact_solution = 1
-  #   vel_x_exact_solution = 'exact_u'
-  #   # vel_y_exact_solution = 'exact_v'
-  # []
-  [placeholder_p]
-    type = FVDiffusionFunctionBC
-    # boundary = 'left right top bottom'
-    boundary = 'left right'
+  [mass_continuity_flux]
+    type = FVMatAdvectionFunctionBC
     variable = pressure
-    exact_solution = 'exact_p'
-    coeff = '1'
-    coeff_function = '1'
+    # boundary = 'top bottom left right'
+    boundary = 'left right'
+    advected_quantity = 1
+    vel = 'velocity'
+    flux_variable_exact_solution = 1
+    vel_x_exact_solution = 'exact_u'
+    # vel_y_exact_solution = 'exact_v'
   []
 []
 
@@ -264,7 +250,7 @@ rho=1.1
 []
 [forcing_p]
   type = ParsedFunction
-  value = '1.331*cos(1.1*x)'
+  value = '1.21*cos(1.1*x)'
 []
 []
 
