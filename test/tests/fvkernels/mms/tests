@@ -25,6 +25,12 @@
     exodiff = 'advection_out.e'
     requirement = 'The system shall be able to solve a advection problem with the finite volume method and display second order convergence.'
   []
+  [mat-advection]
+    type = Exodiff
+    input = 'mat-advection.i'
+    exodiff = 'mat-advection_out.e'
+    requirement = 'The system shall be able to solve a advection problem with the finite volume method, using a velocity supplied by a material, and display second order convergence.'
+  []
   [upwind-advection-diffusion]
     type = Exodiff
     input = 'advection-diffusion.i'
