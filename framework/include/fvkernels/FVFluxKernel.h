@@ -49,10 +49,10 @@ protected:
   /// provided for both the elem and neighbor side of the face.
   virtual ADReal computeQpResidual() = 0;
 
-  /// Calculates and returns "_grad_u dot _normal" on the face to be used for
+  /// Calculates and returns "grad_u dot normal" on the face to be used for
   /// diffusive terms.  If using any cross-diffusion corrections, etc. all
   /// those calculations will be handled for appropriately by this function.
-  virtual ADReal gradUDotNormal();
+  virtual ADReal gradUDotNormal() const;
 
   const ADRealVectorValue & normal() const override final { return _normal; }
 

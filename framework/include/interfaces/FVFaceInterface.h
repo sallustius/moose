@@ -38,7 +38,7 @@ protected:
   /// material property, solution value, etc.).  elem and neighbor represent the
   /// property/value to compute the face value for.
   template <typename T, typename T2, typename T3>
-  void interpolate(InterpMethod m, T & result, const T2 & elem, const T3 & neighbor)
+  void interpolate(InterpMethod m, T & result, const T2 & elem, const T3 & neighbor) const
   {
     switch (m)
     {
@@ -59,8 +59,11 @@ protected:
   /// face); this value often will have been computed using a call to the
   /// non-advective interpolate function.
   template <typename T, typename T2, typename T3, typename Vector>
-  void interpolate(
-      InterpMethod m, T & result, const T2 & elem, const T3 & neighbor, const Vector & advector)
+  void interpolate(InterpMethod m,
+                   T & result,
+                   const T2 & elem,
+                   const T3 & neighbor,
+                   const Vector & advector) const
   {
     switch (m)
     {
@@ -78,8 +81,40 @@ protected:
     }
   }
 
-  /**
-   * Return the normal at the face
-   */
+  /// Return the normal at the face
   virtual const ADRealVectorValue & normal() const = 0;
+
+  /// Calculates and returns "grad_u dot normal" on the face to be used for
+  /// diffusive terms.  If using any cross-diffusion corrections, etc. all
+  /// those calculations will be handled for appropriately by this function.
+  template <typename T, typename T2>
+  ADReal gradUDotNormal(const T & elem_value, const T2 & neighbor_value, const FaceInfo &) const;
 };
+
+template <typename T, typename T2>
+ADReal
+FVFaceInterface::gradUDotNormal(const T & elem_value,
+                                const T2 & neighbor_value,
+                                const FaceInfo & face_info) const
+{
+  // We compute "grad_u dot _normal" by assuming the mesh is orthogonal, and
+  // recognizing that it is equivalent to delta u between the two cell
+  // centroids but for one unit in the normal direction.  We know delta u for
+  // the length between cell centroids (u_neighbor - u_elem) and then we just
+  // divide that by the distance between the centroids to convert it to delta
+  // u for one unit in the normal direction.  Because the _normal vector is
+  // defined to be outward from the elem element, u_neighbor-u_elem gives delta u
+  // when moving in the positive normal direction.  So we divide by the
+  // (positive) distance between centroids because one unit in the normal
+  // direction is always positive movement.
+  ADReal dudn =
+      (neighbor_value - elem_value) /
+      (face_info.neighborPtr() ? face_info.neighborCentroid() - face_info.elemCentroid()
+                               : 2. * (face_info.faceCentroid() - face_info.elemCentroid()))
+          .norm();
+
+  // TODO: need to apply cross-diffusion correction factor here.  This
+  // currently is only correct if the vector between the elem-neighbor cell
+  // centroids is parallel to the normal vector.
+  return dudn;
+}
