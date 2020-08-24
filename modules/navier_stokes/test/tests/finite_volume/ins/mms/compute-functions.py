@@ -8,7 +8,7 @@ p = '1.1*cos(1.1*x)'
 
 f_u, e_u = mms.evaluate('div(vel*rho*u) - div(mu * grad(u)) + grad(p).dot(e_i)', '1.1*sin(1.1*x)', variable='u', vel=vel, p=p, scalars=['mu', 'rho'])
 
-f_p, e_p = mms.evaluate('-div(grad(p))', p, variable='p', vel=vel)
+f_p, e_p = mms.evaluate('div(vel)', p, variable='p', vel=vel)
 
 rho = sympy.Symbol('rho')
 
