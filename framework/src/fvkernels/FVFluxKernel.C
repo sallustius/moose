@@ -22,6 +22,12 @@ FVFluxKernel::validParams()
   InputParameters params = FVKernel::validParams();
   params += TwoMaterialPropertyInterface::validParams();
   params.registerSystemAttributeName("FVFluxKernel");
+  params.addParam<bool>("force_skip",
+                        false,
+                        "Whether to force skipping this object's computation on a boundary. This "
+                        "can be useful in a context like incompressible Navier Stokes for which "
+                        "there may be a DirichletBC for the pressure, but the user wants to "
+                        "execute a flux BC for the mass continuity equation simultaneously.");
   return params;
 }
 
@@ -36,7 +42,8 @@ FVFluxKernel::FVFluxKernel(const InputParameters & params)
     _u_elem(_var.adSln()),
     _u_neighbor(_var.adSlnNeighbor()),
     _grad_u_elem(_var.adGradSln()),
-    _grad_u_neighbor(_var.adGradSlnNeighbor())
+    _grad_u_neighbor(_var.adGradSlnNeighbor()),
+    _force_skip(getParam<bool>("force_skip"))
 {
   addMooseVariableDependency(&_var);
 }
@@ -51,6 +58,8 @@ FVFluxKernel::skipForBoundary(const FaceInfo & fi)
 {
   if (!fi.isBoundary())
     return false;
+  else if (_force_skip)
+    return true;
 
   std::vector<FVDirichletBC *> dirichlet_bcs;
   _app.theWarehouse()

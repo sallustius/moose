@@ -97,4 +97,10 @@ private:
   /// conditions - otherwise this returns false and all jacobian/residual calcs
   /// should be skipped.
   bool skipForBoundary(const FaceInfo & fi);
+
+  /// Whether to force skipping this object's computation on a boundary. This
+  /// can be useful in a context like incompressible Navier Stokes for which
+  /// there may be a DirichletBC for the pressure, but the user wants to
+  /// execute a flux BC for the mass continuity equation simultaneously
+  const bool _force_skip;
 };
