@@ -63,8 +63,8 @@ rho=1.1
     velocity_interp_method = 'rc'
     vel = 'velocity'
     pressure = pressure
-    u = v
-    v = v
+    u = u
+    # v = v
     mu = ${mu}
     rho = ${rho}
   []
@@ -83,7 +83,7 @@ rho=1.1
     velocity_interp_method = 'rc'
     pressure = pressure
     u = u
-    v = v
+    # v = v
     mu = ${mu}
     rho = ${rho}
   []
@@ -144,19 +144,28 @@ rho=1.1
 
 [FVBCs]
   [u_advection]
-    type = FVMatAdvectionFunctionBC
-    boundary = 'left right top bottom'
+    type = NSFVFunctionBC
+    # boundary = 'left right top bottom'
+    boundary = 'left right'
     variable = u
     vel = 'velocity'
     flux_variable_exact_solution = 'exact_rhou'
     advected_quantity = 'rhou'
     advected_interp_method = 'average'
     vel_x_exact_solution = 'exact_u'
-    vel_y_exact_solution = 'exact_v'
+    # vel_y_exact_solution = 'exact_v'
+    velocity_interp_method = 'rc'
+    pressure = pressure
+    u = u
+    # v = v
+    mu = ${mu}
+    rho = ${rho}
+    pressure_exact_solution = 'exact_p'
   []
   [u_diffusion]
     type = FVDiffusionFunctionBC
-    boundary = 'left right top bottom'
+    # boundary = 'left right top bottom'
+    boundary = 'left right'
     variable = u
     exact_solution = 'exact_u'
     coeff = '${mu}'
@@ -164,7 +173,8 @@ rho=1.1
   []
   [u_pressure]
     type = FVMomPressureFunctionBC
-    boundary = 'left right top bottom'
+    # boundary = 'left right top bottom'
+    boundary = 'left right'
     variable = u
     momentum_component = 'x'
     p = pressure
@@ -200,14 +210,22 @@ rho=1.1
   # []
 
   [mass_continuity_flux]
-    type = FVMatAdvectionFunctionBC
+    type = NSFVFunctionBC
     variable = pressure
-    boundary = 'top bottom left right'
+    # boundary = 'top bottom left right'
+    boundary = 'left right'
     advected_quantity = 1
     vel = 'velocity'
     flux_variable_exact_solution = 1
     vel_x_exact_solution = 'exact_u'
-    vel_y_exact_solution = 'exact_v'
+    # vel_y_exact_solution = 'exact_v'
+    velocity_interp_method = 'rc'
+    pressure = pressure
+    u = u
+    # v = v
+    mu = ${mu}
+    rho = ${rho}
+    pressure_exact_solution = 'exact_p'
   []
 []
 
@@ -220,7 +238,7 @@ rho=1.1
   [ins_fv]
     type = INSFVMaterial
     u = 'u'
-    v = 'v'
+    # v = 'v'
     # we need to compute this here for advection in FVMomPressure
     pressure = 'pressure'
   []
@@ -239,33 +257,17 @@ rho=1.1
 []
 [forcing_u]
   type = ParsedFunction
-  value = '1.331*mu*sin(1.1*x) - 0.891*rho*sin(1.1*x)*sin(0.9*y) + 2.662*rho*sin(1.1*x)*cos(1.1*x) + 0.96*cos(0.8*x)*cos(1.3*y)'
-  vars = 'mu rho'
-  vals = '${mu} ${rho}'
-[]
-[exact_v]
-  type = ParsedFunction
-  value = '0.9*cos(0.9*y)'
-[]
-[exact_rhov]
-  type = ParsedFunction
-  value = '0.9*rho*cos(0.9*y)'
-  vars = 'rho'
-  vals = '${rho}'
-[]
-[forcing_v]
-  type = ParsedFunction
-  value = '0.729*mu*cos(0.9*y) - 1.458*rho*sin(0.9*y)*cos(0.9*y) + 1.089*rho*cos(1.1*x)*cos(0.9*y) - 1.56*sin(0.8*x)*sin(1.3*y)'
+  value = '1.331*mu*sin(1.1*x) + 2.662*rho*sin(1.1*x)*cos(1.1*x) + 0.96*cos(0.8*x)'
   vars = 'mu rho'
   vals = '${mu} ${rho}'
 []
 [exact_p]
   type = ParsedFunction
-  value = '1.2*sin(0.8*x)*cos(1.3*y)'
+  value = '1.2*sin(0.8*x)'
 []
 [forcing_p]
   type = ParsedFunction
-  value = '-0.81*sin(0.9*y) + 1.21*cos(1.1*x)'
+  value = '1.21*cos(1.1*x)'
 []
 []
 
@@ -298,13 +300,13 @@ rho=1.1
     outputs = 'console csv'
     execute_on = 'timestep_end'
   [../]
-  [./L2v]
-    variable = v
-    function = exact_v
-    type = ElementL2Error
-    outputs = 'console csv'
-    execute_on = 'timestep_end'
-  [../]
+  # [./L2v]
+  #   variable = v
+  #   function = exact_v
+  #   type = ElementL2Error
+  #   outputs = 'console csv'
+  #   execute_on = 'timestep_end'
+  # [../]
   [./L2p]
     variable = pressure
     function = exact_p
