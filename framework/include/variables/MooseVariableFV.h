@@ -435,7 +435,7 @@ public:
    * the notation of Moukallad's "Finite Volume Method in Computational Fluid Dynamics"
    */
   const ADReal &
-  adCoeff(const Elem * elem, void * context, ADReal (*fn)(const Elem &, void *)) const;
+  adCoeff(const Elem * elem, void * context, ADReal (*fn)(const Elem * const, void *)) const;
 #endif
 
   const MooseArray<OutputType> & nodalValueArray() const override

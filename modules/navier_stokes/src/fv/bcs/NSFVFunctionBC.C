@@ -7,7 +7,7 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "NSFVKernel.h"
+#include "NSFVFunctionBC.h"
 
 #ifdef MOOSE_GLOBAL_AD_INDEXING
 
@@ -22,23 +22,23 @@
 #include "libmesh/numeric_vector.h"
 #include "libmesh/vector_value.h"
 
-registerMooseObject("NavierStokesApp", NSFVKernel);
+registerMooseObject("NavierStokesApp", NSFVFunctionBC);
 
 namespace
 {
 ADReal
 coeffCalculator(const Elem * const elem, void * context)
 {
-  auto * nsfv_kernel = static_cast<NSFVKernel *>(context);
+  auto * nsfv_bc = static_cast<NSFVFunctionBC *>(context);
 
-  return nsfv_kernel->coeffCalculator(elem);
+  return nsfv_bc->coeffCalculator(elem);
 }
 }
 
 InputParameters
-NSFVKernel::validParams()
+NSFVFunctionBC::validParams()
 {
-  InputParameters params = FVMatAdvection::validParams();
+  InputParameters params = FVMatAdvectionFunctionBC::validParams();
   params.addRequiredCoupledVar("pressure", "The pressure variable.");
   params.addRequiredCoupledVar("u", "The velocity in the x direction.");
   params.addCoupledVar("v", "The velocity in the y direction.");
@@ -54,11 +54,14 @@ NSFVKernel::validParams()
 
   params.addParam<Real>("mu", 1, "The viscosity");
   params.addParam<Real>("rho", 1, "The density");
+
+  params.addRequiredParam<FunctionName>("pressure_exact_solution",
+                                        "The function describing the pressure exact solution.");
   return params;
 }
 
-NSFVKernel::NSFVKernel(const InputParameters & params)
-  : FVMatAdvection(params),
+NSFVFunctionBC::NSFVFunctionBC(const InputParameters & params)
+  : FVMatAdvectionFunctionBC(params),
     _p_var(dynamic_cast<const MooseVariableFV<Real> *>(getFieldVar("pressure", 0))),
     _u_var(dynamic_cast<const MooseVariableFV<Real> *>(getFieldVar("u", 0))),
     _v_var(isParamValid("v") ? dynamic_cast<const MooseVariableFV<Real> *>(getFieldVar("v", 0))
@@ -66,7 +69,8 @@ NSFVKernel::NSFVKernel(const InputParameters & params)
     _w_var(isParamValid("w") ? dynamic_cast<const MooseVariableFV<Real> *>(getFieldVar("w", 0))
                              : nullptr),
     _mu(getParam<Real>("mu")),
-    _rho(getParam<Real>("rho"))
+    _rho(getParam<Real>("rho")),
+    _pressure_exact_solution(getFunction("pressure_exact_solution"))
 {
   if (!_p_var)
     paramError("pressure", "the pressure must be a finite volume variable.");
@@ -93,7 +97,7 @@ NSFVKernel::NSFVKernel(const InputParameters & params)
 }
 
 ADReal
-NSFVKernel::coeffCalculator(const Elem * const elem)
+NSFVFunctionBC::coeffCalculator(const Elem * const elem)
 {
   ADReal coeff = 0;
 
@@ -160,7 +164,7 @@ NSFVKernel::coeffCalculator(const Elem * const elem)
       elem_velocity(2) = neighbor_value_functor(*_w_var, 2);
 
     ADRealVectorValue interp_v;
-    FVFluxKernel::interpolate(InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity);
+    FVFluxBC::interpolate(InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity);
 
     const ADReal mass_flow = _rho * interp_v * surface_vector;
 
@@ -177,55 +181,78 @@ NSFVKernel::coeffCalculator(const Elem * const elem)
 }
 
 void
-NSFVKernel::interpolate(InterpMethod m,
-                        ADRealVectorValue & v,
-                        const ADRealVectorValue & elem_v,
-                        const ADRealVectorValue & neighbor_v)
+NSFVFunctionBC::interpolate(InterpMethod m,
+                            ADRealVectorValue & v_face,
+                            const ADRealVectorValue & elem_v,
+                            const RealVectorValue & ghost_v)
 {
-  FVFluxKernel::interpolate(InterpMethod::Average, v, elem_v, neighbor_v);
+  FVFluxBC::interpolate(InterpMethod::Average, v_face, elem_v, ghost_v);
 
   if (m == InterpMethod::RhieChow)
   {
-    // Get pressure gradient
-    const VectorValue<ADReal> & grad_p = _p_var->adGradSln(*_face_info);
+    // Get pressure gradient for the elem
+    const VectorValue<ADReal> & grad_p_elem = _p_var->adGradSln(&_face_info->elem());
 
-    // Get uncorrected pressure gradient
-    const VectorValue<ADReal> & unc_grad_p = _p_var->uncorrectedAdGradSln(*_face_info);
+    // Get pressure gradient for the ghost
+    RealVectorValue grad_p_ghost = _pressure_exact_solution.gradient(
+        _t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid());
+
+    // Uncorrected face pressure gradient
+    auto unc_grad_p = (grad_p_elem + grad_p_ghost) / 2.;
+
+    // Now perform correction
+
+    // Get pressure value for the elem
+    ADReal p_elem = _p_var->getElemValue(&_face_info->elem());
+
+    // Get pressure value for the ghost
+    Real p_ghost = _pressure_exact_solution.value(
+        _t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid());
+
+    auto d_cf = 2. * (_face_info->faceCentroid() - _face_info->elemCentroid());
+    auto d_cf_norm = d_cf.norm();
+    auto e_cf = d_cf / d_cf_norm;
+
+    // Corrected face pressure gradient
+    auto grad_p = unc_grad_p + ((p_ghost - p_elem) / d_cf_norm - unc_grad_p * e_cf) * e_cf;
 
     // Now we need to perform the computations of D
-    const ADReal & elem_a = _p_var->adCoeff(&_face_info->elem(), this, &::coeffCalculator);
-    ADReal face_a = elem_a;
+    // I don't know how I would want to do computation of the a coefficient on a ghost cell. I would
+    // have to essentially create an entire fictional element with defined geometric locations of
+    // the faces in order to compute inward advective flux and diffusive flux. For now I'm going to
+    // try not doing that and just use the a coeff of the elem
+    const ADReal & face_a = _p_var->adCoeff(&_face_info->elem(), this, &::coeffCalculator);
     Real face_volume = _face_info->elemVolume();
-
-    if (_face_info->neighborPtr())
-    {
-      const ADReal & neighbor_a =
-          _p_var->adCoeff(_face_info->neighborPtr(), this, &::coeffCalculator);
-      FVFluxKernel::interpolate(InterpMethod::Average, face_a, elem_a, neighbor_a);
-      FVFluxKernel::interpolate(InterpMethod::Average,
-                                face_volume,
-                                _face_info->elemVolume(),
-                                _face_info->neighborVolume());
-    }
 
     mooseAssert(face_a > 0, "face_a should be greater than zero");
     const ADReal face_D = face_volume / face_a;
 
     // perform the pressure correction
-    v -= face_D * (grad_p - unc_grad_p);
+    v_face -= face_D * (grad_p - unc_grad_p);
   }
 }
 
 ADReal
-NSFVKernel::computeQpResidual()
+NSFVFunctionBC::computeQpResidual()
 {
-  ADRealVectorValue v;
-  ADReal u_interface;
+  ADReal flux_var_face;
+  ADRealVectorValue v_face;
 
-  interpolate(_velocity_interp_method, v, _vel_elem[_qp], _vel_neighbor[_qp]);
-  FVFluxKernel::interpolate(
-      _advected_interp_method, u_interface, _adv_quant_elem[_qp], _adv_quant_neighbor[_qp], v);
-  return _normal * v * u_interface;
+  Real flux_var_ghost = _flux_variable_exact_solution.value(
+      _t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid());
+  RealVectorValue v_ghost(
+      _vel_x_exact_solution.value(_t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid()),
+      _vel_y_exact_solution ? _vel_y_exact_solution->value(
+                                  _t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid())
+                            : 0,
+      _vel_z_exact_solution ? _vel_z_exact_solution->value(
+                                  _t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid())
+                            : 0);
+
+  interpolate(_velocity_interp_method, v_face, _vel[_qp], v_ghost);
+  FVFluxBC::interpolate(
+      _advected_interp_method, flux_var_face, _adv_quant[_qp], flux_var_ghost, v_face);
+  return _normal * v_face * flux_var_face;
 }
 
 #endif

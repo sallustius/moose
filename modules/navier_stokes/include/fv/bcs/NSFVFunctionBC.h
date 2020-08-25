@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "FVMatAdvection.h"
+#include "FVMatAdvectionFunctionBC.h"
 
 #ifdef MOOSE_GLOBAL_AD_INDEXING
 
@@ -25,11 +25,11 @@ template <typename>
 class VectorValue;
 }
 
-class NSFVKernel : public FVMatAdvection
+class NSFVFunctionBC : public FVMatAdvectionFunctionBC
 {
 public:
   static InputParameters validParams();
-  NSFVKernel(const InputParameters & params);
+  NSFVFunctionBC(const InputParameters & params);
 
   ADReal coeffCalculator(const Elem * elem);
 
@@ -40,7 +40,7 @@ protected:
   void interpolate(InterpMethod m,
                    ADRealVectorValue & interp_v,
                    const ADRealVectorValue & elem_v,
-                   const ADRealVectorValue & neighbor_v);
+                   const RealVectorValue & ghost_v);
 
   ADReal computeQpResidual() override;
 
@@ -61,6 +61,8 @@ private:
 
   /// The interpolation method to use for the velocity
   InterpMethod _velocity_interp_method;
+
+  const Function & _pressure_exact_solution;
 };
 
 #endif
