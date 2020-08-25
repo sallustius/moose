@@ -67,6 +67,7 @@ rho=1.1
     v = v
     mu = ${mu}
     rho = ${rho}
+    ghost_layers = 2
   []
   [mass_forcing]
     type = FVBodyForce
@@ -86,6 +87,7 @@ rho=1.1
     v = v
     mu = ${mu}
     rho = ${rho}
+    ghost_layers = 2
   []
   [u_viscosity]
     type = FVDiffusion
@@ -121,6 +123,7 @@ rho=1.1
     v = v
     mu = ${mu}
     rho = ${rho}
+    ghost_layers = 2
   []
   [v_viscosity]
     type = FVDiffusion

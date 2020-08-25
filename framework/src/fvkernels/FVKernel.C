@@ -31,14 +31,19 @@ FVKernel::validParams()
 
   params.declareControllable("enable");
 
+  params.addParam<unsigned short>("ghost_layers", 1, "The number of layers of elements to ghost.");
+
   // FV Kernels always need one layer of ghosting because when looping over
   // faces to compute fluxes, the elements on each side of the face may be on
   // different MPI ranks, but we still need to access them as a pair to
   // compute the numerical face flux.
-  params.addRelationshipManager("ElementSideNeighborLayers",
-                                Moose::RelationshipManagerType::GEOMETRIC |
-                                    Moose::RelationshipManagerType::ALGEBRAIC |
-                                    Moose::RelationshipManagerType::COUPLING);
+  params.addRelationshipManager(
+      "ElementSideNeighborLayers",
+      Moose::RelationshipManagerType::GEOMETRIC | Moose::RelationshipManagerType::ALGEBRAIC |
+          Moose::RelationshipManagerType::COUPLING,
+      [](const InputParameters & obj_params, InputParameters & rm_params) {
+        rm_params.set<unsigned short>("layers") = obj_params.get<unsigned short>("ghost_layers");
+      });
 
   params.registerBase("FVKernel");
   return params;
