@@ -1,8 +1,14 @@
 [Tests]
-  [test]
+  [average]
     type = Exodiff
     input = lid-driven.i
     exodiff = 'lid-driven_out.e'
     requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations using an average interpolation scheme and produce second order convergence for the velocity components and zeroth order convergence for the pressure because of the checkerboard pattern.'
+  []
+  [rc]
+    type = Exodiff
+    input = rc.i
+    exodiff = 'rc_out.e'
+    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations using a Rhie-Chow interpolation scheme and produce second order convergence for the velocity components and first order convergence for the pressure.'
   []
 []
