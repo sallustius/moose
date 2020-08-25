@@ -441,9 +441,12 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
           return ADReal(bc.boundaryValue(*fi));
         }
         else
+        {
+          mooseError("temp");
           // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
           // face value is equivalent to the element value
           return elem_value;
+        }
       }
     };
 
@@ -498,6 +501,8 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
   }
   else // we're on a boundary
   {
+    mooseError("temp");
+
     // Do we have any Dirichlet BCs?
     std::vector<FVDirichletBC *> bcs;
 
@@ -556,6 +561,8 @@ MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi) const
       return getElemValue(neighbor);
     else
     {
+      mooseError("temp");
+
       // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
       std::vector<FVDirichletBC *> bcs;
 
@@ -622,7 +629,7 @@ template <typename OutputType>
 const ADReal &
 MooseVariableFV<OutputType>::adCoeff(const Elem * const elem,
                                      void * context,
-                                     ADReal (*fn)(const Elem &, void *)) const
+                                     ADReal (*fn)(const Elem * const, void *)) const
 {
   auto it = _elem_to_coeff.find(elem);
 
@@ -631,7 +638,7 @@ MooseVariableFV<OutputType>::adCoeff(const Elem * const elem,
 
   // Returns a pair with the first being an iterator pointing to the key-value pair and the second a
   // boolean denoting whether a new insertion took place
-  auto emplace_ret = _elem_to_coeff.emplace(elem, (*fn)(*elem, context));
+  auto emplace_ret = _elem_to_coeff.emplace(elem, (*fn)(elem, context));
 
   mooseAssert(emplace_ret.second, "We should have inserted a new key-value pair");
 
