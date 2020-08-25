@@ -56,17 +56,17 @@ rho=1.1
 
 [FVKernels]
   [mass]
-    # type = NSFVKernel
-    type = FVMatAdvection
+    type = NSFVKernel
     variable = pressure
     advected_quantity = 1
     advected_interp_method = 'average'
+    velocity_interp_method = 'average'
     vel = 'velocity'
-    # pressure = pressure
-    # u = v
-    # v = v
-    # mu = ${mu}
-    # rho = ${rho}
+    pressure = pressure
+    u = v
+    v = v
+    mu = ${mu}
+    rho = ${rho}
   []
   [mass_forcing]
     type = FVBodyForce
@@ -75,17 +75,17 @@ rho=1.1
   []
 
   [u_advection]
-    # type = NSFVKernel
-    type = FVMatAdvection
+    type = NSFVKernel
     variable = u
     advected_quantity = 'rhou'
     vel = 'velocity'
     advected_interp_method = 'average'
-    # pressure = pressure
-    # u = u
-    # v = v
-    # mu = ${mu}
-    # rho = ${rho}
+    velocity_interp_method = 'average'
+    pressure = pressure
+    u = u
+    v = v
+    mu = ${mu}
+    rho = ${rho}
   []
   [u_viscosity]
     type = FVDiffusion
@@ -94,7 +94,7 @@ rho=1.1
   []
   [u_pressure]
     # FVMomPressure inherits from FVMatAdvection and in FVMomPressure::validParams we set
-    # 'advected_quantity = NS::prssure'
+    # 'advected_quantity = NS::pressure'
     type = FVMomPressure
     variable = u
     momentum_component = 'x'
@@ -110,17 +110,17 @@ rho=1.1
   []
 
   [v_advection]
-    # type = NSFVKernel
-    type = FVMatAdvection
+    type = NSFVKernel
     variable = v
     advected_quantity = 'rhov'
     vel = 'velocity'
     advected_interp_method = 'average'
-    # pressure = pressure
-    # u = u
-    # v = v
-    # mu = ${mu}
-    # rho = ${rho}
+    velocity_interp_method = 'average'
+    pressure = pressure
+    u = u
+    v = v
+    mu = ${mu}
+    rho = ${rho}
   []
   [v_viscosity]
     type = FVDiffusion
