@@ -39,19 +39,18 @@ rho=1.1
 []
 
 # [AuxVariables]
-#   [U]
+#   [v]
 #     order = CONSTANT
 #     family = MONOMIAL
 #     fv = true
 #   []
 # []
 
-# [AuxKernels]
-#   [mag]
-#     type = VectorMagnitudeAux
-#     variable = U
-#     x = u
-#     y = v
+# [ICs]
+#   [v]
+#     type = FunctionIC
+#     function = 'exact_v'
+#     variable = v
 #   []
 # []
 
@@ -178,7 +177,7 @@ rho=1.1
     variable = v
     vel = 'velocity'
     flux_variable_exact_solution = 'exact_rhov'
-    advected_quantity = 'rhou'
+    advected_quantity = 'rhov'
     advected_interp_method = 'average'
     vel_x_exact_solution = 'exact_u'
     vel_y_exact_solution = 'exact_v'
