@@ -31,7 +31,7 @@ public:
   static InputParameters validParams();
   NSFVKernel(const InputParameters & params);
 
-  ADReal coeffCalculator(const Elem & elem);
+  ADReal coeffCalculator(const Elem * elem);
 
 protected:
   /**

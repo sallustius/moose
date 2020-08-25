@@ -442,7 +442,6 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
         }
         else
         {
-          mooseError("temp");
           // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
           // face value is equivalent to the element value
           return elem_value;

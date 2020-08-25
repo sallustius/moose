@@ -15,6 +15,7 @@
 #include "SystemBase.h"
 #include "ADReal.h"    // Moose::derivInsert
 #include "MooseMesh.h" // FaceInfo methods
+#include "FVDirichletBC.h"
 
 #include "libmesh/dof_map.h"
 #include "libmesh/elem.h"
@@ -23,12 +24,15 @@
 
 registerMooseObject("NavierStokesApp", NSFVKernel);
 
+namespace
+{
 ADReal
-coeffCalculator(const Elem & elem, void * context)
+coeffCalculator(const Elem * const elem, void * context)
 {
   auto * nsfv_kernel = static_cast<NSFVKernel *>(context);
 
   return nsfv_kernel->coeffCalculator(elem);
+}
 }
 
 InputParameters
@@ -89,39 +93,71 @@ NSFVKernel::NSFVKernel(const InputParameters & params)
 }
 
 ADReal
-NSFVKernel::coeffCalculator(const Elem & elem)
+NSFVKernel::coeffCalculator(const Elem * const elem)
 {
   ADReal coeff = 0;
 
-  ADRealVectorValue elem_velocity(_u_var->getElemValue(&elem));
+  ADRealVectorValue elem_velocity(_u_var->getElemValue(elem));
 
   if (_v_var)
-    elem_velocity(1) = _v_var->getElemValue(&elem);
+    elem_velocity(1) = _v_var->getElemValue(elem);
   if (_w_var)
-    elem_velocity(2) = _w_var->getElemValue(&elem);
+    elem_velocity(2) = _w_var->getElemValue(elem);
 
-  for (const auto side : elem.side_index_range())
+  for (const auto side : elem->side_index_range())
   {
-    const Elem * const neighbor = elem.neighbor_ptr(side);
-    if (!neighbor)
-      continue;
+    const Elem * const neighbor = elem->neighbor_ptr(side);
 
-    bool elem_has_info = elem.id() < neighbor->id();
+    bool elem_has_info = neighbor ? elem->id() < neighbor->id() : true;
 
-    const FaceInfo * const fi =
-        elem_has_info ? _mesh.faceInfo(&elem, side)
-                      : _mesh.faceInfo(neighbor, neighbor->which_neighbor_am_i(&elem));
+    const FaceInfo * const fi = elem_has_info
+                                    ? _mesh.faceInfo(elem, side)
+                                    : _mesh.faceInfo(neighbor, neighbor->which_neighbor_am_i(elem));
 
     mooseAssert(fi, "We should have found a FaceInfo");
 
     const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
     const Point surface_vector = elem_normal * fi->faceArea();
 
-    ADRealVectorValue neighbor_velocity(_u_var->getElemValue(neighbor));
+    auto neighbor_value_functor = [&](const MooseVariableFV<Real> & var, unsigned int component) {
+      if (neighbor)
+        return var.getElemValue(neighbor);
+      else
+      {
+        // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
+        std::vector<FVDirichletBC *> bcs;
+
+        _subproblem.getMooseApp()
+            .theWarehouse()
+            .query()
+            .template condition<AttribSystem>("FVDirichletBC")
+            .template condition<AttribThread>(_tid)
+            .template condition<AttribBoundaries>(_face_info->boundaryIDs())
+            .template condition<AttribVar>(var.number())
+            .queryInto(bcs);
+        mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
+
+        bool has_dirichlet_bc = bcs.size() > 0;
+
+        if (has_dirichlet_bc)
+        {
+          const FVDirichletBC & bc = *bcs[0];
+
+          // Linear interpolation: face_value = (elem_value + neighbor_value) / 2
+          return 2. * bc.boundaryValue(*_face_info) - elem_velocity(component);
+        }
+        else
+          // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
+          // face value is equivalent to the element value
+          return elem_velocity(component);
+      }
+    };
+
+    ADRealVectorValue neighbor_velocity(neighbor_value_functor(*_u_var, 0));
     if (_v_var)
-      elem_velocity(1) = _v_var->getElemValue(neighbor);
+      elem_velocity(1) = neighbor_value_functor(*_v_var, 1);
     if (_w_var)
-      elem_velocity(2) = _w_var->getElemValue(neighbor);
+      elem_velocity(2) = neighbor_value_functor(*_w_var, 2);
 
     ADRealVectorValue interp_v;
     FVFluxKernel::interpolate(InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity);
