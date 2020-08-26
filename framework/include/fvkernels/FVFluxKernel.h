@@ -56,6 +56,12 @@ protected:
 
   const ADRealVectorValue & normal() const override final { return _normal; }
 
+  const FaceInfo & faceInfo() const override final
+  {
+    mooseAssert(_face_info, "FaceInfo is null in FVFluxKernel");
+    return *_face_info;
+  }
+
   MooseVariableFV<Real> & _var;
 
   const unsigned int _qp = 0;

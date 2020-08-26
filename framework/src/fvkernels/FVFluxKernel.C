@@ -27,6 +27,7 @@ FVFluxKernel::validParams()
 
 FVFluxKernel::FVFluxKernel(const InputParameters & params)
   : FVKernel(params),
+    FVFaceInterface(this),
     TwoMaterialPropertyInterface(this, blockIDs(), {}),
     NeighborMooseVariableInterface(
         this, false, Moose::VarKindType::VAR_NONLINEAR, Moose::VarFieldType::VAR_FIELD_STANDARD),

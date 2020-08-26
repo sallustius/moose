@@ -34,6 +34,12 @@ protected:
 
   const ADRealVectorValue & normal() const override final { return _normal; }
 
+  const FaceInfo & faceInfo() const override final
+  {
+    mooseAssert(_face_info, "FaceInfo is null in FVFluxBC");
+    return *_face_info;
+  }
+
   const unsigned int _qp = 0;
   const ADVariableValue & _u;
   // TODO: add gradients once we have reconstruction.

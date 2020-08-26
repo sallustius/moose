@@ -28,6 +28,7 @@ FVFluxBC::validParams()
 
 FVFluxBC::FVFluxBC(const InputParameters & parameters)
   : FVBoundaryCondition(parameters),
+    FVFaceInterface(this),
     CoupleableMooseVariableDependencyIntermediateInterface(this, /*nodal=*/false, /*is_fv=*/true),
     MaterialPropertyInterface(this, Moose::EMPTY_BLOCK_IDS, boundaryIDs()),
     _u(_var.adSln())
