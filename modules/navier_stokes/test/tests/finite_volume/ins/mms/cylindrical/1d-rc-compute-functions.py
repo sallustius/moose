@@ -7,10 +7,8 @@ u = 'sin(x)'
 vel = u + '* e_i'
 p = 'cos(x)'
 
-# f_u, e_u = mms.evaluate('div(vel*rho*u) - div(mu * grad(u)) + grad(p).dot(e_i)', u, variable='u', vel=vel, p=p, scalars=['mu', 'rho'], transformation='cylindrical', coordinate_names=('x', 'phi', 'y'))
-f_u, e_u = mms.evaluate('- div(mu * grad(u))', u, variable='u', vel=vel, p=p, scalars=['mu', 'rho'], transformation='cylindrical', coordinate_names=('x', 'phi', 'y'))
-# f_p, e_p = mms.evaluate('div(vel) + p', p, variable='p', vel=vel, transformation='cylindrical', coordinate_names=('x', 'phi', 'y'))
-f_p, e_p = mms.evaluate('p', p, variable='p', vel=vel, transformation='cylindrical', coordinate_names=('x', 'phi', 'y'))
+f_u, e_u = mms.evaluate('div(vel*rho*u) - div(mu * grad(u)) + grad(p).dot(e_i)', u, variable='u', vel=vel, p=p, scalars=['mu', 'rho'], transformation='cylindrical', coordinate_names=('x', 'phi', 'y'))
+f_p, e_p = mms.evaluate('div(vel)', p, variable='p', vel=vel, transformation='cylindrical', coordinate_names=('x', 'phi', 'y'))
 
 rho = sympy.Symbol('rho')
 
