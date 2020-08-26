@@ -450,13 +450,32 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
     };
 
     const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
-    const Point surface_vector = elem_normal * fi->faceArea();
+
+    mooseAssert(neighbor ? _subproblem.getCoordSystem(elem->subdomain_id()) ==
+                               _subproblem.getCoordSystem(neighbor->subdomain_id())
+                         : true,
+                "Coordinate systems must be the same between element and neighbor");
+
+    Real coord;
+    coordTransformFactor(_subproblem, elem->subdomain_id(), fi->faceCentroid(), coord);
+
+    const Point surface_vector = elem_normal * fi->faceArea() * coord;
 
     grad += face_value_functor() * surface_vector;
 
     if (!volume_set)
     {
-      volume = elem_has_info ? fi->elemVolume() : fi->neighborVolume();
+      if (elem_has_info)
+      {
+        coordTransformFactor(_subproblem, elem->subdomain_id(), fi->elemCentroid(), coord);
+        volume = fi->elemVolume() * coord;
+      }
+      else
+      {
+        coordTransformFactor(_subproblem, neighbor->subdomain_id(), fi->neighborCentroid(), coord);
+        volume = fi->neighborVolume() * coord;
+      }
+
       volume_set = true;
     }
   }
