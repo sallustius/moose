@@ -2,7 +2,7 @@
 
 import mms
 
-labels = ['L2p']
+labels = ['L2u', 'L2p']
 df1 = mms.run_spatial('1d-rc.i', 7, y_pp=labels)
 
 fig = mms.ConvergencePlot(xlabel='Element Size ($h$)', ylabel='$L_2$ Error')

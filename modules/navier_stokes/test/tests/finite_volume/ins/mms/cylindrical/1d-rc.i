@@ -17,12 +17,12 @@ rho=1.1
 []
 
 [Variables]
-  # [u]
-  #   order = CONSTANT
-  #   family = MONOMIAL
-  #   fv = true
-  #   initial_condition = 1
-  # []
+  [u]
+    order = CONSTANT
+    family = MONOMIAL
+    fv = true
+    initial_condition = 1
+  []
   [pressure]
     order = CONSTANT
     family = MONOMIAL
@@ -30,29 +30,20 @@ rho=1.1
   []
 []
 
-[AuxVariables]
-  [u]
-    order = CONSTANT
-    family = MONOMIAL
-    fv = true
-    initial_condition = 1
-  []
-[]
-
 [FVKernels]
-  [mass]
-    type = NSFVKernel
-    variable = pressure
-    advected_quantity = 1
-    advected_interp_method = 'average'
-    velocity_interp_method = 'rc'
-    vel = 'velocity'
-    pressure = pressure
-    u = u
-    mu = ${mu}
-    rho = ${rho}
-    ghost_layers = 2
-  []
+  # [mass]
+  #   type = NSFVKernel
+  #   variable = pressure
+  #   advected_quantity = 1
+  #   advected_interp_method = 'average'
+  #   velocity_interp_method = 'rc'
+  #   vel = 'velocity'
+  #   pressure = pressure
+  #   u = u
+  #   mu = ${mu}
+  #   rho = ${rho}
+  #   ghost_layers = 2
+  # []
   [mass_forcing]
     type = FVBodyForce
     variable = pressure
@@ -76,27 +67,32 @@ rho=1.1
   #   rho = ${rho}
   #   ghost_layers = 2
   # []
-  # [u_viscosity]
-  #   type = FVDiffusion
-  #   variable = u
-  #   coeff = ${mu}
-  # []
-  # [u_pressure]
-  #   # FVMomPressure inherits from FVMatAdvection and in FVMomPressure::validParams we set
-  #   # 'advected_quantity = NS::pressure'
-  #   type = FVMomPressure
-  #   variable = u
-  #   momentum_component = 'x'
+  [u_viscosity]
+    type = FVDiffusion
+    variable = u
+    coeff = ${mu}
+  []
+  [u_pressure]
+    # FVMomPressure inherits from FVMatAdvection and in FVMomPressure::validParams we set
+    # 'advected_quantity = NS::pressure'
+    type = FVMomPressure
+    variable = u
+    momentum_component = 'x'
 
-  #   # these parameters shouldn't be used for anything but are still required
-  #   vel = 'velocity'
-  #   advected_interp_method = 'average'
-  # []
-  # [u_forcing]
-  #   type = FVBodyForce
-  #   variable = u
-  #   function = forcing_u
-  # []
+    # these parameters shouldn't be used for anything but are still required
+    vel = 'velocity'
+    advected_interp_method = 'average'
+  []
+  [u_pressure_rz]
+    type = FVMomPressureRZ
+    variable = u
+    p = pressure
+  []
+  [u_forcing]
+    type = FVBodyForce
+    variable = u
+    function = forcing_u
+  []
 []
 
 [FVBCs]
@@ -133,7 +129,14 @@ rho=1.1
   #   pressure_exact_solution = 'exact_p'
   # []
 
-  [diri]
+  [diri_u]
+    type = FVFunctionDirichletBC
+    variable = u
+    function = 'exact_u'
+    boundary = 'left right'
+  []
+
+  [diri_pressure]
     type = FVFunctionDirichletBC
     variable = pressure
     function = 'exact_p'
@@ -172,34 +175,30 @@ rho=1.1
 []
 
 [Functions]
-# [exact_u]
-#   type = ParsedFunction
-#   value = 'sin(x)'
-# []
-# [exact_rhou]
-#   type = ParsedFunction
-#   value = 'rho*sin(x)'
-#   vars = 'rho'
-#   vals = '${rho}'
-# []
-# [forcing_u]
-#   type = ParsedFunction
-#   value = '-sin(x) - (-x*mu*sin(x) + mu*cos(x))/x + (2*x*rho*sin(x)*cos(x) + rho*sin(x)^2)/x'
-#   vars = 'mu rho'
-#   vals = '${mu} ${rho}'
-# []
+[exact_u]
+  type = ParsedFunction
+  value = 'sin(x)'
+[]
+[exact_rhou]
+  type = ParsedFunction
+  value = 'rho*sin(x)'
+  vars = 'rho'
+  vals = '${rho}'
+[]
+[forcing_u]
+  type = ParsedFunction
+  value = '-sin(x) - (-x*mu*sin(x) + mu*cos(x))/x'
+  vars = 'mu rho'
+  vals = '${mu} ${rho}'
+[]
 [exact_p]
   type = ParsedFunction
   value = 'cos(x)'
 []
 [forcing_p]
   type = ParsedFunction
-  value = '1/x + cos(x)'
+  value = 'cos(x)'
 []
-# [forcing_p]
-#   type = ParsedFunction
-#   value = '(x*cos(x) + sin(x))/x'
-# []
 []
 
 [Executioner]
@@ -224,13 +223,13 @@ rho=1.1
     outputs = 'console csv'
     execute_on = 'timestep_end'
   []
-  # [./L2u]
-  #   type = ElementL2Error
-  #   variable = u
-  #   function = exact_u
-  #   outputs = 'console csv'
-  #   execute_on = 'timestep_end'
-  # [../]
+  [./L2u]
+    type = ElementL2Error
+    variable = u
+    function = exact_u
+    outputs = 'console csv'
+    execute_on = 'timestep_end'
+  [../]
   [./L2p]
     variable = pressure
     function = exact_p
