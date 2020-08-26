@@ -5,4 +5,10 @@
     exodiff = diffusion_out.e
     requirement = 'The system shall be able to solve the diffusion equation in axisymmetric coordinates using the finite volume method, and display a second order convergence rate.'
   []
+  [advection]
+    type = Exodiff
+    input = advection.i
+    exodiff = advection_out.e
+    requirement = 'The system shall be able to solve a pure advection problem in 1D cylindrical coordinates using the finite volume method, and display a second order convergence rate.'
+  []
 []
