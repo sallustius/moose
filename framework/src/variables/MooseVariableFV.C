@@ -508,6 +508,9 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
 
   const Elem * const neighbor = fi.neighborPtr();
 
+  // If we have a neighbor then we interpolate between the two to the face. If we do not, then we
+  // assume a zero hessian and just use the element gradient as the uncorrected gradient value on
+  // the face
   if (neighbor)
   {
     const VectorValue<ADReal> & neighbor_grad = adGradSln(neighbor);
@@ -516,31 +519,6 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
 
     // Uncorrected gradient value
     unc_face_grad = g_C * elem_grad + (1. - g_C) * neighbor_grad;
-  }
-  else // we're on a boundary
-  {
-    mooseError("temp");
-
-    // Do we have any Dirichlet BCs?
-    std::vector<FVDirichletBC *> bcs;
-
-    _subproblem.getMooseApp()
-        .theWarehouse()
-        .query()
-        .template condition<AttribSystem>("FVDirichletBC")
-        .template condition<AttribThread>(_tid)
-        .template condition<AttribBoundaries>(fi.boundaryIDs())
-        .template condition<AttribVar>(_var_num)
-        .queryInto(bcs);
-    mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
-
-    if (bcs.size() == 0)
-      // If we don't have a Dirichlet BC, then we should be prescribing some value for the gradient.
-      // For now we just prescribe a zero gradient
-      unc_face_grad = 0;
-    // else
-    // We do have a Dirichlet BC. I don't know what we want to do in this case. For now I just use
-    // the cell value as the face value
   }
 
   return unc_face_grad;
@@ -579,8 +557,6 @@ MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi) const
       return getElemValue(neighbor);
     else
     {
-      mooseError("temp");
-
       // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
       std::vector<FVDirichletBC *> bcs;
 
