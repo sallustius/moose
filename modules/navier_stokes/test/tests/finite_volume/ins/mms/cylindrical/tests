@@ -1,0 +1,8 @@
+[Tests]
+  [1d-average]
+    type = Exodiff
+    input = 1d-average.i
+    exodiff = 1d-average_out.e
+    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in 1D cylindrical coordinates, using an average interpolation scheme, and demonstrate second order convergence in the velocity variable and zeroth order convergence in the pressure variable because of the checkerboard pattern.'
+  []
+[]
