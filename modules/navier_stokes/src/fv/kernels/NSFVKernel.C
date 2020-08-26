@@ -134,6 +134,7 @@ NSFVKernel::coeffCalculator(const Elem * const elem)
             .template condition<AttribThread>(_tid)
             .template condition<AttribBoundaries>(_face_info->boundaryIDs())
             .template condition<AttribVar>(var.number())
+            .template condition<AttribSysNum>(var.sys().number())
             .queryInto(bcs);
         mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
 

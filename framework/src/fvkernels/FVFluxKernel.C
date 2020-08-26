@@ -59,6 +59,7 @@ FVFluxKernel::skipForBoundary(const FaceInfo & fi)
       .template condition<AttribThread>(_tid)
       .template condition<AttribBoundaries>(fi.boundaryIDs())
       .template condition<AttribVar>(_var.number())
+      .template condition<AttribSysNum>(_var.sys().number())
       .queryInto(dirichlet_bcs);
   return dirichlet_bcs.size() == 0;
 }

@@ -522,6 +522,7 @@ MooseVariableDataFV<OutputType>::computeGhostValuesFace(
       .template condition<AttribThread>(_tid)
       .template condition<AttribBoundaries>(fi.boundaryIDs())
       .template condition<AttribVar>(_var_num)
+      .template condition<AttribSysNum>(_var.sys().number())
       .queryInto(bcs);
   mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
   _has_dirichlet_bc = bcs.size() > 0;

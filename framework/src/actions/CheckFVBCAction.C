@@ -49,12 +49,14 @@ CheckFVBCAction::act()
           .template condition<AttribSystem>("FVFluxBC")
           .template condition<AttribVar>(var_num)
           .template condition<AttribThread>(0)
+          .template condition<AttribSysNum>(var->sys().number())
           .queryInto(flux_bcs);
 
       the_warehouse.query()
           .template condition<AttribSystem>("FVDirichletBC")
           .template condition<AttribVar>(var_num)
           .template condition<AttribThread>(0)
+          .template condition<AttribSysNum>(var->sys().number())
           .queryInto(dirichlet_bcs);
 
       std::set<BoundaryID> all_flux_side_ids;

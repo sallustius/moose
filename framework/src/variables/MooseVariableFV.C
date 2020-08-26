@@ -429,6 +429,7 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
             .template condition<AttribThread>(_tid)
             .template condition<AttribBoundaries>(fi->boundaryIDs())
             .template condition<AttribVar>(_var_num)
+            .template condition<AttribSysNum>(_sys.number())
             .queryInto(bcs);
         mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
 
@@ -567,6 +568,7 @@ MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi) const
           .template condition<AttribThread>(_tid)
           .template condition<AttribBoundaries>(fi.boundaryIDs())
           .template condition<AttribVar>(_var_num)
+          .template condition<AttribSysNum>(_sys.number())
           .queryInto(bcs);
       mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
 
