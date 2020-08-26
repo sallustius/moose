@@ -312,7 +312,7 @@ public:
   virtual void prepareShapes(unsigned int var, THREAD_ID tid) = 0;
   virtual void prepareFaceShapes(unsigned int var, THREAD_ID tid) = 0;
   virtual void prepareNeighborShapes(unsigned int var, THREAD_ID tid) = 0;
-  virtual Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) = 0;
+  virtual Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) const = 0;
 
   /**
    * Returns the desired radial direction for RZ coordinate transformation

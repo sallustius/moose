@@ -82,7 +82,7 @@ DisplacedProblem::isTransient() const
 }
 
 Moose::CoordinateSystemType
-DisplacedProblem::getCoordSystem(SubdomainID sid)
+DisplacedProblem::getCoordSystem(SubdomainID sid) const
 {
   return _mproblem.getCoordSystem(sid);
 }

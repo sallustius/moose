@@ -130,7 +130,7 @@ public:
   virtual unsigned int numMatrixTags() const override;
 
   virtual bool isTransient() const override;
-  virtual Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) override;
+  virtual Moose::CoordinateSystemType getCoordSystem(SubdomainID sid) const override;
 
   // Variables /////
   virtual bool hasVariable(const std::string & var_name) const override;

@@ -518,9 +518,9 @@ FEProblemBase::~FEProblemBase()
 }
 
 Moose::CoordinateSystemType
-FEProblemBase::getCoordSystem(SubdomainID sid)
+FEProblemBase::getCoordSystem(SubdomainID sid) const
 {
-  std::map<SubdomainID, Moose::CoordinateSystemType>::iterator it = _coord_sys.find(sid);
+  auto it = _coord_sys.find(sid);
   if (it != _coord_sys.end())
     return (*it).second;
   else
