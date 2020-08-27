@@ -11,4 +11,10 @@
     exodiff = 1d-rc_out.e
     requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in 1D cylindrical coordinates, using a Rhie-Chow scheme, dirichlet boundary conditions for both variables, and demonstrate second order convergence for the velocity and first order convergence for the pressure.'
   []
+  [2d-rc-diri]
+    type = Exodiff
+    input = 2d-rc.i
+    exodiff = 2d-rc_out.e
+    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in 2D cylindrical coordinates, using a Rhie-Chow scheme, dirichlet boundary conditions for both variables, and demonstrate second order convergence for the velocity and first order convergence for the pressure.'
+  []
 []
