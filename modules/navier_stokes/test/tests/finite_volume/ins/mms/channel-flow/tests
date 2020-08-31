@@ -3,6 +3,12 @@
     type = Exodiff
     input = 1d-average.i
     exodiff = 1d-average_out.e
-    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in one dimension with prescribed inlet velocity and outlet pressure and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure.'
+    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in one dimension with prescribed inlet velocity and outlet pressure and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure when using an average interpolation scheme for the velocity.'
+  []
+  [1d-rc]
+    type = Exodiff
+    input = 1d-rc.i
+    exodiff = 1d-rc_out.e
+    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in one dimension with prescribed inlet velocity and outlet pressure and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure when using a Rhie-Chow interpolation scheme for the velocity.'
   []
 []
