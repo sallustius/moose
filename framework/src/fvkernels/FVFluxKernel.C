@@ -22,6 +22,9 @@ FVFluxKernel::validParams()
   InputParameters params = FVKernel::validParams();
   params += TwoMaterialPropertyInterface::validParams();
   params.registerSystemAttributeName("FVFluxKernel");
+  params.addParam<bool>("force_boundary_execution",
+                        false,
+                        "Whether to force execution of this object on the boundary.");
   return params;
 }
 
@@ -36,7 +39,8 @@ FVFluxKernel::FVFluxKernel(const InputParameters & params)
     _u_elem(_var.adSln()),
     _u_neighbor(_var.adSlnNeighbor()),
     _grad_u_elem(_var.adGradSln()),
-    _grad_u_neighbor(_var.adGradSlnNeighbor())
+    _grad_u_neighbor(_var.adGradSlnNeighbor()),
+    _force_boundary_execution(getParam<bool>("force_boundary_execution"))
 {
   addMooseVariableDependency(&_var);
 }
@@ -49,7 +53,7 @@ FVFluxKernel::FVFluxKernel(const InputParameters & params)
 bool
 FVFluxKernel::skipForBoundary(const FaceInfo & fi)
 {
-  if (!fi.isBoundary())
+  if (!fi.isBoundary() || _force_boundary_execution)
     return false;
 
   std::vector<FVDirichletBC *> dirichlet_bcs;
@@ -91,7 +95,8 @@ FVFluxKernel::computeResidual(const FaceInfo & fi)
   // a flux BC or a natural BC - in either of those cases we don't want to add
   // any residual contributions from regular flux kernels.
   auto ft = fi.faceType(_var.name());
-  if ((ft == FaceInfo::VarFaceNeighbors::ELEM && _var.hasDirichletBC()) ||
+  if ((ft == FaceInfo::VarFaceNeighbors::ELEM &&
+       (_force_boundary_execution || _var.hasDirichletBC())) ||
       ft == FaceInfo::VarFaceNeighbors::BOTH)
   {
     // residual contribution of this kernel to the elem element
@@ -99,7 +104,8 @@ FVFluxKernel::computeResidual(const FaceInfo & fi)
     _local_re(0) = r;
     accumulateTaggedLocalResidual();
   }
-  if ((ft == FaceInfo::VarFaceNeighbors::NEIGHBOR && _var.hasDirichletBC()) ||
+  if ((ft == FaceInfo::VarFaceNeighbors::NEIGHBOR &&
+       (_force_boundary_execution || _var.hasDirichletBC())) ||
       ft == FaceInfo::VarFaceNeighbors::BOTH)
   {
     // residual contribution of this kernel to the neighbor element
@@ -172,7 +178,8 @@ FVFluxKernel::computeJacobian(const FaceInfo & fi)
   // a flux BC or a natural BC - in either of those cases we don't want to add
   // any jacobian contributions from regular flux kernels.
   auto ft = fi.faceType(_var.name());
-  if ((ft == FaceInfo::VarFaceNeighbors::ELEM && _var.hasDirichletBC()) ||
+  if ((ft == FaceInfo::VarFaceNeighbors::ELEM &&
+       (_force_boundary_execution || _var.hasDirichletBC())) ||
       ft == FaceInfo::VarFaceNeighbors::BOTH)
   {
     mooseAssert(_var.dofIndices().size() == 1, "We're currently built to use CONSTANT MONOMIALS");
@@ -199,7 +206,8 @@ FVFluxKernel::computeJacobian(const FaceInfo & fi)
     _assembly.processDerivatives(r, _var.dofIndices()[0], _matrix_tags, element_functor);
   }
 
-  if ((ft == FaceInfo::VarFaceNeighbors::NEIGHBOR && _var.hasDirichletBC()) ||
+  if ((ft == FaceInfo::VarFaceNeighbors::NEIGHBOR &&
+       (_force_boundary_execution || _var.hasDirichletBC())) ||
       ft == FaceInfo::VarFaceNeighbors::BOTH)
   {
     mooseAssert((ft == FaceInfo::VarFaceNeighbors::NEIGHBOR) == (_var.dofIndices().size() == 0),

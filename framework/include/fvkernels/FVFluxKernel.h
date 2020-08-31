@@ -97,4 +97,6 @@ private:
   /// conditions - otherwise this returns false and all jacobian/residual calcs
   /// should be skipped.
   bool skipForBoundary(const FaceInfo & fi);
+
+  const bool _force_boundary_execution;
 };
