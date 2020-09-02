@@ -191,6 +191,11 @@ ThreadedFaceLoop<RangeType>::operator()(const RangeType & range, bool bypass_thr
           neighborSubdomainChanged();
 
         onFace(*faceinfo);
+        // Cache data now because onBoundary may clear it. E.g. there was a nasty bug for two
+        // variable FV systems where if one variable was executing an FVFluxKernel on a boundary
+        // while the other was executing an FVFluxBC, the FVFluxKernel data would get lost because
+        // onBoundary would clear the residual/Jacobian data before it was cached
+        postFace(*faceinfo);
 
         const std::set<BoundaryID> boundary_ids = faceinfo->boundaryIDs();
         for (auto & it : boundary_ids)
