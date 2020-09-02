@@ -3,15 +3,15 @@
 import mms
 import sympy
 
-u = 'sin(pi * x / 4) * cos(y)'
-v = 'sin(pi * x / 4) * sin(pi * y / 2)'
+u = 'cos(pi * x / 2) * sin(pi * y / 2)'
+v = 'sin(pi * x / 4) * cos(pi * y / 2)'
 vel = u + '* e_i + ' + v + ' * e_j'
 
 p = 'cos(pi * x / 4) * sin(3 * pi * y / 2)'
 
 f_u, e_u = mms.evaluate('div(vel*rho*u) - div(mu * grad(u)) + grad(p).dot(e_i)', u, variable='u', vel=vel, p=p, scalars=['mu', 'rho'])
 f_v, e_v = mms.evaluate('div(vel*rho*v) - div(mu * grad(v)) + grad(p).dot(e_j)', v, variable='v', vel=vel, p=p, scalars=['mu', 'rho'])
-f_p, e_p = mms.evaluate('div(vel) - div(grad(p))', p, variable='p', vel=vel)
+f_p, e_p = mms.evaluate('div(vel)', p, variable='p', vel=vel)
 
 rho = sympy.Symbol('rho')
 
