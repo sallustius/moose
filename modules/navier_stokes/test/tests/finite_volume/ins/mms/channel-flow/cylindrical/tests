@@ -1,0 +1,14 @@
+[Tests]
+  [average]
+    type = Exodiff
+    input = 2d-average.i
+    exodiff = 2d-average_out.e
+    requirement = 'The system shall be able to solve a problem with channel-flow like boundary conditions in the coordinate system with an average interpolation for the velocity and demonstrate second order convergence in the velocity variables and first order convergence in the pressure variable.'
+  []
+  [rc]
+    type = Exodiff
+    input = 2d-rc.i
+    exodiff = 2d-rc_out.e
+    requirement = 'The system shall be able to solve a problem with channel-flow like boundary conditions in the coordinate system with a Rhie-Chow interpolation for the velocity and demonstrate second order convergence in the velocity variables and first order convergence in the pressure variable.'
+  []
+[]
