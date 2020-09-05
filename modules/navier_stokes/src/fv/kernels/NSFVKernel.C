@@ -16,6 +16,7 @@
 #include "ADReal.h"    // Moose::derivInsert
 #include "MooseMesh.h" // FaceInfo methods
 #include "FVDirichletBC.h"
+#include "Assembly.h"
 
 #include "libmesh/dof_map.h"
 #include "libmesh/elem.h"
@@ -117,7 +118,15 @@ NSFVKernel::coeffCalculator(const Elem * const elem)
     mooseAssert(fi, "We should have found a FaceInfo");
 
     const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
-    const Point surface_vector = elem_normal * fi->faceArea();
+
+    mooseAssert(neighbor ? _subproblem.getCoordSystem(elem->subdomain_id()) ==
+                               _subproblem.getCoordSystem(neighbor->subdomain_id())
+                         : true,
+                "Coordinate systems must be the same between element and neighbor");
+    Real coord;
+    coordTransformFactor(_subproblem, elem->subdomain_id(), fi->faceCentroid(), coord);
+
+    const Point surface_vector = elem_normal * fi->faceArea() * coord;
 
     auto neighbor_value_functor = [&](const MooseVariableFV<Real> & var, unsigned int component) {
       if (neighbor)
@@ -171,7 +180,7 @@ NSFVKernel::coeffCalculator(const Elem * const elem)
       coeff += -mass_flow;
 
     // Now add the viscous flux
-    coeff += _mu * fi->faceArea() / (fi->elemCentroid() - fi->neighborCentroid()).norm();
+    coeff += _mu * fi->faceArea() * coord / (fi->elemCentroid() - fi->neighborCentroid()).norm();
   }
 
   return coeff;
@@ -210,7 +219,17 @@ NSFVKernel::interpolate(InterpMethod m,
     }
 
     mooseAssert(face_a > 0, "face_a should be greater than zero");
-    const ADReal face_D = face_volume / face_a;
+
+    mooseAssert(_face_info->neighborPtr()
+                    ? _subproblem.getCoordSystem(_face_info->elem().ubdomain_id()) ==
+                          _subproblem.getCoordSystem(_face_info->neighborPtr()->subdomain_id())
+                    : true,
+                "Coordinate systems must be the same between element and neighbor");
+    Real coord;
+    coordTransformFactor(
+        _subproblem, _face_info->elem().subdomain_id(), _face_info->faceCentroid(), coord);
+
+    const ADReal face_D = face_volume * coord / face_a;
 
     // perform the pressure correction
     v -= face_D * (grad_p - unc_grad_p);
