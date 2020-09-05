@@ -99,4 +99,6 @@ private:
   bool skipForBoundary(const FaceInfo & fi);
 
   const bool _force_boundary_execution;
+
+  std::set<BoundaryID> _boundaries;
 };

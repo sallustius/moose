@@ -24,7 +24,11 @@ FVFluxKernel::validParams()
   params.registerSystemAttributeName("FVFluxKernel");
   params.addParam<bool>("force_boundary_execution",
                         false,
-                        "Whether to force execution of this object on the boundary.");
+                        "Whether to force execution of this object on all boundaries.");
+  params.addParam<std::vector<BoundaryName>>(
+      "boundaries",
+      std::vector<BoundaryName>(),
+      "The boundaries that this object should be executed on.");
   return params;
 }
 
@@ -43,6 +47,11 @@ FVFluxKernel::FVFluxKernel(const InputParameters & params)
     _force_boundary_execution(getParam<bool>("force_boundary_execution"))
 {
   addMooseVariableDependency(&_var);
+
+  const auto & boundaries = getParam<std::vector<BoundaryName>>("boundaries");
+
+  for (const auto & bnd_name : boundaries)
+    _boundaries.insert(_mesh.getBoundaryID(bnd_name));
 }
 
 // Note the lack of quadrature point loops in the residual/jacobian compute
@@ -55,6 +64,11 @@ FVFluxKernel::skipForBoundary(const FaceInfo & fi)
 {
   if (!fi.isBoundary() || _force_boundary_execution)
     return false;
+
+  // Usually only one boundary ID per FaceInfo
+  for (const auto bnd_id : fi.boundaryIDs())
+    if (_boundaries.find(bnd_id) != _boundaries.end())
+      return false;
 
   std::vector<FVDirichletBC *> dirichlet_bcs;
   _app.theWarehouse()
