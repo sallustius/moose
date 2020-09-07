@@ -1312,11 +1312,11 @@ SystemBase::cacheVarIndicesByFace(const std::vector<VariableName> & vars)
 
   // loop over all faces
   auto & faces = mesh().faceInfo();
-  for (auto & p : faces)
+  for (auto * p : faces)
   {
     // get elem & neighbor elements, and set subdomain ids
-    const Elem & elem_elem = p.elem();
-    const Elem * neighbor_elem = p.neighborPtr();
+    const Elem & elem_elem = p->elem();
+    const Elem * neighbor_elem = p->neighborPtr();
     SubdomainID elem_subdomain_id = elem_elem.subdomain_id();
     SubdomainID neighbor_subdomain_id = Elem::invalid_subdomain_id;
     if (neighbor_elem)
@@ -1324,7 +1324,7 @@ SystemBase::cacheVarIndicesByFace(const std::vector<VariableName> & vars)
 
     // TODO: what happens if elem and neighbor subdomain ids have different
     // coordinate transforms here?  Figure out how to handle this robustly.
-    coordTransformFactor(_subproblem, elem_subdomain_id, p.faceCentroid(), p.faceCoord());
+    coordTransformFactor(_subproblem, elem_subdomain_id, p->faceCentroid(), p->faceCoord());
 
     // loop through vars
     for (unsigned int j = 0; j < moose_vars.size(); ++j)
@@ -1348,14 +1348,14 @@ SystemBase::cacheVarIndicesByFace(const std::vector<VariableName> & vars)
         var->getDofIndices(&elem_elem, elem_dof_indices);
       else
         elem_dof_indices = {libMesh::DofObject::invalid_id};
-      p.elemDofIndices(var_name) = elem_dof_indices;
+      p->elemDofIndices(var_name) = elem_dof_indices;
       // neighbor
       std::vector<dof_id_type> neighbor_dof_indices;
       if (neighbor_elem && var_subdomains.find(neighbor_subdomain_id) != var_subdomains.end())
         var->getDofIndices(neighbor_elem, neighbor_dof_indices);
       else
         neighbor_dof_indices = {libMesh::DofObject::invalid_id};
-      p.neighborDofIndices(var_name) = neighbor_dof_indices;
+      p->neighborDofIndices(var_name) = neighbor_dof_indices;
 
       /**
        * The following paragraph of code assigns the VarFaceNeighbors
@@ -1370,16 +1370,16 @@ SystemBase::cacheVarIndicesByFace(const std::vector<VariableName> & vars)
       bool var_defined_neighbor =
           var_subdomains.find(neighbor_subdomain_id) != var_subdomains.end();
       if (var_defined_elem && var_defined_neighbor)
-        p.faceType(var_name) = FaceInfo::VarFaceNeighbors::BOTH;
+        p->faceType(var_name) = FaceInfo::VarFaceNeighbors::BOTH;
       else if (!var_defined_elem && !var_defined_neighbor)
-        p.faceType(var_name) = FaceInfo::VarFaceNeighbors::NEITHER;
+        p->faceType(var_name) = FaceInfo::VarFaceNeighbors::NEITHER;
       else
       {
         // this is a boundary face for this variable, set elem or neighbor
         if (var_defined_elem)
-          p.faceType(var_name) = FaceInfo::VarFaceNeighbors::ELEM;
+          p->faceType(var_name) = FaceInfo::VarFaceNeighbors::ELEM;
         else if (var_defined_neighbor)
-          p.faceType(var_name) = FaceInfo::VarFaceNeighbors::NEIGHBOR;
+          p->faceType(var_name) = FaceInfo::VarFaceNeighbors::NEIGHBOR;
         else
           mooseError("Should never get here");
       }

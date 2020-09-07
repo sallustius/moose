@@ -194,6 +194,8 @@ public:
   /// Return the geometric weighting factor
   Real gC() const;
 
+  processor_id_type processor_id() const { return _processor_id; }
+
 private:
   Real _face_area;
   Real _face_coord = 0;
@@ -229,6 +231,8 @@ private:
 
   /// The MooseMesh that owns us
   const MooseMesh & _mesh;
+
+  const processor_id_type _processor_id;
 };
 
 /**
@@ -1147,7 +1151,7 @@ public:
 
   ///@{ accessors for the FaceInfo objects
   unsigned int nFace() const { return _face_info.size(); }
-  std::vector<FaceInfo> & faceInfo()
+  std::vector<FaceInfo *> & faceInfo()
   {
     buildFaceInfo();
     return _face_info;
@@ -1342,7 +1346,8 @@ protected:
   std::vector<std::pair<BoundaryID, BoundaryID>> _paired_boundary;
 
   /// FaceInfo object storing information for face based loops
-  std::vector<FaceInfo> _face_info;
+  std::vector<FaceInfo *> _face_info;
+  std::vector<FaceInfo> _all_face_info;
 
   /// Map from elem-side pair to FaceInfo
   std::unordered_map<std::pair<const Elem *, unsigned int>, FaceInfo *> _elem_side_to_face_info;

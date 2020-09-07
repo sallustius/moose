@@ -66,7 +66,7 @@ FaceInfo::FaceInfo(const Elem * elem,
                    unsigned int side,
                    const Elem * neighbor,
                    const MooseMesh & mesh)
-  : _mesh(mesh)
+  : _mesh(mesh), _processor_id(elem->processor_id())
 {
   _elem = elem;
   _neighbor = neighbor;
@@ -3140,6 +3140,7 @@ MooseMesh::buildFaceInfo()
   }
 
   _face_info.clear();
+  _all_face_info.clear();
   _elem_side_to_face_info.clear();
 
   // loop over all active, local elements. Note that by looping over just *local* elements and by
@@ -3147,8 +3148,8 @@ MooseMesh::buildFaceInfo()
   // double count face contributions. If a face lies along a process boundary, the only process that
   // will contribute to both sides of the face residuals/Jacobians will be the process that owns the
   // element with the lower ID.
-  auto begin = getMesh().active_local_elements_begin();
-  auto end = getMesh().active_local_elements_end();
+  auto begin = getMesh().active_elements_begin();
+  auto end = getMesh().active_elements_end();
 
   for (auto it = begin; it != end; ++it)
   {
@@ -3194,8 +3195,9 @@ MooseMesh::buildFaceInfo()
            (elem_id < neighbor->id())) ||
           (neighbor->level() < elem->level()))
       {
-        _face_info.emplace_back(elem, side, neighbor, *this);
-        auto & fi = _face_info.back();
+        _all_face_info.emplace_back(elem, side, neighbor, *this);
+
+        auto & fi = _all_face_info.back();
 
 #ifndef NDEBUG
         auto pair_it =
@@ -3221,6 +3223,13 @@ MooseMesh::buildFaceInfo()
       }
     }
   }
+
+  // Build the local face info. We need to do this after _all_face_info is finished being
+  // constructed because emplace_back invalidates all iterators and references if ever the new size
+  // exceeds capacity
+  for (auto & fi : _all_face_info)
+    if (fi.processor_id() == this->processor_id())
+      _face_info.push_back(&fi);
 }
 
 const FaceInfo *

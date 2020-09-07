@@ -175,7 +175,7 @@ ThreadedFaceLoop<RangeType>::operator()(const RangeType & range, bool bypass_thr
       typename RangeType::const_iterator faceinfo = range.begin();
       for (faceinfo = range.begin(); faceinfo != range.end(); ++faceinfo)
       {
-        const Elem & elem = faceinfo->elem();
+        const Elem & elem = (*faceinfo)->elem();
 
         _old_subdomain = _subdomain;
         _subdomain = elem.subdomain_id();
@@ -184,24 +184,24 @@ ThreadedFaceLoop<RangeType>::operator()(const RangeType & range, bool bypass_thr
 
         _old_neighbor_subdomain = _neighbor_subdomain;
         _neighbor_subdomain = Elem::invalid_subdomain_id;
-        if (faceinfo->neighborPtr())
-          _neighbor_subdomain = faceinfo->neighbor().subdomain_id();
+        if ((*faceinfo)->neighborPtr())
+          _neighbor_subdomain = (*faceinfo)->neighbor().subdomain_id();
 
         if (_neighbor_subdomain != _old_neighbor_subdomain)
           neighborSubdomainChanged();
 
-        onFace(*faceinfo);
+        onFace(**faceinfo);
         // Cache data now because onBoundary may clear it. E.g. there was a nasty bug for two
         // variable FV systems where if one variable was executing an FVFluxKernel on a boundary
         // while the other was executing an FVFluxBC, the FVFluxKernel data would get lost because
         // onBoundary would clear the residual/Jacobian data before it was cached
-        postFace(*faceinfo);
+        postFace(**faceinfo);
 
-        const std::set<BoundaryID> boundary_ids = faceinfo->boundaryIDs();
+        const std::set<BoundaryID> boundary_ids = (*faceinfo)->boundaryIDs();
         for (auto & it : boundary_ids)
-          onBoundary(*faceinfo, it);
+          onBoundary(**faceinfo, it);
 
-        postFace(*faceinfo);
+        postFace(**faceinfo);
 
       } // range
       post();
