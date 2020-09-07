@@ -156,9 +156,9 @@ NSFVKernel::coeffCalculator(const Elem * const elem)
 
     ADRealVectorValue neighbor_velocity(neighbor_value_functor(*_u_var, 0));
     if (_v_var)
-      elem_velocity(1) = neighbor_value_functor(*_v_var, 1);
+      neighbor_velocity(1) = neighbor_value_functor(*_v_var, 1);
     if (_w_var)
-      elem_velocity(2) = neighbor_value_functor(*_w_var, 2);
+      neighbor_velocity(2) = neighbor_value_functor(*_w_var, 2);
 
     ADRealVectorValue interp_v;
     FVFluxKernel::interpolate(InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity);
