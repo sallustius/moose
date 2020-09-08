@@ -10,22 +10,11 @@
 #pragma once
 
 #include "FVMatAdvectionFunctionBC.h"
+#include "NSFVBase.h"
 
 #ifdef MOOSE_GLOBAL_AD_INDEXING
 
-template <typename>
-class MooseVariableFV;
-
-namespace libMesh
-{
-class DofMap;
-template <typename>
-class NumericVector;
-template <typename>
-class VectorValue;
-}
-
-class NSFVFunctionBC : public FVMatAdvectionFunctionBC
+class NSFVFunctionBC : public FVMatAdvectionFunctionBC, public NSFVBase
 {
 public:
   static InputParameters validParams();
@@ -43,24 +32,6 @@ protected:
                    const RealVectorValue & ghost_v);
 
   ADReal computeQpResidual() override;
-
-private:
-  /// pressure variable
-  const MooseVariableFV<Real> * const _p_var;
-  /// x-velocity
-  const MooseVariableFV<Real> * const _u_var;
-  /// y-velocity
-  const MooseVariableFV<Real> * const _v_var;
-  /// z-velocity
-  const MooseVariableFV<Real> * const _w_var;
-
-  /// The viscosity
-  const Real _mu;
-  /// The density
-  const Real _rho;
-
-  /// The interpolation method to use for the velocity
-  InterpMethod _velocity_interp_method;
 
   const Function & _pressure_exact_solution;
 };
