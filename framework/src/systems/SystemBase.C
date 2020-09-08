@@ -140,7 +140,7 @@ SystemBase::SystemBase(SubProblem & subproblem,
 }
 
 MooseVariableFieldBase &
-SystemBase::getVariable(THREAD_ID tid, const std::string & var_name)
+SystemBase::getVariable(THREAD_ID tid, const std::string & var_name) const
 {
   MooseVariableFieldBase * var =
       dynamic_cast<MooseVariableFieldBase *>(_vars[tid].getVariable(var_name));
@@ -150,7 +150,7 @@ SystemBase::getVariable(THREAD_ID tid, const std::string & var_name)
 }
 
 MooseVariableFieldBase &
-SystemBase::getVariable(THREAD_ID tid, unsigned int var_number)
+SystemBase::getVariable(THREAD_ID tid, unsigned int var_number) const
 {
   if (var_number < _numbered_vars[tid].size())
     if (_numbered_vars[tid][var_number])

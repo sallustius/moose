@@ -44,6 +44,8 @@ public:
   static InputParameters validParams();
   FVKernel(const InputParameters & params);
 
+  const SubProblem & subProblem() const { return _subproblem; }
+
 protected:
   SubProblem & _subproblem;
   const SystemBase & _sys;

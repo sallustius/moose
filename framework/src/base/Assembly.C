@@ -35,7 +35,7 @@
 
 template <typename P, typename C>
 void
-coordTransformFactor(SubProblem & s, SubdomainID sub_id, const P & point, C & factor)
+coordTransformFactor(const SubProblem & s, SubdomainID sub_id, const P & point, C & factor)
 {
   switch (s.getCoordSystem(sub_id))
   {
@@ -4338,11 +4338,11 @@ Assembly::feCurlPhiFaceNeighbor<VectorValue<Real>>(FEType type) const
   return _vector_fe_shape_data_face_neighbor[type]->_curl_phi;
 }
 
-template void coordTransformFactor<Point, Real>(SubProblem & s,
+template void coordTransformFactor<Point, Real>(const SubProblem & s,
                                                 SubdomainID sub_id,
                                                 const Point & point,
                                                 Real & factor);
-template void coordTransformFactor<ADPoint, ADReal>(SubProblem & s,
+template void coordTransformFactor<ADPoint, ADReal>(const SubProblem & s,
                                                     SubdomainID sub_id,
                                                     const ADPoint & point,
                                                     ADReal & factor);

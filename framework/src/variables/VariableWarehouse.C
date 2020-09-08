@@ -81,13 +81,17 @@ VariableWarehouse::addBoundaryVars(
 }
 
 MooseVariableBase *
-VariableWarehouse::getVariable(const std::string & var_name)
+VariableWarehouse::getVariable(const std::string & var_name) const
 {
-  return _var_name[var_name];
+  auto it = _var_name.find(var_name);
+  if (it != _var_name.end())
+    return it->second;
+  else
+    return nullptr;
 }
 
 MooseVariableBase *
-VariableWarehouse::getVariable(unsigned int var_number)
+VariableWarehouse::getVariable(unsigned int var_number) const
 {
   auto it = _all_objects.find(var_number);
   if (it != _all_objects.end())
