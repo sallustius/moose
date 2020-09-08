@@ -26,6 +26,7 @@ template <typename>
 class MooseVariableFV;
 
 typedef MooseVariableFV<Real> MooseVariableFVReal;
+class FVDirichletBC;
 
 namespace libMesh
 {
@@ -419,6 +420,8 @@ public:
     return _element_data->hasDirichletBC() || _neighbor_data->hasDirichletBC();
   }
 
+  std::pair<bool, const FVDirichletBC *> getDirichletBC(const FaceInfo & fi) const;
+
   void residualSetup() override;
   void jacobianSetup() override;
 
@@ -430,9 +433,14 @@ public:
    */
   ADReal getElemValue(const Elem * elem) const;
 
+  ADReal getNeighborValue(const Elem * const neighbor,
+                          const FaceInfo & fi,
+                          const ADReal & elem_value) const;
+
   /**
-   * Get custom coefficients on a per-element basis. These should correspond to \p a coefficients in
-   * the notation of Moukallad's "Finite Volume Method in Computational Fluid Dynamics"
+   * Get custom coefficients on a per-element basis. These should correspond to \p a
+   * coefficients in the notation of Moukallad's "Finite Volume Method in Computational Fluid
+   * Dynamics"
    */
   const ADReal &
   adCoeff(const Elem * elem, void * context, ADReal (*fn)(const Elem * const, void *)) const;

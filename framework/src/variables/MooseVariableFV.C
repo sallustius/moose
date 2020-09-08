@@ -13,6 +13,7 @@
 #include "NonlinearSystemBase.h"
 #include "DisplacedSystem.h"
 #include "Assembly.h"
+#include "FVUtils.h"
 
 #include "libmesh/numeric_vector.h"
 
@@ -344,6 +345,39 @@ MooseVariableFV<OutputType>::isVector() const
   return std::is_same<OutputType, RealVectorValue>::value;
 }
 
+template <typename OutputType>
+std::pair<bool, const FVDirichletBC *>
+MooseVariableFV<OutputType>::getDirichletBC(const FaceInfo & fi) const
+{
+  std::vector<FVDirichletBC *> bcs;
+
+  _subproblem.getMooseApp()
+      .theWarehouse()
+      .query()
+      .template condition<AttribSystem>("FVDirichletBC")
+      .template condition<AttribThread>(_tid)
+      .template condition<AttribBoundaries>(fi.boundaryIDs())
+      .template condition<AttribVar>(_var_num)
+      .template condition<AttribSysNum>(_sys.number())
+      .queryInto(bcs);
+  mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
+
+  bool has_dirichlet_bc = bcs.size() > 0;
+
+  if (has_dirichlet_bc)
+  {
+    mooseAssert(bcs.size() == 1,
+                "There should not be multiple Dirichlet boundary conditions for a given variable "
+                "on a given FaceInfo");
+
+    mooseAssert(bcs[0], "The FVDirichletBC is null!");
+
+    return std::make_pair(true, bcs[0]);
+  }
+  else
+    return std::make_pair(false, nullptr);
+}
+
 #ifdef MOOSE_GLOBAL_AD_INDEXING
 
 template <typename OutputType>
@@ -368,6 +402,35 @@ MooseVariableFV<OutputType>::getElemValue(const Elem * const elem) const
 }
 
 template <typename OutputType>
+ADReal
+MooseVariableFV<OutputType>::getNeighborValue(const Elem * const neighbor,
+                                              const FaceInfo & fi,
+                                              const ADReal & elem_value) const
+{
+  if (neighbor)
+    return getElemValue(neighbor);
+  else
+  {
+    // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
+    const auto & pr = getDirichletBC(fi);
+
+    if (pr.first)
+    {
+      mooseAssert(pr.second, "The FVDirichletBC is null!");
+
+      const FVDirichletBC & bc = *pr.second;
+
+      // Linear interpolation: face_value = (elem_value + neighbor_value) / 2
+      return 2. * bc.boundaryValue(fi) - elem_value;
+    }
+    else
+      // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
+      // face value is equivalent to the element value
+      return elem_value;
+  }
+}
+
+template <typename OutputType>
 const VectorValue<ADReal> &
 MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
 {
@@ -389,22 +452,14 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
 
   ADReal elem_value = getElemValue(elem);
 
-  for (const auto side : elem->side_index_range())
-  {
-    const Elem * const neighbor = elem->neighbor_ptr(side);
-
-    bool elem_has_info = neighbor ? (elem->id() < neighbor->id()) : true;
-
-    const FaceInfo * const fi = elem_has_info
-                                    ? _mesh.faceInfo(elem, side)
-                                    : _mesh.faceInfo(neighbor, neighbor->which_neighbor_am_i(elem));
-
-    mooseAssert(fi, "We should have found a FaceInfo");
-
-    // Below uses notation from Moukalled's Finite Volume Method in Computational Fluid Dynamics,
-    // Green-Gauss computation of the gradient
-
-    auto face_value_functor = [&]() {
+  auto action_functor = [&grad, &volume_set, &volume, &elem_value, this](
+                            const Elem & functor_elem,
+                            const Elem * const neighbor,
+                            const FaceInfo * const fi,
+                            const Point & surface_vector,
+                            Real coord,
+                            const bool elem_has_info) {
+    auto face_value_functor = [&neighbor, &fi, &elem_value, this]() {
       if (neighbor)
       {
         ADReal neighbor_value = getElemValue(neighbor);
@@ -416,28 +471,11 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
       else
       {
         // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
+        const auto & pr = getDirichletBC(*fi);
 
-        std::vector<FVDirichletBC *> bcs;
-
-        // TODO: this query probably (maybe?)needs to also filter based on the
-        // active tags - these currently live in the flux thread loop object and I'm
-        // not sure how best to get them here.
-        _subproblem.getMooseApp()
-            .theWarehouse()
-            .query()
-            .template condition<AttribSystem>("FVDirichletBC")
-            .template condition<AttribThread>(_tid)
-            .template condition<AttribBoundaries>(fi->boundaryIDs())
-            .template condition<AttribVar>(_var_num)
-            .template condition<AttribSysNum>(_sys.number())
-            .queryInto(bcs);
-        mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
-
-        bool has_dirichlet_bc = bcs.size() > 0;
-
-        if (has_dirichlet_bc)
+        if (pr.first)
         {
-          const FVDirichletBC & bc = *bcs[0];
+          const FVDirichletBC & bc = *pr.second;
 
           return ADReal(bc.boundaryValue(*fi));
         }
@@ -450,25 +488,13 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
       }
     };
 
-    const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
-
-    mooseAssert(neighbor ? _subproblem.getCoordSystem(elem->subdomain_id()) ==
-                               _subproblem.getCoordSystem(neighbor->subdomain_id())
-                         : true,
-                "Coordinate systems must be the same between element and neighbor");
-
-    Real coord;
-    coordTransformFactor(_subproblem, elem->subdomain_id(), fi->faceCentroid(), coord);
-
-    const Point surface_vector = elem_normal * fi->faceArea() * coord;
-
     grad += face_value_functor() * surface_vector;
 
     if (!volume_set)
     {
       if (elem_has_info)
       {
-        coordTransformFactor(_subproblem, elem->subdomain_id(), fi->elemCentroid(), coord);
+        coordTransformFactor(_subproblem, functor_elem.subdomain_id(), fi->elemCentroid(), coord);
         volume = fi->elemVolume() * coord;
       }
       else
@@ -479,7 +505,9 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
 
       volume_set = true;
     }
-  }
+  };
+
+  Moose::loopOverElemFaceInfo(*elem, _mesh, _subproblem, action_functor);
 
   mooseAssert(volume_set && volume > 0, "We should have set the volume");
 
@@ -510,8 +538,9 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
   const Elem * const neighbor = fi.neighborPtr();
 
   // If we have a neighbor then we interpolate between the two to the face. If we do not, then we
-  // assume a zero hessian and just use the element gradient as the uncorrected gradient value on
-  // the face
+  // check for a Dirichlet BC. If we have a Dirichlet BC, then we will apply a zero Hessian
+  // assumption. If we do not, then we know we are applying a zero gradient assumption elsehwere in
+  // our calculations, so we should be consistent and apply a zero gradient assumption here as well
   if (neighbor)
   {
     const VectorValue<ADReal> & neighbor_grad = adGradSln(neighbor);
@@ -520,6 +549,13 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
 
     // Uncorrected gradient value
     unc_face_grad = g_C * elem_grad + (1. - g_C) * neighbor_grad;
+  }
+  else
+  {
+    const auto & pr = getDirichletBC(fi);
+
+    if (!pr.first)
+      unc_face_grad = 0;
   }
 
   return unc_face_grad;
@@ -553,42 +589,8 @@ MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi) const
 
   const ADReal elem_value = getElemValue(&fi.elem());
 
-  auto neighbor_value_functor = [&]() {
-    if (neighbor)
-      return getElemValue(neighbor);
-    else
-    {
-      // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
-      std::vector<FVDirichletBC *> bcs;
-
-      _subproblem.getMooseApp()
-          .theWarehouse()
-          .query()
-          .template condition<AttribSystem>("FVDirichletBC")
-          .template condition<AttribThread>(_tid)
-          .template condition<AttribBoundaries>(fi.boundaryIDs())
-          .template condition<AttribVar>(_var_num)
-          .template condition<AttribSysNum>(_sys.number())
-          .queryInto(bcs);
-      mooseAssert(bcs.size() <= 1, "cannot have multiple dirichlet BCs on the same boundary");
-
-      bool has_dirichlet_bc = bcs.size() > 0;
-
-      if (has_dirichlet_bc)
-      {
-        const FVDirichletBC & bc = *bcs[0];
-
-        // Linear interpolation: face_value = (elem_value + neighbor_value) / 2
-        return 2. * bc.boundaryValue(fi) - elem_value;
-      }
-      else
-        // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
-        // face value is equivalent to the element value
-        return elem_value;
-    }
-  };
-
-  face_grad += ((neighbor_value_functor() - elem_value) / d_CF - face_grad * e_CF) * e_CF;
+  face_grad +=
+      ((getNeighborValue(neighbor, fi, elem_value) - elem_value) / d_CF - face_grad * e_CF) * e_CF;
 
   return face_grad;
 }

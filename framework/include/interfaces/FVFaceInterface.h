@@ -9,28 +9,15 @@
 
 #pragma once
 
+#include "FVUtils.h"
+
 class FVFaceInterface
 {
 public:
-  /// This codifies a set of available ways to interpolate with elem+neighbor
-  /// solution information to calculate values (e.g. solution, material
-  /// properties, etc.) at the face (centroid).  These methods are used in the
-  /// class's interpolate functions.  Some interpolation methods are only meant
-  /// to be used with advective terms (e.g. upwind), others are more
-  /// generically applicable.
-  enum class InterpMethod
-  {
-    /// (elem+neighbor)/2
-    Average,
-    /// weighted
-    Upwind,
-    // Rhie-Chow
-    RhieChow
-  };
+  using InterpMethod = Moose::InterpMethod;
 
   FVFaceInterface() = default;
 
-protected:
   /// Provides interpolation of face values for non-advection-specific purposes
   /// (although it can/will still be used by advective kernels sometimes).  The
   /// interpolated value is stored in result.  This should be called when a
