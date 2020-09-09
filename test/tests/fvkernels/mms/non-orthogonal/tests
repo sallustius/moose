@@ -1,0 +1,8 @@
+[Tests]
+  [compact]
+    type = Exodiff
+    input = advection-diffusion-reaction.i
+    exodiff = advection-diffusion-reaction_out.e
+    requirement = 'The system shall be able to solve an advection-diffusion-reaction problem with triangular finite elements and demonstrate second order convergence when using a compact stencil to approximate the gradient.'
+  []
+[]
