@@ -27,6 +27,7 @@ class MooseVariableFV;
 
 typedef MooseVariableFV<Real> MooseVariableFVReal;
 class FVDirichletBC;
+class FVFluxBC;
 
 namespace libMesh
 {
@@ -421,6 +422,8 @@ public:
   }
 
   std::pair<bool, const FVDirichletBC *> getDirichletBC(const FaceInfo & fi) const;
+
+  std::pair<bool, std::vector<const FVFluxBC *>> getFluxBCs(const FaceInfo & fi) const;
 
   void residualSetup() override;
   void jacobianSetup() override;

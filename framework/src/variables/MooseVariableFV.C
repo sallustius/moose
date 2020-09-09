@@ -14,6 +14,7 @@
 #include "DisplacedSystem.h"
 #include "Assembly.h"
 #include "FVUtils.h"
+#include "FVFluxBC.h"
 
 #include "libmesh/numeric_vector.h"
 
@@ -380,16 +381,36 @@ MooseVariableFV<OutputType>::getDirichletBC(const FaceInfo & fi) const
 
   if (has_dirichlet_bc)
   {
-    mooseAssert(bcs.size() == 1,
-                "There should not be multiple Dirichlet boundary conditions for a given variable "
-                "on a given FaceInfo");
-
     mooseAssert(bcs[0], "The FVDirichletBC is null!");
 
     return std::make_pair(true, bcs[0]);
   }
   else
     return std::make_pair(false, nullptr);
+}
+
+template <typename OutputType>
+std::pair<bool, std::vector<const FVFluxBC *>>
+MooseVariableFV<OutputType>::getFluxBCs(const FaceInfo & fi) const
+{
+  std::vector<const FVFluxBC *> bcs;
+
+  _subproblem.getMooseApp()
+      .theWarehouse()
+      .query()
+      .template condition<AttribSystem>("FVFluxBC")
+      .template condition<AttribThread>(_tid)
+      .template condition<AttribBoundaries>(fi.boundaryIDs())
+      .template condition<AttribVar>(_var_num)
+      .template condition<AttribSysNum>(_sys.number())
+      .queryInto(bcs);
+
+  bool has_flux_bc = bcs.size() > 0;
+
+  if (has_flux_bc)
+    return std::make_pair(true, bcs);
+  else
+    return std::make_pair(false, std::vector<const FVFluxBC *>());
 }
 
 #ifdef MOOSE_GLOBAL_AD_INDEXING
