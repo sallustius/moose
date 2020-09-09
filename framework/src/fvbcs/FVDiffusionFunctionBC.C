@@ -37,7 +37,7 @@ FVDiffusionFunctionBC::computeQpResidual()
   auto u_ghost =
       _exact_solution.value(_t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid());
 
-  auto dudn = gradUDotNormal(_u[_qp], u_ghost, *_face_info);
+  auto dudn = gradUDotNormal(_u[_qp], u_ghost, *_face_info, _var);
 
   auto coeff_ghost =
       _coeff_function.value(_t, 2. * _face_info->faceCentroid() - _face_info->elemCentroid());

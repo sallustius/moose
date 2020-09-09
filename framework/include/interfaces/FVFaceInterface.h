@@ -10,6 +10,7 @@
 #pragma once
 
 #include "FVUtils.h"
+#include "MooseVariableFV.h"
 
 class FVFaceInterface
 {
@@ -75,15 +76,29 @@ public:
   /// diffusive terms.  If using any cross-diffusion corrections, etc. all
   /// those calculations will be handled for appropriately by this function.
   template <typename T, typename T2>
-  ADReal gradUDotNormal(const T & elem_value, const T2 & neighbor_value, const FaceInfo &) const;
+  ADReal gradUDotNormal(const T & elem_value,
+                        const T2 & neighbor_value,
+                        const FaceInfo & fi,
+                        const MooseVariableFV<Real> & fv_var) const;
 };
 
 template <typename T, typename T2>
 ADReal
-FVFaceInterface::gradUDotNormal(const T & elem_value,
-                                const T2 & neighbor_value,
-                                const FaceInfo & face_info) const
+FVFaceInterface::gradUDotNormal(
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+    const T &, const T2 &, const FaceInfo & face_info, const MooseVariableFV<Real> & fv_var
+#else
+    const T & elem_value,
+    const T2 & neighbor_value,
+    const FaceInfo & face_info,
+    const MooseVariableFV<Real> &
+#endif
+) const
 {
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+  return fv_var.adGradSln(face_info) * normal();
+
+#else
   // We compute "grad_u dot _normal" by assuming the mesh is orthogonal, and
   // recognizing that it is equivalent to delta u between the two cell
   // centroids but for one unit in the normal direction.  We know delta u for
@@ -104,4 +119,5 @@ FVFaceInterface::gradUDotNormal(const T & elem_value,
   // currently is only correct if the vector between the elem-neighbor cell
   // centroids is parallel to the normal vector.
   return dudn;
+#endif
 }

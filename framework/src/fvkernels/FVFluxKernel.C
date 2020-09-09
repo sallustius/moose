@@ -56,16 +56,14 @@ FVFluxKernel::skipForBoundary(const FaceInfo & fi)
   if (!fi.isBoundary() || _force_boundary_execution)
     return false;
 
-  std::vector<FVDirichletBC *> dirichlet_bcs;
-  _app.theWarehouse()
-      .query()
-      .template condition<AttribSystem>("FVDirichletBC")
-      .template condition<AttribThread>(_tid)
-      .template condition<AttribBoundaries>(fi.boundaryIDs())
-      .template condition<AttribVar>(_var.number())
-      .template condition<AttribSysNum>(_var.sys().number())
-      .queryInto(dirichlet_bcs);
-  return dirichlet_bcs.size() == 0;
+  // If we have flux bcs then we do skip
+  const auto & flux_pr = _var.getFluxBCs(fi);
+  if (flux_pr.first)
+    return true;
+
+  // If we don't have flux bcs *and* we do have dirichlet bcs then we don't skip. If we don't have
+  // either then we assume natural boundary condition and we should skip
+  return !_var.getDirichletBC(fi).first;
 }
 
 void
@@ -242,5 +240,5 @@ FVFluxKernel::computeJacobian(const FaceInfo & fi)
 ADReal
 FVFluxKernel::gradUDotNormal() const
 {
-  return FVFaceInterface::gradUDotNormal(_u_elem[_qp], _u_neighbor[_qp], *_face_info);
+  return FVFaceInterface::gradUDotNormal(_u_elem[_qp], _u_neighbor[_qp], *_face_info, _var);
 }
