@@ -17,6 +17,7 @@ a=1.1
 
 [Problem]
   kernel_coverage_check = off
+  fv_bcs_integrity_check = false
 []
 
 [Variables]
@@ -60,6 +61,12 @@ a=1.1
     exact_solution = 'exact'
     coeff = coeff
     coeff_function = '${diff}'
+  []
+  [exact]
+    type = FVFunctionDirichletBC
+    boundary = 'left right'
+    function = 'exact'
+    variable = v
   []
 []
 

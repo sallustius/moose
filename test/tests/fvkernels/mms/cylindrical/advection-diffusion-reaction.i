@@ -52,21 +52,11 @@ diff=1.1
 []
 
 [FVBCs]
-  [advection]
-    type = FVAdvectionFunctionBC
+  [exact]
+    type = FVFunctionDirichletBC
     boundary = 'left right top bottom'
-    exact_solution = 'exact'
+    function = 'exact'
     variable = v
-    velocity = '${a} ${a} 0'
-    advected_interp_method = 'average'
-  []
-  [diffusion]
-    type = FVDiffusionFunctionBC
-    boundary = 'left right top bottom'
-    exact_solution = 'exact'
-    variable = v
-    coeff = ${diff}
-    coeff_function = ${diff}
   []
 []
 
