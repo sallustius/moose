@@ -23,7 +23,13 @@ template <typename OutputType>
 InputParameters
 MooseVariableFV<OutputType>::validParams()
 {
-  return MooseVariableField<OutputType>::validParams();
+  auto params = MooseVariableField<OutputType>::validParams();
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+  params.template addParam<bool>("use_extended_stencil",
+                                 false,
+                                 "Whether to use an extended stencil for gradient computation.");
+#endif
+  return params;
 }
 
 template <typename OutputType>
@@ -31,6 +37,14 @@ MooseVariableFV<OutputType>::MooseVariableFV(const InputParameters & parameters)
   : MooseVariableField<OutputType>(parameters),
     _solution(_sys.currentSolution()),
     _phi(&_assembly.template fePhi<OutputShape>(FEType(CONSTANT, MONOMIAL)))
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+    ,
+    // If the user doesn't specify a MooseVariableFV type in the input file, then we won't have this
+    // parameter available
+    _use_extended_stencil(this->isParamValid("use_extended_stencil")
+                              ? this->template getParam<bool>("use_extended_stencil")
+                              : false)
+#endif
 {
   _element_data = libmesh_make_unique<MooseVariableDataFV<OutputType>>(
       *this, _sys, _tid, Moose::ElementType::Element, this->_assembly.elem());
@@ -381,6 +395,52 @@ MooseVariableFV<OutputType>::getDirichletBC(const FaceInfo & fi) const
 #ifdef MOOSE_GLOBAL_AD_INDEXING
 
 template <typename OutputType>
+const ADReal &
+MooseVariableFV<OutputType>::getVertexValue(const Node & vertex) const
+{
+  auto it = _vertex_to_value.find(&vertex);
+
+  if (it != _vertex_to_value.end())
+    return it->second;
+
+  // Returns a pair with the first being an iterator pointing to the key-value pair and the second a
+  // boolean denoting whether a new insertion took place
+  auto emplace_ret = _vertex_to_value.emplace(&vertex, 0);
+
+  mooseAssert(emplace_ret.second, "We should have inserted a new key-value pair");
+
+  ADReal & value = emplace_ret.first->second;
+
+  ADReal numerator = 0, denominator = 0;
+
+  const auto node_elem_it = _mesh.nodeToElemMap().find(vertex.id());
+
+  mooseAssert(node_elem_it != _mesh.nodeToElemMap().end(), "Should have found the node");
+
+  const auto & connected_elems = node_elem_it->second;
+
+  const MeshBase & lm_mesh = _mesh.getMesh();
+
+  for (const auto elem_id : connected_elems)
+  {
+    const Elem * const elem = lm_mesh.elem_ptr(elem_id);
+    mooseAssert(elem, "If the elem ID exists, then the elem shouldn't be null");
+
+    const auto & elem_value = getElemValue(elem);
+
+    auto distance = (vertex - elem->centroid()).norm();
+
+    numerator += elem_value / distance;
+
+    denominator += 1. / distance;
+  }
+
+  value = numerator / denominator;
+
+  return value;
+}
+
+template <typename OutputType>
 ADReal
 MooseVariableFV<OutputType>::getElemValue(const Elem * const elem) const
 {
@@ -431,6 +491,56 @@ MooseVariableFV<OutputType>::getNeighborValue(const Elem * const neighbor,
 }
 
 template <typename OutputType>
+ADReal
+MooseVariableFV<OutputType>::getFaceValue(const Elem * const neighbor,
+                                          const FaceInfo & fi,
+                                          const ADReal & elem_value) const
+{
+  // Are we on a boundary?
+  if (!neighbor)
+  {
+    const auto & pr = getDirichletBC(fi);
+
+    if (pr.first)
+    {
+      const FVDirichletBC & bc = *pr.second;
+
+      return ADReal(bc.boundaryValue(fi));
+    }
+    else
+    {
+      // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
+      // face value is equivalent to the element value
+      return elem_value;
+    }
+  }
+
+  if (_use_extended_stencil)
+  {
+    ADReal numerator = 0, denominator = 0;
+
+    for (const Node * const vertex : fi.vertices())
+    {
+      auto distance = (*vertex - fi.faceCentroid()).norm();
+
+      numerator += getVertexValue(*vertex) / distance;
+      denominator += 1. / distance;
+    }
+
+    return numerator / denominator;
+  }
+  else
+  {
+    // Compact stencil
+    ADReal neighbor_value = getElemValue(neighbor);
+
+    const Real g_C = fi.gC();
+
+    return g_C * elem_value + (1. - g_C) * neighbor_value;
+  }
+}
+
+template <typename OutputType>
 const VectorValue<ADReal> &
 MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
 {
@@ -459,36 +569,9 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
                             const Point & surface_vector,
                             Real coord,
                             const bool elem_has_info) {
-    auto face_value_functor = [&neighbor, &fi, &elem_value, this]() {
-      if (neighbor)
-      {
-        ADReal neighbor_value = getElemValue(neighbor);
+    mooseAssert(fi, "We need a FaceInfo for this action_functor");
 
-        const Real g_C = fi->gC();
-
-        return g_C * elem_value + (1. - g_C) * neighbor_value;
-      }
-      else
-      {
-        // If we don't have a neighbor, then we're along a boundary, and we may have a DirichletBC
-        const auto & pr = getDirichletBC(*fi);
-
-        if (pr.first)
-        {
-          const FVDirichletBC & bc = *pr.second;
-
-          return ADReal(bc.boundaryValue(*fi));
-        }
-        else
-        {
-          // No DirichletBC so we'll implicitly apply a zero gradient condition and assume that the
-          // face value is equivalent to the element value
-          return elem_value;
-        }
-      }
-    };
-
-    grad += face_value_functor() * surface_vector;
+    grad += getFaceValue(neighbor, *fi, elem_value) * surface_vector;
 
     if (!volume_set)
     {
@@ -619,6 +702,8 @@ MooseVariableFV<OutputType>::clearCaches()
   _elem_to_grad.clear();
   _face_to_unc_grad.clear();
   _face_to_grad.clear();
+  _elem_to_coeff.clear();
+  _vertex_to_value.clear();
 #endif
 }
 

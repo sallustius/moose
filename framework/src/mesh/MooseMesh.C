@@ -62,61 +62,6 @@
 static const int GRAIN_SIZE =
     1; // the grain_size does not have much influence on our execution speed
 
-FaceInfo::FaceInfo(const Elem * elem,
-                   unsigned int side,
-                   const Elem * neighbor,
-                   const MooseMesh & mesh)
-  : _mesh(mesh), _processor_id(elem->processor_id())
-{
-  _elem = elem;
-  _neighbor = neighbor;
-
-  _elem_side_id = side;
-  _elem_centroid = elem->centroid();
-  _elem_volume = elem->volume();
-
-  std::unique_ptr<const Elem> face = elem->build_side_ptr(_elem_side_id);
-  _face_area = face->volume();
-  _face_centroid = face->centroid();
-
-  // 1. compute face centroid
-  // 2. compute an centroid face normal by using 1-point quadrature
-  //    meshes)
-  unsigned int dim = elem->dim();
-  std::unique_ptr<FEBase> fe(FEBase::build(dim, FEType(elem->default_order())));
-  QGauss qface(dim - 1, CONSTANT);
-  fe->attach_quadrature_rule(&qface);
-  const std::vector<Point> & normals = fe->get_normals();
-  fe->reinit(elem, _elem_side_id);
-  mooseAssert(normals.size() == 1, "FaceInfo construction broken w.r.t. computing face normals");
-  _normal = normals[0];
-
-  // the neighbor info does not exist for domain boundaries
-  if (!_neighbor)
-  {
-    _neighbor_side_id = std::numeric_limits<unsigned int>::max();
-    _neighbor_centroid = 2 * (_face_centroid - _elem_centroid) + _elem_centroid;
-    _neighbor_volume = _elem_volume;
-  }
-  else
-  {
-    _neighbor_side_id = neighbor->which_neighbor_am_i(elem);
-    _neighbor_centroid = neighbor->centroid();
-    _neighbor_volume = neighbor->volume();
-  }
-
-  _gc = (_neighbor_centroid - _face_centroid).norm() / (_neighbor_centroid - _elem_centroid).norm();
-}
-
-Real
-FaceInfo::gC() const
-{
-  mooseAssert(!_mesh.isDisplaced(),
-              "Currently all our FaceInfo geometric information is hard-coded for a static mesh.");
-
-  return _gc;
-}
-
 defineLegacyParams(MooseMesh);
 
 InputParameters

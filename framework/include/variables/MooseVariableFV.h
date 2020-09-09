@@ -437,6 +437,11 @@ public:
                           const FaceInfo & fi,
                           const ADReal & elem_value) const;
 
+  ADReal
+  getFaceValue(const Elem * const neighbor, const FaceInfo & fi, const ADReal & elem_value) const;
+
+  const ADReal & getVertexValue(const Node & vertex) const;
+
   /**
    * Get custom coefficients on a per-element basis. These should correspond to \p a
    * coefficients in the notation of Moukallad's "Finite Volume Method in Computational Fluid
@@ -506,6 +511,10 @@ private:
 
   /// A cache for storing FV \p a coefficients on elements
   mutable std::unordered_map<const Elem *, ADReal> _elem_to_coeff;
+
+  mutable std::unordered_map<const Node *, ADReal> _vertex_to_value;
+
+  const bool _use_extended_stencil;
 #endif
 };
 

@@ -32,6 +32,10 @@ FVKernel::validParams()
   params.declareControllable("enable");
 
   params.addParam<unsigned short>("ghost_layers", 1, "The number of layers of elements to ghost.");
+  params.addParam<bool>("use_point_neighbors",
+                        false,
+                        "Whether to use point neighbors, which introduces additional ghosting to "
+                        "that used for simple face neighbors.");
 
   // FV Kernels always need one layer of ghosting because when looping over
   // faces to compute fluxes, the elements on each side of the face may be on
@@ -43,6 +47,7 @@ FVKernel::validParams()
           Moose::RelationshipManagerType::COUPLING,
       [](const InputParameters & obj_params, InputParameters & rm_params) {
         rm_params.set<unsigned short>("layers") = obj_params.get<unsigned short>("ghost_layers");
+        rm_params.set<bool>("use_point_neighbors") = obj_params.get<bool>("use_point_neighbors");
       });
 
   params.registerBase("FVKernel");
