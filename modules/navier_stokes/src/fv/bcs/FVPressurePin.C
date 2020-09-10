@@ -64,22 +64,26 @@ FVPressurePin::FVPressurePin(const InputParameters & parameters)
 
   auto it = nodeset_to_nodes.find(boundary_id);
 
-  // lindsayad: is this check valid for a distributed mesh? Are we guaranteed to have nodeset ids
-  // available if none of the nodeset's nodes are (semi)local?
-  if (it == nodeset_to_nodes.end())
-    boundaryParamError();
+  const std::vector<dof_id_type> * nodes = nullptr;
+  bool local_node = false;
 
-  const auto & nodes = it->second;
+  if (it != nodeset_to_nodes.end())
+    nodes = &it->second;
 
-  // lindsayad: In distributed (or actually even in replicated) mode, I assume that we don't add
-  // nodes that aren't (semi)local to the nodeset_to_nodes container, so size() may be zero
-  if (nodes.size() > 1)
+  if (nodes->size() > 1)
     paramError("boundary",
                "The FVPressurePin class should only be associated with a single boundary node.");
 
+  const Node * const one_node = _mesh.getMesh().query_node_ptr((*nodes)[0]);
+  mooseAssert(one_node,
+              "It's weird that this nodeid existed in our map, but we can't query it on the mesh.");
+  mooseAssert(one_node->id() == (*nodes)[0], "the ids should match");
+
+  local_node = one_node->processor_id() == this->processor_id();
+
   std::vector<dof_id_type> global_nodes;
-  if (nodes.size())
-    global_nodes.push_back(nodes[0]);
+  if (local_node)
+    global_nodes.push_back((*nodes)[0]);
 
   _communicator.gather(0, global_nodes);
 
@@ -88,7 +92,7 @@ FVPressurePin::FVPressurePin(const InputParameters & parameters)
       boundaryParamError();
 
   // lindsayad: No matter how we refine, this node should still exist and be executed on (right?)
-  _valid_node = nodes.size() ? nodes[0] : libMesh::DofObject::invalid_id;
+  _valid_node = local_node ? (*nodes)[0] : libMesh::DofObject::invalid_id;
 }
 
 dof_id_type
