@@ -225,7 +225,6 @@ force_boundary_execution=true
   petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
   petsc_options_value = 'asm      200                lu           NONZERO'
   line_search = 'none'
-  nl_rel_tol = 1e-12
 []
 
 [Outputs]

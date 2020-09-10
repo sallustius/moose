@@ -1,32 +1,39 @@
 [Tests]
   [1d-average]
-    type = Exodiff
-    input = 1d-average.i
-    exodiff = 1d-average_out.e
+    type = PythonUnitTest
+    input = test.py
+    test_case = Test1DAverage
+    method = '!dbg'
     requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in one dimension with prescribed inlet velocity and outlet pressure and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure when using an average interpolation scheme for the velocity.'
   []
   [1d-rc]
-    type = Exodiff
-    input = 1d-rc.i
-    exodiff = 1d-rc_out.e
+    type = PythonUnitTest
+    input = test.py
+    test_case = Test1DRC
+    method = '!dbg'
     requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in one dimension with prescribed inlet velocity and outlet pressure and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure when using a Rhie-Chow interpolation scheme for the velocity.'
   []
   [2d-average]
-    type = Exodiff
-    input = 2d-average.i
-    exodiff = 2d-average_out.e
+    type = PythonUnitTest
+    input = test.py
+    test_case = Test2DAverage
+    method = '!dbg'
     requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in two dimensions with prescribed inlet velocity and outlet pressure, free slip along the walls, and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure when using an average interpolation scheme for the velocity.'
   []
   [2d-rc]
-    type = Exodiff
-    input = 2d-rc.i
-    exodiff = 2d-rc_out.e
+    type = PythonUnitTest
+    input = test.py
+    test_case = Test2DRC
+    method = '!dbg'
+    min_parallel = 8
     requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in two dimensions with prescribed inlet velocity and outlet pressure, free slip along the walls, and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure when using a Rhie-Chow interpolation scheme for the velocity.'
   []
   [2d-rc-no-slip]
-    type = Exodiff
-    input = 2d-rc-no-slip.i
-    exodiff = 2d-rc-no-slip_out.e
+    type = PythonUnitTest
+    input = test.py
+    test_case = Test2DRCNoSlip
+    method = '!dbg'
+    min_parallel = 8
     requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in two dimensions with prescribed inlet velocity and outlet pressure, no slip along the walls, and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure when using a Rhie-Chow interpolation scheme for the velocity.'
   []
 []

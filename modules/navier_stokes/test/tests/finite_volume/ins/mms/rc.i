@@ -1,5 +1,6 @@
 mu=1.1
 rho=1.1
+velocity_interp_method='rc'
 
 [Mesh]
   [gen]
@@ -16,6 +17,8 @@ rho=1.1
 
 [Problem]
   kernel_coverage_check = false
+  fv_bcs_integrity_check = false
+  error_on_jacobian_nonzero_reallocation = true
 []
 
 [Variables]
@@ -60,7 +63,7 @@ rho=1.1
     variable = pressure
     advected_quantity = 1
     advected_interp_method = 'average'
-    velocity_interp_method = 'rc'
+    velocity_interp_method = ${velocity_interp_method}
     vel = 'velocity'
     pressure = pressure
     u = u
@@ -81,7 +84,7 @@ rho=1.1
     advected_quantity = 'rhou'
     vel = 'velocity'
     advected_interp_method = 'average'
-    velocity_interp_method = 'rc'
+    velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
     v = v
@@ -117,7 +120,7 @@ rho=1.1
     advected_quantity = 'rhov'
     vel = 'velocity'
     advected_interp_method = 'average'
-    velocity_interp_method = 'rc'
+    velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
     v = v
@@ -156,7 +159,7 @@ rho=1.1
     advected_interp_method = 'average'
     vel_x_exact_solution = 'exact_u'
     vel_y_exact_solution = 'exact_v'
-    velocity_interp_method = 'rc'
+    velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
     v = v
@@ -191,7 +194,7 @@ rho=1.1
     advected_interp_method = 'average'
     vel_x_exact_solution = 'exact_u'
     vel_y_exact_solution = 'exact_v'
-    velocity_interp_method = 'rc'
+    velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
     v = v
@@ -225,13 +228,32 @@ rho=1.1
     flux_variable_exact_solution = 1
     vel_x_exact_solution = 'exact_u'
     vel_y_exact_solution = 'exact_v'
-    velocity_interp_method = 'rc'
+    velocity_interp_method = ${velocity_interp_method}
     pressure = pressure
     u = u
     v = v
     mu = ${mu}
     rho = ${rho}
     pressure_exact_solution = 'exact_p'
+  []
+
+  [u_diri]
+    type = FVFunctionDirichletBC
+    variable = u
+    boundary = 'top bottom left right'
+    function = 'exact_u'
+  []
+  [v_diri]
+    type = FVFunctionDirichletBC
+    variable = v
+    boundary = 'top bottom left right'
+    function = 'exact_v'
+  []
+  [p_diri]
+    type = FVFunctionDirichletBC
+    variable = pressure
+    boundary = 'top bottom left right'
+    function = 'exact_p'
   []
 []
 
