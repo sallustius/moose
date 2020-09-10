@@ -77,8 +77,14 @@ ExtraNodesetGenerator::generate()
 
   // add nodes with their ids
   for (const auto & node_id : nodes)
+  {
+    // Our mesh may be distributed and this node may not exist on this process
+    if (!mesh->query_node_ptr(node_id))
+      continue;
+
     for (const auto & boundary_id : boundary_ids)
       boundary_info.add_node(node_id, boundary_id);
+  }
 
   // add nodes with their coordinates
   const auto dim = mesh->mesh_dimension();
