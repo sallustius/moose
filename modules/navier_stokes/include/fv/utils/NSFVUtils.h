@@ -50,12 +50,15 @@ coeffCalculator(const Elem * const elem, const NSFVClass & nsfv)
     static_cast<const FVFaceInterface &>(nsfv).interpolate(
         Moose::InterpMethod::Average, interp_v, elem_velocity, neighbor_velocity);
 
-    const ADReal mass_flow = nsfv.rho() * interp_v * surface_vector;
+    ADReal mass_flow = nsfv.rho() * interp_v * surface_vector;
 
     // We are upwinding, so we only sum into the coefficient if the mass flow rate is negative,
-    // indicating *inflow*
-    if (mass_flow < 0)
-      coeff += -mass_flow;
+    // indicating inflow. However, we also don't want to indicate different sparsity with this
+    // stupid if statement, so when we don't want to add, we just zero the variable out
+    if (mass_flow > 0)
+      mass_flow -= mass_flow;
+
+    coeff += -mass_flow;
 
     // Now add the viscous flux
     coeff +=
