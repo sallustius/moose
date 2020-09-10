@@ -99,7 +99,6 @@ NSFVKernel::interpolate(InterpMethod m,
       FVFluxKernel::interpolate(InterpMethod::Average, face_volume, elem_volume, neighbor_volume);
     }
 
-    mooseAssert(face_a > 0, "face_a should be greater than zero");
     const ADReal face_D = face_volume / face_a;
 
     // perform the pressure correction

@@ -52,12 +52,6 @@ coeffCalculator(const Elem * const elem, const NSFVClass & nsfv)
 
     ADReal mass_flow = nsfv.rho() * interp_v * surface_vector;
 
-    // We are upwinding, so we only sum into the coefficient if the mass flow rate is negative,
-    // indicating inflow. However, we also don't want to indicate different sparsity with this
-    // stupid if statement, so when we don't want to add, we just zero the variable out
-    if (mass_flow > 0)
-      mass_flow -= mass_flow;
-
     coeff += -mass_flow;
 
     // Now add the viscous flux
