@@ -12,6 +12,7 @@
 #include "MooseTypes.h"
 
 #include "libmesh/point.h"
+#include "libmesh/vector_value.h"
 
 #include <map>
 #include <set>
@@ -147,7 +148,13 @@ public:
   Real neighborVolume() const { return _neighbor_volume; }
 
   /// Return the geometric weighting factor
-  Real gC() const;
+  Real gC() const { return _gc; }
+
+  const RealVectorValue & dCF() const { return _d_cf; }
+
+  Real dCFMag() const { return _d_cf_mag; }
+
+  const RealVectorValue & eCF() const { return _e_cf; }
 
   processor_id_type processor_id() const { return _processor_id; }
 
@@ -192,4 +199,8 @@ private:
   const processor_id_type _processor_id;
 
   std::vector<const Node *> _vertices;
+
+  RealVectorValue _d_cf;
+  Real _d_cf_mag;
+  RealVectorValue _e_cf;
 };

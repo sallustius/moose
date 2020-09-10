@@ -58,18 +58,14 @@ FaceInfo::FaceInfo(const Elem * elem,
     _neighbor_volume = neighbor->volume();
   }
 
-  _gc = (_neighbor_centroid - _face_centroid).norm() / (_neighbor_centroid - _elem_centroid).norm();
+  _gc = (_neighbor_centroid - _face_centroid).norm() /
+        ((_neighbor_centroid - _face_centroid).norm() + (_elem_centroid - _face_centroid).norm());
+
+  _d_cf = _neighbor_centroid - _elem_centroid;
+  _d_cf_mag = _d_cf.norm();
+  _e_cf = _d_cf / _d_cf_mag;
 
   _vertices.resize(face->n_vertices());
   for (const auto vertex_num : make_range(face->n_vertices()))
     _vertices[vertex_num] = face->node_ptr(vertex_num);
-}
-
-Real
-FaceInfo::gC() const
-{
-  mooseAssert(!_mesh.isDisplaced(),
-              "Currently all our FaceInfo geometric information is hard-coded for a static mesh.");
-
-  return _gc;
 }
