@@ -25,6 +25,8 @@ diff=1.1
     order = CONSTANT
     fv = true
     initial_condition = 1
+    type = MooseVariableFVReal
+    use_extended_stencil = true
   [../]
 []
 
@@ -43,6 +45,7 @@ diff=1.1
     type = FVDiffusion
     variable = v
     coeff = ${diff}
+    use_point_neighbors = true
   []
   [body_v]
     type = FVBodyForce
