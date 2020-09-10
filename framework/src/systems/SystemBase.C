@@ -1322,10 +1322,6 @@ SystemBase::cacheVarIndicesByFace(const std::vector<VariableName> & vars)
     if (neighbor_elem)
       neighbor_subdomain_id = neighbor_elem->subdomain_id();
 
-    // TODO: what happens if elem and neighbor subdomain ids have different
-    // coordinate transforms here?  Figure out how to handle this robustly.
-    coordTransformFactor(_subproblem, elem_subdomain_id, p->faceCentroid(), p->faceCoord());
-
     // loop through vars
     for (unsigned int j = 0; j < moose_vars.size(); ++j)
     {
@@ -1385,6 +1381,8 @@ SystemBase::cacheVarIndicesByFace(const std::vector<VariableName> & vars)
       }
     }
   }
+
+  mesh().computeFaceInfoFaceCoords(_subproblem);
 }
 
 template MooseVariableFE<Real> & SystemBase::getFieldVariable<Real>(THREAD_ID tid,

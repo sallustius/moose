@@ -10,7 +10,6 @@
 #include "MooseMesh.h"
 #include "Factory.h"
 #include "CacheChangedListsThread.h"
-#include "Assembly.h"
 #include "MooseUtils.h"
 #include "MooseApp.h"
 #include "RelationshipManager.h"
@@ -18,6 +17,8 @@
 #include "TimedPrint.h"
 #include "Executioner.h"
 #include "NonlinearSystemBase.h"
+#include "Assembly.h"
+#include "SubProblem.h"
 
 #include <utility>
 
@@ -3188,5 +3189,26 @@ MooseMesh::faceInfo(const Elem * elem, unsigned int side) const
   {
     mooseAssert(it->second, "For some reason, the FaceInfo object is NULL!");
     return it->second;
+  }
+}
+
+void
+MooseMesh::computeFaceInfoFaceCoords(const SubProblem & subproblem)
+{
+  if (_face_info_dirty)
+    mooseError("Trying to compute face-info coords when the information is dirty");
+
+  for (auto & fi : _all_face_info)
+  {
+    // get elem & neighbor elements, and set subdomain ids
+    const Elem & elem_elem = fi.elem();
+    const Elem * neighbor_elem = fi.neighborPtr();
+    SubdomainID elem_subdomain_id = elem_elem.subdomain_id();
+    SubdomainID neighbor_subdomain_id = Elem::invalid_subdomain_id;
+    if (neighbor_elem)
+      neighbor_subdomain_id = neighbor_elem->subdomain_id();
+
+    coordTransformFactor(
+        subproblem, elem_subdomain_id, fi.faceCentroid(), fi.faceCoord(), neighbor_subdomain_id);
   }
 }

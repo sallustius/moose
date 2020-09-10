@@ -994,6 +994,8 @@ public:
   // const
   ///@}
 
+  void computeFaceInfoFaceCoords(const SubProblem & subproblem);
+
   /**
    * Set whether this mesh is displaced
    */
