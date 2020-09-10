@@ -416,3 +416,6 @@ def recursive_update(d, u):
 
 def fuzzyEqual(test_value, true_value, tolerance):
     return abs(test_value - true_value) / abs(true_value) < tolerance
+
+def fuzzyAbsoluteEqual(test_value, true_value, tolerance):
+    return abs(test_value - true_value) < tolerance
