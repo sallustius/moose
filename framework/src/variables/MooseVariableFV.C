@@ -555,9 +555,7 @@ MooseVariableFV<OutputType>::getFaceValue(const Elem * const neighbor,
     // Compact stencil
     ADReal neighbor_value = getElemValue(neighbor);
 
-    const Real g_C = fi.gC();
-
-    return g_C * elem_value + (1. - g_C) * neighbor_value;
+    return Moose::linearAverage(elem_value, neighbor_value, fi);
   }
 }
 
@@ -596,6 +594,8 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
 
     if (!volume_set)
     {
+      // We use the FaceInfo volumes because those values have been pre-computed and cached. An
+      // explicit call to elem->volume() here would incur unnecessary expense
       if (elem_has_info)
       {
         coordTransformFactor(_subproblem, functor_elem.subdomain_id(), fi->elemCentroid(), coord);
@@ -649,10 +649,8 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
   {
     const VectorValue<ADReal> & neighbor_grad = adGradSln(neighbor);
 
-    const Real g_C = fi.gC();
-
     // Uncorrected gradient value
-    unc_face_grad = g_C * elem_grad + (1. - g_C) * neighbor_grad;
+    unc_face_grad = Moose::linearAverage(elem_grad, neighbor_grad, fi);
   }
   else
   {
@@ -684,17 +682,12 @@ MooseVariableFV<OutputType>::adGradSln(const FaceInfo & fi) const
 
   const Elem * const neighbor = fi.neighborPtr();
 
-  // perform the correction
-  const Point d_CF_vec = neighbor ? fi.neighborCentroid() - fi.elemCentroid()
-                                  : (2. * (fi.faceCentroid() - fi.elemCentroid()));
-  const Real d_CF = d_CF_vec.norm();
-
-  const Point e_CF = d_CF_vec / d_CF;
-
   const ADReal elem_value = getElemValue(&fi.elem());
 
-  face_grad +=
-      ((getNeighborValue(neighbor, fi, elem_value) - elem_value) / d_CF - face_grad * e_CF) * e_CF;
+  // perform the correction
+  face_grad += ((getNeighborValue(neighbor, fi, elem_value) - elem_value) / fi.dCFMag() -
+                face_grad * fi.eCF()) *
+               fi.eCF();
 
   return face_grad;
 }

@@ -121,4 +121,11 @@ loopOverElemFaceInfo(const Elem & elem,
     }
   }
 }
+
+template <typename T>
+T
+linearAverage(const T & elem_value, const T & neighbor_value, const FaceInfo & fi)
+{
+  return fi.gC() * elem_value + (1. - fi.gC()) * neighbor_value;
+}
 }
