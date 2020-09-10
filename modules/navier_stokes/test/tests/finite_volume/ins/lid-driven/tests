@@ -18,7 +18,7 @@
   [jacobian]
     type = 'PetscJacobianTester'
     input = 'lid-driven.i'
-    cli_args = 'Mesh/gen/nx=4 Mesh/gen/ny=4'
+    cli_args = 'Mesh/gen/nx=2 Mesh/gen/ny=2'
     requirement = 'The system shall be able to compute a perfect Jacobian when solving a lid-driven incompressible Navier-Stokes problem with the finite volume method.'
     run_sim = True
   []
