@@ -3147,12 +3147,6 @@ MooseMesh::buildFaceInfo()
 
         auto & fi = _all_face_info.back();
 
-#ifndef NDEBUG
-        auto pair_it =
-#endif
-            _elem_side_to_face_info.emplace(std::make_pair(elem, side), &fi);
-        mooseAssert(pair_it.second, "We should be adding unique FaceInfo objects.");
-
         // get all the sidesets that this face is contained in and cache them
         // in the face info.
         std::set<boundary_id_type> & boundary_ids = fi.boundaryIDs();
@@ -3172,12 +3166,22 @@ MooseMesh::buildFaceInfo()
     }
   }
 
-  // Build the local face info. We need to do this after _all_face_info is finished being
-  // constructed because emplace_back invalidates all iterators and references if ever the new size
-  // exceeds capacity
+  // Build the local face info and elem_side to face info maps. We need to do this after
+  // _all_face_info is finished being constructed because emplace_back invalidates all iterators and
+  // references if ever the new size exceeds capacity
   for (auto & fi : _all_face_info)
+  {
+    const Elem * const elem = &fi.elem();
+    const auto side = fi.elemSideID();
+
+#ifndef NDEBUG
+    auto pair_it =
+#endif
+        _elem_side_to_face_info.emplace(std::make_pair(elem, side), &fi);
+    mooseAssert(pair_it.second, "We should be adding unique FaceInfo objects.");
     if (fi.processor_id() == this->processor_id())
       _face_info.push_back(&fi);
+  }
 }
 
 const FaceInfo *
