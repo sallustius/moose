@@ -13,6 +13,7 @@
 #include "MooseError.h"
 #include "SubProblem.h"
 #include "Assembly.h"
+#include "FaceInfo.h"
 #include "libmesh/elem.h"
 
 namespace Moose
@@ -40,31 +41,84 @@ loopOverElemFaceInfo(const Elem & elem,
                      const SubProblem & subproblem,
                      ActionFunctor & act)
 {
+  mooseAssert(elem.active(), "We should never call this method with an inactive element");
+
   for (const auto side : elem.side_index_range())
   {
-    const Elem * const neighbor = elem.neighbor_ptr(side);
+    const Elem * const candidate_neighbor = elem.neighbor_ptr(side);
 
-    bool elem_has_info = neighbor ? (elem.id() < neighbor->id()) : true;
+    bool elem_has_info;
 
-    const FaceInfo * const fi = elem_has_info
-                                    ? mesh.faceInfo(&elem, side)
-                                    : mesh.faceInfo(neighbor, neighbor->which_neighbor_am_i(&elem));
+    std::set<const Elem *> neighbors;
 
-    mooseAssert(fi, "We should have found a FaceInfo");
+    // See MooseMesh::buildFaceInfo for corresponding checks/additions of FaceInfo
+    if (!candidate_neighbor)
+    {
+      neighbors.insert(candidate_neighbor);
+      elem_has_info = true;
+    }
+    else if (elem.level() != candidate_neighbor->level())
+    {
+      neighbors.insert(candidate_neighbor);
+      elem_has_info = candidate_neighbor->level() < elem.level();
+    }
+    else if (!candidate_neighbor->active())
+    {
+      // We must be next to an element that has been refined
+      mooseAssert(candidate_neighbor->has_children(), "We should have children");
 
-    const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
+      const auto candidate_neighbor_side = candidate_neighbor->which_neighbor_am_i(&elem);
 
-    mooseAssert(neighbor ? subproblem.getCoordSystem(elem.subdomain_id()) ==
-                               subproblem.getCoordSystem(neighbor->subdomain_id())
-                         : true,
-                "Coordinate systems must be the same between element and neighbor");
+      for (const auto child_num : make_range(candidate_neighbor->n_children()))
+        if (candidate_neighbor->is_child_on_side(child_num, candidate_neighbor_side))
+        {
+          const Elem * const child = candidate_neighbor->child_ptr(child_num);
+          mooseAssert(child->level() - elem.level() == 1, "The math doesn't work out here.");
+          mooseAssert(child->has_neighbor(&elem), "Elem should be a neighbor of this child.");
+          mooseAssert(child->active(),
+                      "We shouldn't have greater than a face mismatch level of one");
+          neighbors.insert(child);
+        }
 
-    Real coord;
-    coordTransformFactor(subproblem, elem.subdomain_id(), fi->faceCentroid(), coord);
+      elem_has_info = false;
+    }
+    else
+    {
+      neighbors.insert(candidate_neighbor);
 
-    const Point surface_vector = elem_normal * fi->faceArea() * coord;
+      // Both elements are active and they are on the same level, so which one has the info is
+      // determined by the lower ID
+      elem_has_info = elem.id() < candidate_neighbor->id();
+    }
 
-    act(elem, neighbor, fi, surface_vector, coord, elem_has_info);
+    for (const Elem * const neighbor : neighbors)
+    {
+      const FaceInfo * const fi =
+          elem_has_info ? mesh.faceInfo(&elem, side)
+                        : mesh.faceInfo(neighbor, neighbor->which_neighbor_am_i(&elem));
+
+      mooseAssert(fi, "We should have found a FaceInfo");
+      mooseAssert(elem_has_info ? &elem == &fi->elem() : &elem == fi->neighborPtr(),
+                  "Doesn't seem like we understand how this FaceInfo thing is working");
+      mooseAssert(neighbor
+                      ? (elem_has_info ? neighbor == fi->neighborPtr() : neighbor == &fi->elem())
+                      : true,
+                  "Doesn't seem like we understand how this FaceInfo thing is working");
+
+      const Point elem_normal = elem_has_info ? fi->normal() : Point(-fi->normal());
+
+      mooseAssert(neighbor ? subproblem.getCoordSystem(elem.subdomain_id()) ==
+                                 subproblem.getCoordSystem(neighbor->subdomain_id())
+                           : true,
+                  "Coordinate systems must be the same between element and neighbor");
+
+      Real coord;
+      coordTransformFactor(subproblem, elem.subdomain_id(), fi->faceCentroid(), coord);
+
+      const Point surface_vector = elem_normal * fi->faceArea() * coord;
+
+      act(elem, neighbor, fi, surface_vector, coord, elem_has_info);
+    }
   }
 }
 }

@@ -3123,9 +3123,11 @@ MooseMesh::buildFaceInfo()
       //       element and vise versa, we only create a face info object once
       //       instead of twice.
       //
-      //  * when the following two conditions are met:
+      //  * when the following two (CURRENTLY ONE ACTUALLY) conditions are met:
       //
-      //     - the neighbor is active - this means we aren't looking at a face
+      //     - WE AREN'T ACTULLY DOING THIS CHECK RIGHT NOW. SHOULD WE BE? WE DON'T
+      //       DO IT FOR DGKERNELS OR INTERFACE KERNELS
+      //       the neighbor is active - this means we aren't looking at a face
       //       between an active element and an inactive (pre-refined version)
       //       of a neighbor
       //
