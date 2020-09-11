@@ -12,5 +12,6 @@
     exodiff = 2d-rc-no-slip_out.e
     method = "!dbg"
     requirement = 'The system shall be able to model no-slip conditions in a channel; specifically, moving down the channel, the tangential velocity shall develop a parabolic profile.'
+    abs_zero = 1e-9
   []
 []
