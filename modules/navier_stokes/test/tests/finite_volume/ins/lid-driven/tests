@@ -22,4 +22,11 @@
     requirement = 'The system shall be able to compute a perfect Jacobian when solving a lid-driven incompressible Navier-Stokes problem with the finite volume method.'
     run_sim = True
   []
+  [with-temp]
+    type = 'Exodiff'
+    input = 'lid-driven-with-energy.i'
+    exodiff = 'lid-driven-with-energy_out.e'
+    requirement = 'The system shall be able to transport scalar quantities using the simultaneously calculated velocity field from the incompressible Navier Stokes equations.'
+    method = '!dbg'
+  []
 []
