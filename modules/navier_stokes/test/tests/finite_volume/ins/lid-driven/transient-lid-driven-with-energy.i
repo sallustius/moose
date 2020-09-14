@@ -52,6 +52,14 @@ advected_interp_method = 'average'
   []
 []
 
+[ICs]
+  [T]
+    type = ConstantIC
+    variable = T
+    value = 1
+  []
+[]
+
 [AuxVariables]
   [U]
     order = CONSTANT
@@ -84,6 +92,10 @@ advected_interp_method = 'average'
     rho = ${rho}
   []
 
+  [u_time]
+    type = FVMomentumTimeDerivative
+    variable = 'u'
+  []
   [u_advection]
     type = NSFVKernel
     variable = u
@@ -97,13 +109,11 @@ advected_interp_method = 'average'
     mu = ${mu}
     rho = ${rho}
   []
-
   [u_viscosity]
     type = FVDiffusion
     variable = u
     coeff = ${mu}
   []
-
   [u_pressure]
     type = FVMomPressure
     variable = u
@@ -111,6 +121,10 @@ advected_interp_method = 'average'
     vel = ${vel}
   []
 
+  [v_time]
+    type = FVMomentumTimeDerivative
+    variable = v
+  []
   [v_advection]
     type = NSFVKernel
     variable = v
@@ -124,13 +138,11 @@ advected_interp_method = 'average'
     mu = ${mu}
     rho = ${rho}
   []
-
   [v_viscosity]
     type = FVDiffusion
     variable = v
     coeff = ${mu}
   []
-
   [v_pressure]
     type = FVMomPressure
     variable = v
@@ -138,13 +150,16 @@ advected_interp_method = 'average'
     momentum_component = 'y'
   []
 
-  [temp-condution]
+  [temp_time]
+    type = FVEnergyTimeDerivative
+    variable = T
+  []
+  [temp_conduction]
     type = FVDiffusion
     coeff = 'k'
     variable = T
   []
-
-  [temp-advection]
+  [temp_advection]
     type = FVMatAdvection
     vel = ${vel}
     variable = T
@@ -223,11 +238,17 @@ advected_interp_method = 'average'
 
 
 [Executioner]
-  type = Steady
-  solve_type = 'NEWTON'
-  petsc_options_iname = '-pc_type -ksp_gmres_restart -sub_pc_type -sub_pc_factor_shift_type'
-  petsc_options_value = 'asm      300                lu           NONZERO'
+  type = Transient
+  # Run for 100+ timesteps to reach steady state.
+  num_steps = 5
+  dt = .5
+  dtmin = .5
+  petsc_options_iname = '-pc_type -sub_pc_type -sub_pc_factor_shift_type -ksp_gmres_restart'
+  petsc_options_value = 'asm      lu           NONZERO                   200'
+  line_search = 'none'
   nl_rel_tol = 1e-12
+  nl_max_its = 6
+  l_max_its = 200
 []
 
 [Outputs]

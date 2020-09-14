@@ -29,4 +29,11 @@
     requirement = 'The system shall be able to transport scalar quantities using the simultaneously calculated velocity field from the incompressible Navier Stokes equations.'
     method = '!dbg'
   []
+  [transient-with-temp]
+    type = 'Exodiff'
+    input = 'transient-lid-driven-with-energy.i'
+    exodiff = 'transient-lid-driven-with-energy_out.e'
+    requirement = 'The system shall be able to transport scalar quantities using the simultaneously calculated velocity field from the transient incompressible Navier Stokes equations.'
+    method = '!dbg'
+  []
 []

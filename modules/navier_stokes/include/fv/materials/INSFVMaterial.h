@@ -50,4 +50,10 @@ protected:
 
   /// density
   const ADMaterialProperty<Real> & _rho;
+
+  const bool _has_temperature;
+
+  const ADVariableValue * const _temperature;
+  const ADMaterialProperty<Real> * const _cp;
+  ADMaterialProperty<Real> * const _rho_cp_temp;
 };

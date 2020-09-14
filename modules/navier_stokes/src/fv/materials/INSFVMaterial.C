@@ -23,6 +23,8 @@ INSFVMaterial::validParams()
   params.addCoupledVar("w", 0, "z-velocity"); // only required in 3D
   params.addParam<MaterialPropertyName>("rho_name", "rho", "The name of the density");
   params.addRequiredCoupledVar("pressure", "The pressure variable.");
+  params.addCoupledVar("temperature", "the temperature");
+  params.addParam<MaterialPropertyName>("cp_name", "cp", "the name of the specific heat capacity");
   return params;
 }
 
@@ -37,7 +39,11 @@ INSFVMaterial::INSFVMaterial(const InputParameters & parameters)
     _rho_v(declareADProperty<Real>(NS::momentum_y)),
     _rho_w(declareADProperty<Real>(NS::momentum_z)),
     _p(declareADProperty<Real>(NS::pressure)),
-    _rho(getADMaterialProperty<Real>("rho_name"))
+    _rho(getADMaterialProperty<Real>("rho_name")),
+    _has_temperature(isParamValid("temperature")),
+    _temperature(_has_temperature ? &adCoupledValue("temperature") : nullptr),
+    _cp(_has_temperature ? &getADMaterialProperty<Real>("cp_name") : nullptr),
+    _rho_cp_temp(_has_temperature ? &declareADProperty<Real>("rho_cp_temp") : nullptr)
 {
 }
 
@@ -66,4 +72,7 @@ INSFVMaterial::computeQpProperties()
               "z-velocity component should be zero");
   mooseAssert(_mesh.dimension() >= 2 || _velocity[_qp](1) == 0,
               "y-velocity component should be zero");
+
+  if (_has_temperature)
+    (*_rho_cp_temp)[_qp] = _rho[_qp] * (*_cp)[_qp] * (*_temperature)[_qp];
 }
