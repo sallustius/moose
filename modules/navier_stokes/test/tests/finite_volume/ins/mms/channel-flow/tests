@@ -36,4 +36,19 @@
     min_parallel = 8
     requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations in two dimensions with prescribed inlet velocity and outlet pressure, no slip along the walls, and implicit zero gradient boundary conditions elsewhere, and demonstrate second order convergence in both velocity and pressure when using a Rhie-Chow interpolation scheme for the velocity.'
   []
+  [2d-average-with-temp]
+    type = PythonUnitTest
+    input = test.py
+    test_case = Test2DAverageTemp
+    method = '!dbg'
+    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations, including energy, using an average interpolation for the velocity, with a mix of Dirichlet and zero-gradient boundary conditions for each variable, and demonstrate second order convergence for each variable.'
+  []
+  [2d-rc-with-temp]
+    type = PythonUnitTest
+    input = test.py
+    test_case = Test2DRCTemp
+    method = '!dbg'
+    min_parallel = 8
+    requirement = 'The system shall be able to solve the incompressible Navier-Stokes equations, including energy, using an average interpolation for the velocity, with a mix of Dirichlet and zero-gradient boundary conditions for each variable, and demonstrate second order convergence for each variable.'
+  []
 []
