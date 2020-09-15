@@ -118,6 +118,7 @@ GeneratedMeshGenerator::generate()
 {
   // Have MOOSE construct the correct libMesh::Mesh object using Mesh block and CLI parameters.
   auto mesh = _mesh->buildMeshBaseObject();
+  _app.attachRelationshipManagers(*mesh);
 
   if (isParamValid("extra_element_integers"))
   {

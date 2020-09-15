@@ -45,6 +45,7 @@ std::unique_ptr<MeshBase>
 FileMeshGenerator::generate()
 {
   auto mesh = _mesh->buildMeshBaseObject();
+  _app.attachRelationshipManagers(*mesh);
 
   bool exodus =
       _file_name.rfind(".exd") < _file_name.size() || _file_name.rfind(".e") < _file_name.size();
