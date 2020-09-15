@@ -678,6 +678,7 @@ public:
    */
   MeshBase & getMesh();
   const MeshBase & getMesh() const;
+  const MeshBase * getMeshPtr() const;
 
   /**
    * Calls print_info() on the underlying Mesh.
