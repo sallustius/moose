@@ -2830,6 +2830,12 @@ MooseMesh::operator libMesh::MeshBase &() { return getMesh(); }
 
 MooseMesh::operator const libMesh::MeshBase &() const { return getMesh(); }
 
+const MeshBase *
+MooseMesh::getMeshPtr() const
+{
+  return _mesh.get();
+}
+
 MeshBase &
 MooseMesh::getMesh()
 {
