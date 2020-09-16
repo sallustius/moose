@@ -1051,7 +1051,6 @@ DistributedRectilinearMeshGenerator::generate()
   _mesh->needGhostGhostedBoundaries(false);
 
   // DistributedRectilinearMeshGenerator always generates a distributed mesh
-  _mesh->setParallelType(MooseMesh::ParallelType::DISTRIBUTED);
   auto mesh = buildDistributedMesh();
 
   MooseEnum elem_type_enum = getParam<MooseEnum>("elem_type");
