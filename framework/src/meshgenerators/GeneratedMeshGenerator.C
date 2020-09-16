@@ -119,6 +119,7 @@ GeneratedMeshGenerator::generate()
   // Have MOOSE construct the correct libMesh::Mesh object using Mesh block and CLI parameters.
   auto mesh = _mesh->buildMeshBaseObject();
   _app.attachRelationshipManagers(*mesh);
+  mesh->allow_remote_element_removal(_mesh->allowRemoteElementRemoval());
 
   if (isParamValid("extra_element_integers"))
   {
