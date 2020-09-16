@@ -133,6 +133,8 @@ FancyExtruderGenerator::generate()
   // Original license is LGPL so it can be used here.
 
   auto mesh = _mesh->buildMeshBaseObject();
+  _app.attachRelationshipManagers(*mesh);
+  mesh->allow_remote_element_removal(_mesh->allowRemoteElementRemoval());
 
   std::unique_ptr<MeshBase> input = std::move(_input);
 

@@ -1052,6 +1052,8 @@ DistributedRectilinearMeshGenerator::generate()
   // ghostGhostedBoundaries will gather all boundaries to every single processor
   _mesh->needGhostGhostedBoundaries(false);
   auto mesh = _mesh->buildMeshBaseObject(MooseMesh::ParallelType::DISTRIBUTED);
+  _app.attachRelationshipManagers(*mesh);
+  mesh->allow_remote_element_removal(_mesh->allowRemoteElementRemoval());
 
   MooseEnum elem_type_enum = getParam<MooseEnum>("elem_type");
 

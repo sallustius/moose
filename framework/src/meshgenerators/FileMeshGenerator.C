@@ -46,6 +46,7 @@ FileMeshGenerator::generate()
 {
   auto mesh = _mesh->buildMeshBaseObject();
   _app.attachRelationshipManagers(*mesh);
+  mesh->allow_remote_element_removal(_mesh->allowRemoteElementRemoval());
 
   bool exodus =
       _file_name.rfind(".exd") < _file_name.size() || _file_name.rfind(".e") < _file_name.size();
