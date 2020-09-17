@@ -256,10 +256,15 @@ public:
   virtual std::unique_ptr<MooseMesh> safeClone() const = 0;
 
   /**
+   * Determine whether to use a distributed mesh. Should be called during construction
+   */
+  void determineUseDistributedMesh();
+
+  /**
    * Method to construct a libMesh::MeshBase object that is normally set and used by the MooseMesh
    * object during the "init()" phase.
    */
-  std::unique_ptr<MeshBase> buildMeshBaseObject(ParallelType override_type = ParallelType::DEFAULT);
+  std::unique_ptr<MeshBase> buildMeshBaseObject();
 
   /**
    * Method to set the mesh_base object. If this method is NOT called prior to calling init(), a
@@ -1006,7 +1011,11 @@ public:
   /**
    *  Allow to change parallel type
    */
-  void setParallelType(ParallelType parallel_type) { _parallel_type = parallel_type; }
+  void setParallelType(ParallelType parallel_type)
+  {
+    _parallel_type = parallel_type;
+    determineUseDistributedMesh();
+  }
 
   /*
    * Set/Get the partitioner name

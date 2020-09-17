@@ -9,6 +9,7 @@
 
 #include "ConcentricCircleMeshGenerator.h"
 #include "CastUniquePointer.h"
+#include "MooseMesh.h"
 #include "libmesh/replicated_mesh.h"
 #include "libmesh/face_quad4.h"
 #include "libmesh/mesh_modification.h"
@@ -106,6 +107,7 @@ std::unique_ptr<MeshBase>
 ConcentricCircleMeshGenerator::generate()
 {
   auto mesh = libmesh_make_unique<ReplicatedMesh>(comm(), 2);
+  _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
 
   // Set dimension of mesh
   mesh->set_mesh_dimension(2);

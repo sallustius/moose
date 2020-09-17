@@ -9,6 +9,7 @@
 
 #include "SpiralAnnularMeshGenerator.h"
 #include "CastUniquePointer.h"
+#include "MooseMesh.h"
 
 #include "libmesh/replicated_mesh.h"
 #include "libmesh/face_quad4.h"
@@ -71,6 +72,7 @@ std::unique_ptr<MeshBase>
 SpiralAnnularMeshGenerator::generate()
 {
   std::unique_ptr<ReplicatedMesh> mesh = libmesh_make_unique<ReplicatedMesh>(comm(), 2);
+  _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
 
   {
     // Compute the radial bias given:

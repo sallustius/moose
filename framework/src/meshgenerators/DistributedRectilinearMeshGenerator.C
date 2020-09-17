@@ -1051,7 +1051,7 @@ DistributedRectilinearMeshGenerator::generate()
   // ghostGhostedBoundaries in which allgather_packed_range  is unscalable.
   // ghostGhostedBoundaries will gather all boundaries to every single processor
   _mesh->needGhostGhostedBoundaries(false);
-  auto mesh = _mesh->buildMeshBaseObject(MooseMesh::ParallelType::DISTRIBUTED);
+  auto mesh = _mesh->buildMeshBaseObject();
   _app.attachRelationshipManagers(*mesh);
   mesh->allow_remote_element_removal(_mesh->allowRemoteElementRemoval());
 

@@ -9,6 +9,7 @@
 
 #include "CartesianMeshGenerator.h"
 #include "CastUniquePointer.h"
+#include "MooseMesh.h"
 
 // libMesh includes
 #include "libmesh/mesh_generation.h"
@@ -228,6 +229,7 @@ std::unique_ptr<MeshBase>
 CartesianMeshGenerator::generate()
 {
   std::unique_ptr<ReplicatedMesh> mesh = libmesh_make_unique<ReplicatedMesh>(comm(), 2);
+  _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
 
   // switching on MooseEnum to generate the reference mesh
   // Note: element type is fixed

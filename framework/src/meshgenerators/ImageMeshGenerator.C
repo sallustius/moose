@@ -11,6 +11,7 @@
 #include "pcrecpp.h"
 #include "MooseApp.h"
 #include "CastUniquePointer.h"
+#include "MooseMesh.h"
 
 #include "libmesh/unstructured_mesh.h"
 #include "libmesh/replicated_mesh.h"
@@ -55,6 +56,7 @@ std::unique_ptr<MeshBase>
 ImageMeshGenerator::generate()
 {
   auto mesh = libmesh_make_unique<ReplicatedMesh>(comm());
+  _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
 
   // A list of filenames of length 1 means we are building a 2D mesh
   if (_filenames.size() == 1)
