@@ -9,6 +9,7 @@
 
 #include "RinglebMeshGenerator.h"
 #include "CastUniquePointer.h"
+#include "MooseMesh.h"
 
 #include "libmesh/replicated_mesh.h"
 #include "libmesh/mesh_modification.h"
@@ -105,6 +106,7 @@ std::unique_ptr<MeshBase>
 RinglebMeshGenerator::generate()
 {
   std::unique_ptr<ReplicatedMesh> mesh = libmesh_make_unique<ReplicatedMesh>(comm(), 2);
+  _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
 
   /// Data structure that holds pointers to the Nodes of each streamline.
   std::vector<std::vector<Node *>> stream_nodes(_num_k_pts);
