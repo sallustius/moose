@@ -548,7 +548,7 @@ MooseVariableFV<OutputType>::getFaceValue(const Elem * const neighbor,
     // Compact stencil
     ADReal neighbor_value = getElemValue(neighbor);
 
-    return Moose::linearAverage(elem_value, neighbor_value, fi);
+    return Moose::FV::linearInterpolation(elem_value, neighbor_value, fi);
   }
 }
 
@@ -604,7 +604,7 @@ MooseVariableFV<OutputType>::adGradSln(const Elem * const elem) const
     }
   };
 
-  Moose::loopOverElemFaceInfo(*elem, _mesh, _subproblem, action_functor);
+  Moose::FV::loopOverElemFaceInfo(*elem, _mesh, _subproblem, action_functor);
 
   mooseAssert(volume_set && volume > 0, "We should have set the volume");
 
@@ -643,7 +643,7 @@ MooseVariableFV<OutputType>::uncorrectedAdGradSln(const FaceInfo & fi) const
     const VectorValue<ADReal> & neighbor_grad = adGradSln(neighbor);
 
     // Uncorrected gradient value
-    unc_face_grad = Moose::linearAverage(elem_grad, neighbor_grad, fi);
+    unc_face_grad = Moose::FV::linearInterpolation(elem_grad, neighbor_grad, fi);
   }
   else
   {
