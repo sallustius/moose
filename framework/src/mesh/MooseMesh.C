@@ -3096,8 +3096,7 @@ MooseMesh::buildFaceInfo()
   _all_face_info.clear();
   _elem_side_to_face_info.clear();
 
-  // loop over all active, local elements. Note that by looping over just *local* elements and by
-  // performing the element ID comparison check in the below loop, we are ensuring that we never
+  // by performing the element ID comparison check in the below loop, we are ensuring that we never
   // double count face contributions. If a face lies along a process boundary, the only process that
   // will contribute to both sides of the face residuals/Jacobians will be the process that owns the
   // element with the lower ID.
