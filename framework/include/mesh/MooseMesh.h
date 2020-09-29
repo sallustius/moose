@@ -1668,7 +1668,7 @@ MooseMesh::buildTypedMesh(unsigned int dim)
   if (!getParam<bool>("allow_renumbering"))
     mesh->allow_renumbering(false);
 
-  mesh->allow_remote_element_removal(allowRemoteElementRemoval());
+  mesh->allow_remote_element_removal(_allow_remote_element_removal);
   _app.attachRelationshipManagers(*mesh);
 
   return mesh;
