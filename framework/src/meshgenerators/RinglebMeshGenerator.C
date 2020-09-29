@@ -105,8 +105,8 @@ RinglebMeshGenerator::computexy(const std::vector<Real> values,
 std::unique_ptr<MeshBase>
 RinglebMeshGenerator::generate()
 {
-  std::unique_ptr<ReplicatedMesh> mesh = libmesh_make_unique<ReplicatedMesh>(comm(), 2);
   _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
+  auto mesh = _mesh->buildMeshBaseObject();
 
   /// Data structure that holds pointers to the Nodes of each streamline.
   std::vector<std::vector<Node *>> stream_nodes(_num_k_pts);

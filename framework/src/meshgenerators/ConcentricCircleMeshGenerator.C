@@ -106,8 +106,11 @@ ConcentricCircleMeshGenerator::ConcentricCircleMeshGenerator(const InputParamete
 std::unique_ptr<MeshBase>
 ConcentricCircleMeshGenerator::generate()
 {
-  auto mesh = libmesh_make_unique<ReplicatedMesh>(comm(), 2);
   _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
+  auto mesh_base = _mesh->buildMeshBaseObject();
+  ReplicatedMesh * mesh = dynamic_cast<ReplicatedMesh *>(mesh_base.get());
+  if (!mesh)
+    mooseError("We should have produced a replicated_mesh");
 
   // Set dimension of mesh
   mesh->set_mesh_dimension(2);
@@ -985,5 +988,5 @@ ConcentricCircleMeshGenerator::generate()
   LaplaceMeshSmoother lms(*mesh);
   lms.smooth(_smoothing_max_it);
 
-  return dynamic_pointer_cast<MeshBase>(mesh);
+  return dynamic_pointer_cast<MeshBase>(mesh_base);
 }

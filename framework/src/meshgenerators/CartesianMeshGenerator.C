@@ -228,8 +228,8 @@ CartesianMeshGenerator::CartesianMeshGenerator(const InputParameters & parameter
 std::unique_ptr<MeshBase>
 CartesianMeshGenerator::generate()
 {
-  std::unique_ptr<ReplicatedMesh> mesh = libmesh_make_unique<ReplicatedMesh>(comm(), 2);
   _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
+  auto mesh = _mesh->buildMeshBaseObject();
 
   // switching on MooseEnum to generate the reference mesh
   // Note: element type is fixed

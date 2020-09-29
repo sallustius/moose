@@ -112,8 +112,6 @@ AnnularMeshGenerator::generate()
 {
   // Have MOOSE construct the correct libMesh::Mesh object using Mesh block and CLI parameters.
   auto mesh = _mesh->buildMeshBaseObject();
-  _app.attachRelationshipManagers(*mesh);
-  mesh->allow_remote_element_removal(_mesh->allowRemoteElementRemoval());
 
   const Real dt = (_dmax - _dmin) / _nt;
 

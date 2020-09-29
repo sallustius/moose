@@ -55,8 +55,8 @@ ImageMeshGenerator::ImageMeshGenerator(const InputParameters & parameters)
 std::unique_ptr<MeshBase>
 ImageMeshGenerator::generate()
 {
-  auto mesh = libmesh_make_unique<ReplicatedMesh>(comm());
   _mesh->setParallelType(MooseMesh::ParallelType::REPLICATED);
+  auto mesh = _mesh->buildMeshBaseObject();
 
   // A list of filenames of length 1 means we are building a 2D mesh
   if (_filenames.size() == 1)
@@ -70,7 +70,7 @@ ImageMeshGenerator::generate()
 
 void
 ImageMeshGenerator::buildMesh3D(const std::vector<std::string> & filenames,
-                                std::unique_ptr<ReplicatedMesh> & mesh)
+                                std::unique_ptr<MeshBase> & mesh)
 {
   // If the user gave us a "stack" with 0 or 1 files in it, we can't
   // really create a 3D Mesh from that
@@ -140,8 +140,7 @@ ImageMeshGenerator::buildMesh3D(const std::vector<std::string> & filenames,
 }
 
 void
-ImageMeshGenerator::buildMesh2D(const std::string & filename,
-                                std::unique_ptr<ReplicatedMesh> & mesh)
+ImageMeshGenerator::buildMesh2D(const std::string & filename, std::unique_ptr<MeshBase> & mesh)
 {
   int xpixels = 0, ypixels = 0;
 

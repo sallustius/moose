@@ -102,8 +102,6 @@ std::unique_ptr<MeshBase>
 PatchMeshGenerator::generate()
 {
   auto mesh = _mesh->buildMeshBaseObject();
-  _app.attachRelationshipManagers(*mesh);
-  mesh->allow_remote_element_removal(_mesh->allowRemoteElementRemoval());
   BoundaryInfo & boundary_info = mesh->get_boundary_info();
 
   unsigned num_nodes = 0;
