@@ -2312,6 +2312,20 @@ MooseMesh::buildMeshBaseObject()
   return mesh;
 }
 
+template <typename T>
+T
+MooseMesh::buildTypedMesh(unsigned int dim)
+{
+  if (dim == libMesh::invalid_uint)
+    dim = getParam<MooseEnum>("dim");
+
+  T mesh(_communicator, dim);
+  mesh.allow_remote_element_removal(_allow_remote_element_removal);
+  _app.attachRelationshipManagers(mesh, *this);
+
+  return mesh;
+}
+
 void
 MooseMesh::setMeshBase(std::unique_ptr<MeshBase> mesh_base)
 {
@@ -3234,3 +3248,6 @@ MooseMesh::deleteRemoteElements()
 
   _mesh->delete_remote_elements();
 }
+
+template ReplicatedMesh MooseMesh::buildTypedMesh(unsigned int);
+template DistributedMesh MooseMesh::buildTypedMesh(unsigned int);
