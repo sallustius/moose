@@ -94,11 +94,14 @@ public:
 
   /// Called every time the current subdomain changes (i.e. the subdomain of *this* face's elem element
   /// is not the same as the subdomain of the last face's elem element).
-  virtual void subdomainChanged(){};
+  virtual void subdomainChanged() { _fe_problem.subdomainSetup(_subdomain, _tid); }
 
   /// Called every time the neighbor subdomain changes (i.e. the subdomain of *this* face's neighbor element
   /// is not the same as the subdomain of the last face's neighbor element).
-  virtual void neighborSubdomainChanged(){};
+  virtual void neighborSubdomainChanged()
+  {
+    _fe_problem.neighborSubdomainSetup(_neighbor_subdomain, _tid);
+  }
 
   /// Called if a MooseException is caught anywhere during the computation.
   virtual void caughtMooseException(MooseException &){};
@@ -255,6 +258,7 @@ private:
   using ThreadedFaceLoop<RangeType>::_tid;
   using ThreadedFaceLoop<RangeType>::_tags;
   using ThreadedFaceLoop<RangeType>::_subdomain;
+  using ThreadedFaceLoop<RangeType>::_neighbor_subdomain;
 };
 
 template <typename RangeType>
