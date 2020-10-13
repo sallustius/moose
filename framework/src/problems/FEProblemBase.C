@@ -2982,7 +2982,7 @@ FEProblemBase::addInterfaceMaterial(const std::string & mat_name,
                                     const std::string & name,
                                     InputParameters & parameters)
 {
-  addMaterialHelper({&_interface_materials}, mat_name, name, parameters);
+  addMaterialHelper({&_both_sides_materials}, mat_name, name, parameters);
 }
 
 void
@@ -3261,9 +3261,9 @@ FEProblemBase::reinitMaterialsInterface(BoundaryID boundary_id, THREAD_ID tid, b
     if (swap_stateful && !_bnd_material_data[tid]->isSwapped())
       _bnd_material_data[tid]->swap(*elem, side);
 
-    if (_interface_materials.hasActiveBoundaryObjects(boundary_id, tid))
+    if (_both_sides_materials.hasActiveBoundaryObjects(boundary_id, tid))
       _bnd_material_data[tid]->reinit(
-          _interface_materials.getActiveBoundaryObjects(boundary_id, tid));
+          _both_sides_materials.getActiveBoundaryObjects(boundary_id, tid));
   }
 }
 
@@ -6672,7 +6672,7 @@ FEProblemBase::needInterfaceMaterialOnSide(BoundaryID bnd_id, THREAD_ID tid)
                  .condition<AttribBoundaries>(bnd_id)
                  .count() > 0)
       _interface_mat_side_cache[tid][bnd_id] = true;
-    else if (_interface_materials.hasActiveBoundaryObjects(bnd_id, tid))
+    else if (_both_sides_materials.hasActiveBoundaryObjects(bnd_id, tid))
       _interface_mat_side_cache[tid][bnd_id] = true;
   }
   return _interface_mat_side_cache[tid][bnd_id];

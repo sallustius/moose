@@ -44,6 +44,7 @@ MaterialBase::validParams()
 
   params.addPrivateParam<bool>("_neighbor", false);
   params.addPrivateParam<bool>("_interface", false);
+  params.addPrivateParam<MaterialType>("_material_type");
 
   // Outputs
   params += OutputInterface::validParams();

@@ -527,6 +527,16 @@ enum MaterialDataType
 };
 
 /**
+ * Material types
+ */
+enum class MaterialType
+{
+  REGULAR,
+  INTERNAL_FACE,
+  INTER_FACE
+};
+
+/**
  * Flag for AuxKernel related execution type.
  */
 enum AuxGroup

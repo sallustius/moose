@@ -72,7 +72,6 @@ public:
    * Initialize stateful properties (if material has some)
    */
   virtual void initStatefulProperties(unsigned int n_points);
-  virtual bool isInterfaceMaterial() { return false; };
 
   /**
    * Performs the quadrature point loop, calling computeQpProperties

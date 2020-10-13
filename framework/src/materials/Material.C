@@ -28,6 +28,7 @@ Material::validParams()
       "quadrature point, and then copy that value to the other qps. Evaluations on element qps "
       "will be skipped");
   params.addParamNamesToGroup("use_displaced_mesh", "Advanced");
+  params.set<MaterialType>("_material_type") = MaterialType::REGULAR;
   return params;
 }
 

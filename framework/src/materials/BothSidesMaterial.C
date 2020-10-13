@@ -8,28 +8,24 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 // MOOSE includes
-#include "InterfaceMaterial.h"
-
-defineLegacyParams(InterfaceMaterial);
+#include "BothSidesMaterial.h"
 
 InputParameters
-InterfaceMaterial::validParams()
+BothSidesMaterial::validParams()
 {
 
   InputParameters params = MaterialBase::validParams();
   params += TwoMaterialPropertyInterface::validParams();
-  params.set<bool>("_interface") = true;
-  params.set<Moose::MaterialDataType>("_material_data_type") = Moose::INTERFACE_MATERIAL_DATA;
+  params.set<bool>("_both_sides") = true;
 
-  // Interface materials always need one layer of ghosting to be safe
+  // Both-side- materials always need one layer of ghosting to be safe
   params.addRelationshipManager("ElementSideNeighborLayers",
                                 Moose::RelationshipManagerType::GEOMETRIC |
                                     Moose::RelationshipManagerType::ALGEBRAIC);
-  params.set<MaterialType>("_material_type") = MaterialType::INTER_FACE;
   return params;
 }
 
-InterfaceMaterial::InterfaceMaterial(const InputParameters & parameters)
+BothSidesMaterial::BothSidesMaterial(const InputParameters & parameters)
   : MaterialBase(parameters),
     NeighborCoupleable(this, false, false),
     TwoMaterialPropertyInterface(this, blockIDs(), boundaryIDs()),
@@ -48,7 +44,7 @@ InterfaceMaterial::InterfaceMaterial(const InputParameters & parameters)
 }
 
 void
-InterfaceMaterial::computeProperties()
+BothSidesMaterial::computeProperties()
 {
   for (_qp = 0; _qp < _qrule->n_points(); ++_qp)
     computeQpProperties();

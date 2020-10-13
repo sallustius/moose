@@ -1547,7 +1547,7 @@ public:
    */
   const MaterialWarehouse & getRegularMaterialsWarehouse() const { return _materials; }
   const MaterialWarehouse & getDiscreteMaterialWarehouse() const { return _discrete_materials; }
-  const MaterialWarehouse & getInterfaceMaterialsWarehouse() const { return _interface_materials; }
+  const MaterialWarehouse & getInterfaceMaterialsWarehouse() const { return _both_sides_materials; }
 
   /**
    * Return a pointer to a MaterialBase object.  If no_warn is true, suppress
@@ -1939,9 +1939,10 @@ protected:
 
   ///@{
   // Material Warehouses
-  MaterialWarehouse _materials;           // regular materials
-  MaterialWarehouse _interface_materials; // interface materials
-  MaterialWarehouse _discrete_materials;  // Materials that the user must compute
+  MaterialWarehouse _materials;            // regular materials
+  MaterialWarehouse _both_sides_materials; // materials that have access to material properties and
+                                           // variable values on both sides of a face
+  MaterialWarehouse _discrete_materials;   // Materials that the user must compute
   MaterialWarehouse _all_materials; // All materials for error checking and MaterialData storage
   ///@}
 
