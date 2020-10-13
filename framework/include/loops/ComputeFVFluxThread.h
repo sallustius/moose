@@ -258,7 +258,6 @@ private:
   using ThreadedFaceLoop<RangeType>::_tid;
   using ThreadedFaceLoop<RangeType>::_tags;
   using ThreadedFaceLoop<RangeType>::_subdomain;
-  using ThreadedFaceLoop<RangeType>::_neighbor_subdomain;
 };
 
 template <typename RangeType>
