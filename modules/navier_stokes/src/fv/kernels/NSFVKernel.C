@@ -85,7 +85,7 @@ NSFVKernel::interpolate(Moose::FV::InterpMethod m,
     Real elem_volume = _face_info->elemVolume() * coord;
     Real face_volume = elem_volume;
 
-    if (_face_info->neighborPtr())
+    if (_face_info->neighborPtr() && hasBlocks(_face_info->neighborPtr()->subdomain_id()))
     {
       const ADReal & neighbor_a =
           _p_var->adCoeff(_face_info->neighborPtr(), this, &::coeffCalculator);
