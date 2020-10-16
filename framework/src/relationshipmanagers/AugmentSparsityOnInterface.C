@@ -60,7 +60,7 @@ AugmentSparsityOnInterface::internalInit()
 {
   if (_mesh.isDistributedMesh())
     mooseError(
-        "We need to first be able to run MeshModifiers before remote elements are deleted before "
+        "We need to first be able to run MeshGenerators before remote elements are deleted before "
         "the AugmentSparsityOnInterface ghosting functor can work with DistributedMesh");
 }
 
