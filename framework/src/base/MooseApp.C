@@ -9,6 +9,7 @@
 
 #ifdef HAVE_GPERFTOOLS
 #include "gperftools/profiler.h"
+#include "gperftools/heap-profiler.h"
 #endif
 
 // MOOSE includes
@@ -353,6 +354,14 @@ MooseApp::MooseApp(InputParameters parameters)
     _profiling = true;
     ProfilerStart(profile_file.c_str());
   }
+
+  if (std::getenv("MOOSE_HEAP_PROFILE_BASE"))
+  {
+    static std::string heap_profile_file =
+        std::getenv("MOOSE_HEAP_PROFILE_BASE") + std::to_string(_comm->rank()) + ".heap";
+    _heap_profiling = true;
+    HeapProfilerStart(heap_profile_file.c_str());
+  }
 #endif
 
   Registry::addKnownLabel(_type);
@@ -472,6 +481,8 @@ MooseApp::~MooseApp()
 #ifdef HAVE_GPERFTOOLS
   if (_profiling)
     ProfilerStop();
+  if (_heap_profiling)
+    HeapProfilerStop();
 #endif
   _action_warehouse.clear();
   _executioner.reset();

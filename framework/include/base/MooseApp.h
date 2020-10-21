@@ -1108,6 +1108,7 @@ private:
   bool _geometric_rms_attached;
 
   bool _profiling = false;
+  bool _heap_profiling = false;
 
   // Allow FEProblemBase to set the recover/restart state, so make it a friend
   friend class FEProblemBase;
