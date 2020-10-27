@@ -41,12 +41,9 @@ SetupMeshCompleteAction::SetupMeshCompleteAction(InputParameters params)
 bool
 SetupMeshCompleteAction::completeSetup(MooseMesh * mesh)
 {
-  bool prepared = mesh->prepared();
+  mesh->prepare();
 
-  if (!prepared)
-    mesh->prepare();
-
-  return prepared;
+  return true;
 }
 
 void

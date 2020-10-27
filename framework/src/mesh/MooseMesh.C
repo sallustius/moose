@@ -207,8 +207,6 @@ MooseMesh::MooseMesh(const InputParameters & parameters)
     _custom_partitioner_requested(false),
     _uniform_refine_level(0),
     _is_nemesis(getParam<bool>("nemesis")),
-    _is_prepared(false),
-    _needs_prepare_for_use(false),
     _node_to_elem_map_built(false),
     _node_to_active_semilocal_elem_map_built(false),
     _patch_size(getParam<unsigned int>("patch_size")),
@@ -275,8 +273,6 @@ MooseMesh::MooseMesh(const MooseMesh & other_mesh)
     _custom_partitioner_requested(other_mesh._custom_partitioner_requested),
     _uniform_refine_level(other_mesh.uniformRefineLevel()),
     _is_nemesis(false),
-    _is_prepared(false),
-    _needs_prepare_for_use(other_mesh._needs_prepare_for_use),
     _node_to_elem_map_built(false),
     _node_to_active_semilocal_elem_map_built(false),
     _patch_size(other_mesh._patch_size),
@@ -393,32 +389,14 @@ MooseMesh::freeBndElems()
 }
 
 void
-MooseMesh::prepare(bool force)
+MooseMesh::prepare()
 {
   TIME_SECTION(_prepare_timer);
 
   mooseAssert(_mesh, "The MeshBase has not been constructed");
 
-  if (dynamic_cast<DistributedMesh *>(&getMesh()) && !_is_nemesis)
-  {
-    // Call prepare_for_use() and don't mess with the renumbering
-    // setting
-    if (force || _needs_prepare_for_use)
-    {
-      CONSOLE_TIMED_PRINT("Preparing for use");
-
-      getMesh().prepare_for_use();
-    }
-  }
-  else
-  {
-    CONSOLE_TIMED_PRINT("Preparing for use");
-
-    // Call prepare_for_use() and DO NOT allow renumbering
-    getMesh().allow_renumbering(false);
-    if (force || _needs_prepare_for_use)
-      getMesh().prepare_for_use();
-  }
+  if (!_mesh->is_prepared())
+    _mesh->prepare_for_use();
 
   // Collect (local) subdomain IDs
   _mesh_subdomains.clear();
@@ -452,10 +430,6 @@ MooseMesh::prepare(bool force)
   detectOrthogonalDimRanges();
 
   update();
-
-  // Prepared has been called
-  _is_prepared = true;
-  _needs_prepare_for_use = false;
 }
 
 void
@@ -2533,26 +2507,24 @@ MooseMesh::queryElemPtr(const dof_id_type i) const
 bool
 MooseMesh::prepared() const
 {
-  return _is_prepared;
+  return _mesh->is_prepared();
 }
 
 void
 MooseMesh::prepared(bool state)
 {
-  _is_prepared = state;
-
-  /**
-   * If we are explicitly setting the mesh to not prepared, then we've likely modified the mesh
-   * and can no longer make assumptions about orthogonality. We really should recheck.
-   */
   if (!state)
-    _regular_orthogonal_mesh = false;
-}
+  {
+    _mesh->set_isnt_prepared();
 
-void
-MooseMesh::needsPrepareForUse()
-{
-  _needs_prepare_for_use = true;
+    /**
+     * If we are explicitly setting the mesh to not prepared, then we've likely modified the mesh
+     * and can no longer make assumptions about orthogonality. We really should recheck.
+     */
+    _regular_orthogonal_mesh = false;
+  }
+  // Else we don't have any right to tell the libmesh mesh that it *is* prepared. Only a call to
+  // prepare_for_use should tell us that
 }
 
 const std::set<SubdomainID> &
