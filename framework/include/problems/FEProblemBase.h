@@ -1890,6 +1890,16 @@ public:
 
   bool haveDisplaced() const override final { return _displaced_problem.get(); }
 
+  /**
+   * Setter for whether we're computing the scaling jacobian
+   */
+  void computingScalingJacobian(bool computing_scaling_jacobian)
+  {
+    _computing_scaling_jacobian = computing_scaling_jacobian;
+  }
+
+  bool computingScalingJacobian() const override final { return _computing_scaling_jacobian; }
+
 protected:
   /// Create extra tagged vectors and matrices
   void createTagVectors();
@@ -2254,6 +2264,9 @@ private:
   /// MooseEnum describing how to obtain reference points for displaced mesh dgkernels and/or
   /// interface kernels. Options are invert_elem_phys, use_undisplaced_ref, and the default unset.
   MooseEnum _displaced_neighbor_ref_pts;
+
+  /// Flag used to indicate whether we are computing the scaling Jacobian
+  bool _computing_scaling_jacobian = false;
 };
 
 template <typename T>
