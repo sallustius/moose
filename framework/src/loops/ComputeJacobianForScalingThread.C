@@ -16,14 +16,14 @@ using namespace libMesh;
 
 ComputeJacobianForScalingThread::ComputeJacobianForScalingThread(FEProblemBase & fe_problem,
                                                                  const std::set<TagID> & tags)
-  : ComputeJacobianThread(fe_problem, tags)
+  : ComputeFullJacobianThread(fe_problem, tags)
 {
 }
 
 // Splitting Constructor
 ComputeJacobianForScalingThread::ComputeJacobianForScalingThread(
     ComputeJacobianForScalingThread & x, Threads::split split)
-  : ComputeJacobianThread(x, split)
+  : ComputeFullJacobianThread(x, split)
 {
 }
 
