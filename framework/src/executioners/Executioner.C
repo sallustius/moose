@@ -88,6 +88,7 @@ Executioner::Executioner(const InputParameters & parameters)
   if (isParamValid("scaling_group_variables"))
     nl.scalingGroupVariables(
         getParam<std::vector<std::vector<std::string>>>("scaling_group_variables"));
+  nl.scalingWholeRow(getParam<bool>("scaling_whole_row"));
 
   _fe_problem.numGridSteps(_num_grid_steps);
 }

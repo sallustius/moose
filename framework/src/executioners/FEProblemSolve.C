@@ -104,6 +104,10 @@ FEProblemSolve::validParams()
       "scaling_group_variables",
       "Name of variables that are grouped together to for determing scale factors. (Multiple "
       "groups can be provided, separated by semicolon)");
+  params.addParam<bool>(
+      "scaling_whole_row",
+      false,
+      "Whether to consider the entire matrix row when determining scaling factors.");
   params.addRangeCheckedParam<unsigned int>(
       "num_grids",
       1,
@@ -114,7 +118,7 @@ FEProblemSolve::validParams()
   params.addParamNamesToGroup("l_tol l_abs_tol l_max_its nl_max_its nl_max_funcs "
                               "nl_abs_tol nl_rel_tol nl_abs_step_tol nl_rel_step_tol "
                               "snesmf_reuse_base compute_initial_residual_before_preset_bcs "
-                              "automatic_scaling compute_scaling_once num_grids",
+                              "automatic_scaling compute_scaling_once scaling_whole_row num_grids",
                               "Solver");
   return params;
 }
