@@ -173,7 +173,7 @@ NonlinearSystemBase::NonlinearSystemBase(FEProblemBase & fe_problem,
     _computed_scaling(false),
     _compute_scaling_once(true),
     _resid_vs_jac_scaling_param(0),
-    _scaling_matrix(_communicator),
+    _scaling_whole_row(false),
 #ifndef MOOSE_SPARSE_AD
     _required_derivative_size(0),
 #endif

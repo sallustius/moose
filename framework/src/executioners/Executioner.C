@@ -65,30 +65,42 @@ Executioner::Executioner(const InputParameters & parameters)
 
   auto & nl = _fe_problem.getNonlinearSystemBase();
 
+  bool automatic_scaling = false;
   // Check whether the user has explicitly requested automatic scaling and is using a solve type
   // without a matrix. If so, then we warn them
   if ((_pars.isParamSetByUser("automatic_scaling") && getParam<bool>("automatic_scaling")) &&
       _fe_problem.solverParams()._type == Moose::ST_JFNK)
-  {
     paramWarning("automatic_scaling",
                  "Automatic scaling isn't implemented for the case where you do not have a "
                  "preconditioning matrix. No scaling will be applied");
-    _fe_problem.automaticScaling(false);
-  }
   else
     // Check to see whether automatic_scaling has been specified anywhere, including at the
     // application level. No matter what: if we don't have a matrix, we don't do scaling
-    _fe_problem.automaticScaling((isParamValid("automatic_scaling")
-                                      ? getParam<bool>("automatic_scaling")
-                                      : getMooseApp().defaultAutomaticScaling()) &&
-                                 (_fe_problem.solverParams()._type != Moose::ST_JFNK));
+    automatic_scaling =
+        (isParamValid("automatic_scaling") ? getParam<bool>("automatic_scaling")
+                                           : getMooseApp().defaultAutomaticScaling()) &&
+        (_fe_problem.solverParams()._type != Moose::ST_JFNK);
+
+  _fe_problem.automaticScaling(automatic_scaling);
 
   nl.computeScalingOnce(getParam<bool>("compute_scaling_once"));
-  nl.autoScalingParam(getParam<Real>("resid_vs_jac_scaling_param"));
+  const bool resid_vs_jac_scaling_param = getParam<Real>("resid_vs_jac_scaling_param");
+  nl.autoScalingParam(resid_vs_jac_scaling_param);
+
+  // If we are doing automatic scaling based on the jacobian, then we need add a new matrix to the
+  // system
+  if (automatic_scaling && resid_vs_jac_scaling_param < 1. - TOLERANCE)
+  {
+    const bool scaling_whole_row = getParam<bool>("scaling_whole_row");
+    nl.scalingWholeRow(scaling_whole_row);
+
+    if (scaling_whole_row)
+      nl.addMatrix();
+  }
+
   if (isParamValid("scaling_group_variables"))
     nl.scalingGroupVariables(
         getParam<std::vector<std::vector<std::string>>>("scaling_group_variables"));
-  nl.scalingWholeRow(getParam<bool>("scaling_whole_row"));
 
   _fe_problem.numGridSteps(_num_grid_steps);
 }

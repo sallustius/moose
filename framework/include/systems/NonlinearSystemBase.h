@@ -657,6 +657,12 @@ public:
     _scaling_group_variables = scaling_group_variables;
   }
 
+  /**
+   * Whether to consider the whole matrix row, as opposed to just the diagonal, when computing
+   * automatic scaling factors
+   */
+  void scalingWholeRow(bool scaling_whole_row) { _scaling_whole_row = scaling_whole_row; }
+
 #ifndef MOOSE_SPARSE_AD
   /**
    * Set the required size of the derivative vector
@@ -948,8 +954,9 @@ protected:
   /// like for solid/fluid mechanics
   std::vector<std::vector<std::string>> _scaling_group_variables;
 
-  /// A diagonal matrix used for computing scaling
-  DiagonalMatrix<Number> _scaling_matrix;
+  /// Whether to consider the whole matrix row, as opposed to just the diagonal, when computing
+  /// automatic scaling factors
+  bool _scaling_whole_row;
 
 private:
   /**
