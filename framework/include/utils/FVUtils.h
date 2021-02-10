@@ -35,12 +35,18 @@ namespace FV
 /// generically applicable.
 enum class InterpMethod
 {
-  /// (elem+neighbor)/2
+  /// (elem+neighbor)/2. Same as Central-difference
   Average,
   /// weighted
   Upwind,
-  // Rhie-Chow
-  RhieChow
+  // Rhie-Chow (specific to saddle-point incompressible Navier-Stokes *velocity* ineterpolation.
+  // Conceptually different from all the other interpolation methods enumerated here)
+  RhieChow,
+  // Second-order upwind (also known as linear upwind)
+  SOU,
+  // Quadratic Upstream Interpolation for Convective Kinematics
+  QUICK,
+  FROMM
 };
 
 /**
@@ -85,7 +91,8 @@ interpCoeffs(const InterpMethod m,
     }
 
     default:
-      mooseError("Unrecognized interpolation method");
+      mooseError(
+          "For all other schemes coefficient determination is non-trivial on unstructured meshes");
   }
 }
 
@@ -138,7 +145,7 @@ interpolate(InterpMethod m,
 /// call to the non-advective interpolate function. The \p one_is_elem parameter indicates whether
 /// value1 corresponds to the FaceInfo elem value; else it corresponds to the FaceInfo neighbor
 /// value
-template <typename T, typename T2, typename T3, typename Vector>
+template <typename T, typename T2, typename T3, typename Vector, typename T4 = Real>
 void
 interpolate(InterpMethod m,
             T & result,
@@ -146,10 +153,58 @@ interpolate(InterpMethod m,
             const T3 & value2,
             const Vector & advector,
             const FaceInfo & fi,
-            const bool one_is_elem)
+            const bool one_is_elem,
+            const MooseVariableFV<T4> * const
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+                var
+#endif
+            = nullptr)
 {
-  const auto coeffs = interpCoeffs(m, fi, one_is_elem, advector);
-  result = coeffs.first * value1 + coeffs.second * value2;
+  switch (m)
+  {
+    case InterpMethod::Average:
+    case InterpMethod::Upwind:
+    {
+      const auto coeffs = interpCoeffs(m, fi, one_is_elem, advector);
+      result = coeffs.first * value1 + coeffs.second * value2;
+      break;
+    }
+
+#ifdef MOOSE_GLOBAL_AD_INDEXING
+    case InterpMethod::SOU:
+    case InterpMethod::FROMM:
+    case InterpMethod::QUICK:
+    {
+      mooseAssert(var,
+                  "Higher order upwind schemes require gradient reconstruction which we call "
+                  "through variable methods");
+      const bool v_dot_n_greater_than_zero = (fi.normal() * advector > 0);
+      const Elem * const upstream_elem = d_dot_n_greater_than_zero ? &fi.elem() : fi.neighborPtr();
+      mooseAssert(
+          upstream_elem,
+          "We will have to do more work to support an upstream element that is a ghost element");
+
+      // Notation and equations taken from Moukalled section 11.7.1
+      const auto & phi_C = var->getElemValue(upstream_elem);
+      const auto & grad_phi_C = var->adGradSln(upstream_elem);
+      const auto & grad_phi_f = var->adGradSln(fi);
+      const auto d_Cf = v_dot_n_greater_than_zero ? (fi.faceCentroid() - fi.elemCentroid())
+                                                  : (fi.faceCentroid - fi.neighborCentroid());
+
+      switch (m)
+      case InterpMethod::SOU:
+      {
+        value = phi_C + (2 * grad_phi_C - grad_phi_f) * d_Cf;
+        break;
+      }
+
+      break;
+    }
+#endif
+
+    default:
+      mooseError("Unrecognized/unsupported interpolation method");
+  }
 }
 
 template <typename ActionFunctor>
