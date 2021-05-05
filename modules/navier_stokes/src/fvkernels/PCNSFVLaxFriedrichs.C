@@ -10,8 +10,11 @@
 #include "PCNSFVLaxFriedrichs.h"
 #include "NS.h"
 #include "SinglePhaseFluidProperties.h"
+#include "FVUtils.h"
 
 registerMooseObject("MooseApp", PCNSFVLaxFriedrichs);
+
+using namespace Moose::FV;
 
 InputParameters
 PCNSFVLaxFriedrichs::validParams()
@@ -29,29 +32,59 @@ PCNSFVLaxFriedrichs::validParams()
       "scalar_prop_name",
       "An optional material property name that can be used to specify an advected material "
       "property. If this is not supplied the variable variable will be used.");
+  params.addParam<MooseEnum>(
+      "limiter", moose_limiter_type, "The limiter to apply during interpolation.");
+  params.set<unsigned short>("ghost_layers") = 2;
   return params;
 }
 
 PCNSFVLaxFriedrichs::PCNSFVLaxFriedrichs(const InputParameters & params)
   : FVFluxKernel(params),
     _fluid(getUserObject<SinglePhaseFluidProperties>(NS::fluid)),
-    _superficial_vel_elem(getADMaterialProperty<RealVectorValue>(NS::superficial_velocity)),
-    _superficial_vel_neighbor(
-        getNeighborADMaterialProperty<RealVectorValue>(NS::superficial_velocity)),
-    _rho_elem(getADMaterialProperty<Real>(NS::density)),
-    _rho_neighbor(getNeighborADMaterialProperty<Real>(NS::density)),
-    _rhou_elem(getADMaterialProperty<RealVectorValue>(NS::momentum)),
-    _rhou_neighbor(getNeighborADMaterialProperty<RealVectorValue>(NS::momentum)),
-    _rho_ht_elem(getADMaterialProperty<Real>(NS::total_enthalpy_density)),
-    _rho_ht_neighbor(getNeighborADMaterialProperty<Real>(NS::total_enthalpy_density)),
-    _T_fluid_elem(getADMaterialProperty<Real>(NS::T_fluid)),
-    _T_fluid_neighbor(getNeighborADMaterialProperty<Real>(NS::T_fluid)),
+    _dim(_mesh.dimension()),
+
+    // primitives
     _pressure_elem(getADMaterialProperty<Real>(NS::pressure)),
     _pressure_neighbor(getNeighborADMaterialProperty<Real>(NS::pressure)),
+    _grad_pressure_elem(getADMaterialProperty<RealVectorValue>(NS::grad(NS::pressure))),
+    _grad_pressure_neighbor(getNeighborADMaterialProperty<RealVectorValue>(NS::grad(NS::pressure))),
+
+    _T_fluid_elem(getADMaterialProperty<Real>(NS::T_fluid)),
+    _T_fluid_neighbor(getNeighborADMaterialProperty<Real>(NS::T_fluid)),
+    _grad_T_fluid_elem(getADMaterialProperty<RealVectorValue>(NS::grad(NS::T_fluid))),
+    _grad_T_fluid_neighbor(getNeighborADMaterialProperty<RealVectorValue>(NS::grad(NS::T_fluid))),
+
+    _sup_vel_x_elem(getADMaterialProperty<Real>(NS::superficial_velocity_x)),
+    _sup_vel_x_neighbor(getNeighborADMaterialProperty<Real>(NS::superficial_velocity_x)),
+    _grad_sup_vel_x_elem(
+        getADMaterialProperty<RealVectorValue>(NS::grad(NS::superficial_velocity_x))),
+    _grad_sup_vel_x_neighbor(
+        getNeighborADMaterialProperty<RealVectorValue>(NS::grad(NS::superficial_velocity_x))),
+
+    _sup_vel_y_elem(_dim >= 2 ? &getADMaterialProperty<Real>(NS::superficial_velocity_y) : nullptr),
+    _sup_vel_y_neighbor(_dim >= 2 ? &getNeighborADMaterialProperty<Real>(NS::superficial_velocity_y)
+                                  : nullptr),
+    _grad_sup_vel_y_elem(
+        _dim >= 2 ? &getADMaterialProperty<RealVectorValue>(NS::grad(NS::superficial_velocity_y))
+                  : nullptr),
+    _grad_sup_vel_y_neighbor(_dim >= 2 ? &getNeighborADMaterialProperty<RealVectorValue>(
+                                             NS::grad(NS::superficial_velocity_y))
+                                       : nullptr),
+
+    _sup_vel_z_elem(_dim >= 3 ? &getADMaterialProperty<Real>(NS::superficial_velocity_z) : nullptr),
+    _sup_vel_z_neighbor(_dim >= 3 ? &getNeighborADMaterialProperty<Real>(NS::superficial_velocity_z)
+                                  : nullptr),
+    _grad_sup_vel_z_elem(
+        _dim >= 3 ? &getADMaterialProperty<RealVectorValue>(NS::grad(NS::superficial_velocity_z))
+                  : nullptr),
+    _grad_sup_vel_z_neighbor(_dim >= 3 ? &getNeighborADMaterialProperty<RealVectorValue>(
+                                             NS::grad(NS::superficial_velocity_z))
+                                       : nullptr),
+
+    // Porosity
     _eps_elem(getMaterialProperty<Real>(NS::porosity)),
     _eps_neighbor(getNeighborMaterialProperty<Real>(NS::porosity)),
-    _e_elem(getADMaterialProperty<Real>(NS::specific_internal_energy)),
-    _e_neighbor(getNeighborADMaterialProperty<Real>(NS::specific_internal_energy)),
+
     _eqn(getParam<MooseEnum>("eqn")),
     _index(getParam<MooseEnum>("momentum_component")),
     _scalar_elem(isParamValid("scalar_prop_name")
@@ -59,12 +92,22 @@ PCNSFVLaxFriedrichs::PCNSFVLaxFriedrichs(const InputParameters & params)
                      : _u_elem),
     _scalar_neighbor(isParamValid("scalar_prop_name")
                          ? getNeighborADMaterialProperty<Real>("scalar_prop_name").get()
-                         : _u_neighbor)
+                         : _u_neighbor),
+    _limiter(Limiter::build(LimiterType(int(getParam<MooseEnum>("limiter")))))
 {
   if ((_eqn == "momentum") && !isParamValid("momentum_component"))
     paramError("eqn",
                "If 'momentum' is specified for 'eqn', then you must provide a parameter "
                "value for 'momentum_component'");
+}
+
+bool
+PCNSFVLaxFriedrichs::skipForBoundary(const FaceInfo & fi) const
+{
+  if (!onBoundary(fi))
+    return false;
+
+  return true;
 }
 
 void
@@ -116,72 +159,150 @@ PCNSFVLaxFriedrichs::computeJacobian(const FaceInfo & fi)
   _assembly.processDerivatives(-r, _var.dofIndicesNeighbor()[0], _matrix_tags);
 }
 
-void
-PCNSFVLaxFriedrichs::computeAValues()
+ADReal
+PCNSFVLaxFriedrichs::computeQpResidual()
 {
-  _Sf = _face_info->faceArea() * _face_info->faceCoord() * _face_info->normal();
-  _vSf_elem = _superficial_vel_elem[_qp] * _Sf;
-  _vSf_neighbor = _superficial_vel_neighbor[_qp] * _Sf;
+  // Perform primitive interpolations
+  const auto pressure_elem = interpolate(*_limiter,
+                                         _pressure_elem[_qp],
+                                         _pressure_neighbor[_qp],
+                                         _grad_pressure_elem[_qp],
+                                         *_face_info,
+                                         /*elem_is_up=*/true);
+  const auto pressure_neighbor = interpolate(*_limiter,
+                                             _pressure_neighbor[_qp],
+                                             _pressure_elem[_qp],
+                                             _grad_pressure_neighbor[_qp],
+                                             *_face_info,
+                                             /*elem_is_up=*/false);
+  const auto T_fluid_elem = interpolate(*_limiter,
+                                        _T_fluid_elem[_qp],
+                                        _T_fluid_neighbor[_qp],
+                                        _grad_T_fluid_elem[_qp],
+                                        *_face_info,
+                                        /*elem_is_up=*/true);
+  const auto T_fluid_neighbor = interpolate(*_limiter,
+                                            _T_fluid_neighbor[_qp],
+                                            _T_fluid_elem[_qp],
+                                            _grad_T_fluid_neighbor[_qp],
+                                            *_face_info,
+                                            /*elem_is_up=*/false);
+  const auto sup_vel_x_elem = interpolate(*_limiter,
+                                          _sup_vel_x_elem[_qp],
+                                          _sup_vel_x_neighbor[_qp],
+                                          _grad_sup_vel_x_elem[_qp],
+                                          *_face_info,
+                                          /*elem_is_up=*/true);
+  const auto sup_vel_x_neighbor = interpolate(*_limiter,
+                                              _sup_vel_x_neighbor[_qp],
+                                              _sup_vel_x_elem[_qp],
+                                              _grad_sup_vel_x_neighbor[_qp],
+                                              *_face_info,
+                                              /*elem_is_up=*/false);
+  const auto sup_vel_y_elem = _dim >= 2 ? interpolate(*_limiter,
+                                                      (*_sup_vel_y_elem)[_qp],
+                                                      (*_sup_vel_y_neighbor)[_qp],
+                                                      (*_grad_sup_vel_y_elem)[_qp],
+                                                      *_face_info,
+                                                      /*elem_is_up=*/true)
+                                        : ADReal(0);
+  const auto sup_vel_y_neighbor = _dim >= 2 ? interpolate(*_limiter,
+                                                          (*_sup_vel_y_neighbor)[_qp],
+                                                          (*_sup_vel_y_elem)[_qp],
+                                                          (*_grad_sup_vel_y_neighbor)[_qp],
+                                                          *_face_info,
+                                                          /*elem_is_up=*/false)
+                                            : ADReal(0);
+  const auto sup_vel_z_elem = _dim >= 3 ? interpolate(*_limiter,
+                                                      (*_sup_vel_z_elem)[_qp],
+                                                      (*_sup_vel_z_neighbor)[_qp],
+                                                      (*_grad_sup_vel_z_elem)[_qp],
+                                                      *_face_info,
+                                                      /*elem_is_up=*/true)
+                                        : ADReal(0);
+  const auto sup_vel_z_neighbor = _dim >= 3 ? interpolate(*_limiter,
+                                                          (*_sup_vel_z_neighbor)[_qp],
+                                                          (*_sup_vel_z_elem)[_qp],
+                                                          (*_grad_sup_vel_z_neighbor)[_qp],
+                                                          *_face_info,
+                                                          /*elem_is_up=*/false)
+                                            : ADReal(0);
+  const VectorValue<ADReal> sup_vel_elem = {sup_vel_x_elem, sup_vel_y_elem, sup_vel_z_elem};
+  const VectorValue<ADReal> sup_vel_neighbor = {
+      sup_vel_x_neighbor, sup_vel_y_neighbor, sup_vel_z_neighbor};
 
-  const auto specific_volume_elem = 1. / _rho_elem[_qp];
-  const auto specific_volume_neighbor = 1. / _rho_neighbor[_qp];
+  // Compute rho using equation of state
+  const auto rho_elem = _fluid.rho_from_p_T(pressure_elem, T_fluid_elem);
+  const auto rho_neighbor = _fluid.rho_from_p_T(pressure_neighbor, T_fluid_neighbor);
 
+  // Explicit property calculations
+  const auto specific_volume_elem = 1. / rho_elem;
+  const auto specific_volume_neighbor = 1. / rho_neighbor;
+  const auto u_elem = sup_vel_elem / _eps_elem[_qp];
+  const auto u_neighbor = sup_vel_neighbor / _eps_neighbor[_qp];
+  const auto e_elem = _fluid.e_from_p_rho(pressure_elem, rho_elem);
+  const auto e_neighbor = _fluid.e_from_p_rho(pressure_neighbor, rho_neighbor);
   ADReal c_elem, c_neighbor;
   Real dc_elem_dv, dc_elem_de, dc_neighbor_dv, dc_neighbor_de;
   _fluid.c_from_v_e(
-      specific_volume_elem.value(), _e_elem[_qp].value(), c_elem.value(), dc_elem_dv, dc_elem_de);
+      specific_volume_elem.value(), e_elem.value(), c_elem.value(), dc_elem_dv, dc_elem_de);
   _fluid.c_from_v_e(specific_volume_neighbor.value(),
-                    _e_neighbor[_qp].value(),
+                    e_neighbor.value(),
                     c_neighbor.value(),
                     dc_neighbor_dv,
                     dc_neighbor_de);
   c_elem.derivatives() =
-      dc_elem_dv * specific_volume_elem.derivatives() + dc_elem_de * _e_elem[_qp].derivatives();
+      dc_elem_dv * specific_volume_elem.derivatives() + dc_elem_de * e_elem.derivatives();
   c_neighbor.derivatives() = dc_neighbor_dv * specific_volume_neighbor.derivatives() +
-                             dc_neighbor_de * _e_neighbor[_qp].derivatives();
+                             dc_neighbor_de * e_neighbor.derivatives();
 
-  _cSf_elem = c_elem * _Sf.norm();
-  _cSf_neighbor = c_neighbor * _Sf.norm();
+  // Apply Kurganov-Tadmor scheme
+  const auto Sf = _face_info->faceArea() * _face_info->faceCoord() * _face_info->normal();
+  auto vSf_elem = sup_vel_elem * Sf;
+  auto vSf_neighbor = sup_vel_neighbor * Sf;
+  const auto cSf_elem = c_elem * Sf.norm();
+  const auto cSf_neighbor = c_neighbor * Sf.norm();
   // Create this to avoid new nonzero mallocs
-  const ADReal dummy_psi = 0 * (_vSf_elem + _cSf_elem + _vSf_neighbor + _cSf_neighbor);
-  _psi_elem = std::max({_vSf_elem + _cSf_elem, _vSf_neighbor + _cSf_neighbor, ADReal(0)});
-  _psi_elem += dummy_psi;
-  _psi_neighbor = std::min({_vSf_elem - _cSf_elem, _vSf_neighbor - _cSf_neighbor, ADReal(0)});
-  _psi_neighbor += dummy_psi;
-  _alpha_elem = _psi_elem / (_psi_elem - _psi_neighbor);
-  _alpha_neighbor = 1. - _alpha_elem;
-  _psi_max = std::max(std::abs(_psi_elem), std::abs(_psi_neighbor));
-  _omega = _psi_neighbor * _alpha_elem;
-  _vSf_elem *= _alpha_elem;
-  _vSf_neighbor *= _alpha_neighbor;
-  _adjusted_vSf_elem = _vSf_elem - _omega;
-  _adjusted_vSf_neighbor = _vSf_neighbor + _omega;
-  _adjusted_vSf_max = std::max(std::abs(_adjusted_vSf_elem), std::abs(_adjusted_vSf_neighbor));
-  _adjusted_vSf_max += 0 * (_adjusted_vSf_elem + _adjusted_vSf_neighbor);
-}
+  const ADReal dummy_psi = 0 * (vSf_elem + cSf_elem + vSf_neighbor + cSf_neighbor);
+  auto psi_elem = std::max({vSf_elem + cSf_elem, vSf_neighbor + cSf_neighbor, ADReal(0)});
+  psi_elem += dummy_psi;
+  auto psi_neighbor = std::min({vSf_elem - cSf_elem, vSf_neighbor - cSf_neighbor, ADReal(0)});
+  psi_neighbor += dummy_psi;
+  const auto alpha_elem = psi_elem / (psi_elem - psi_neighbor);
+  const auto alpha_neighbor = 1. - alpha_elem;
+  const auto psi_max = std::max(std::abs(psi_elem), std::abs(psi_neighbor));
+  const auto omega = psi_neighbor * alpha_elem;
+  vSf_elem *= alpha_elem;
+  vSf_neighbor *= alpha_neighbor;
+  const auto adjusted_vSf_elem = vSf_elem - omega;
+  const auto adjusted_vSf_neighbor = vSf_neighbor + omega;
+  auto adjusted_vSf_max = std::max(std::abs(adjusted_vSf_elem), std::abs(adjusted_vSf_neighbor));
+  adjusted_vSf_max += 0 * (adjusted_vSf_elem + adjusted_vSf_neighbor);
 
-ADReal
-PCNSFVLaxFriedrichs::computeQpResidual()
-{
-  computeAValues();
-
+  // Finally compute residuals
   if (_eqn == "mass")
-    return _adjusted_vSf_elem * _rho_elem[_qp] + _adjusted_vSf_neighbor * _rho_neighbor[_qp];
+    return adjusted_vSf_elem * rho_elem + adjusted_vSf_neighbor * rho_neighbor;
   else if (_eqn == "momentum")
-    return _adjusted_vSf_elem * _rhou_elem[_qp](_index) +
-           _adjusted_vSf_neighbor * _rhou_neighbor[_qp](_index) +
-           (_alpha_elem * _eps_elem[_qp] * _pressure_elem[_qp] +
-            _alpha_neighbor * _eps_neighbor[_qp] * _pressure_neighbor[_qp]) *
-               _Sf(_index);
+    return adjusted_vSf_elem * rho_elem * u_elem(_index) +
+           adjusted_vSf_neighbor * rho_neighbor * u_neighbor(_index) +
+           (alpha_elem * _eps_elem[_qp] * pressure_elem +
+            alpha_neighbor * _eps_neighbor[_qp] * pressure_neighbor) *
+               Sf(_index);
   else if (_eqn == "energy")
-    return _adjusted_vSf_elem * _rho_ht_elem[_qp] + _adjusted_vSf_neighbor * _rho_ht_neighbor[_qp] +
+  {
+    const auto rho_ht_elem = rho_elem * (e_elem + u_elem * u_elem / 2.) + pressure_elem;
+    const auto rho_ht_neighbor =
+        rho_neighbor * (e_neighbor + u_neighbor * u_neighbor / 2.) + pressure_neighbor;
+
+    return adjusted_vSf_elem * rho_ht_elem + adjusted_vSf_neighbor * rho_ht_neighbor +
            // This term removes artifacts at boundaries in the particle velocity solution. Note that
            // if instead of using pressure, one uses porosity*pressure then the solution is totally
            // wrong
-           _omega * (_pressure_elem[_qp] - _pressure_neighbor[_qp]);
+           omega * (pressure_elem - pressure_neighbor);
+  }
   else if (_eqn == "scalar")
-    return _adjusted_vSf_elem * _rho_elem[_qp] * _scalar_elem[_qp] +
-           _adjusted_vSf_neighbor * _rho_neighbor[_qp] * _scalar_neighbor[_qp];
+    return adjusted_vSf_elem * rho_elem * _scalar_elem[_qp] +
+           adjusted_vSf_neighbor * rho_neighbor * _scalar_neighbor[_qp];
   else
     mooseError("Unrecognized enum type ", _eqn);
 }
