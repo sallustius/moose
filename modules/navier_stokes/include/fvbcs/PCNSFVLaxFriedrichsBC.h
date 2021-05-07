@@ -10,6 +10,15 @@
 #pragma once
 
 #include "FVFluxBC.h"
+#include <memory>
+
+namespace Moose
+{
+namespace FV
+{
+class Limiter;
+}
+}
 
 class SinglePhaseFluidProperties;
 
@@ -28,14 +37,26 @@ protected:
   void computeAValues();
 
   const SinglePhaseFluidProperties & _fluid;
-  const ADMaterialProperty<RealVectorValue> & _superficial_vel_elem;
-  const ADMaterialProperty<RealVectorValue> & _superficial_vel_neighbor;
-  const ADMaterialProperty<Real> & _rho_elem;
-  const ADMaterialProperty<Real> & _rho_neighbor;
+  const ADMaterialProperty<Real> & _sup_vel_x_elem;
+  const ADMaterialProperty<Real> & _sup_vel_x_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_x_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_x_neighbor;
+  const ADMaterialProperty<Real> & _sup_vel_y_elem;
+  const ADMaterialProperty<Real> & _sup_vel_y_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_y_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_y_neighbor;
+  const ADMaterialProperty<Real> & _sup_vel_z_elem;
+  const ADMaterialProperty<Real> & _sup_vel_z_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_z_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_z_neighbor;
   const ADMaterialProperty<Real> & _T_fluid_elem;
   const ADMaterialProperty<Real> & _T_fluid_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_T_fluid_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_T_fluid_neighbor;
   const ADMaterialProperty<Real> & _pressure_elem;
   const ADMaterialProperty<Real> & _pressure_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_pressure_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_pressure_neighbor;
   const MaterialProperty<Real> & _eps_elem;
   const MaterialProperty<Real> & _eps_neighbor;
   const MooseEnum _eqn;
@@ -47,10 +68,11 @@ protected:
   const Function * const _svel_function;
   const Function * const _pressure_function;
   const Function * const _T_fluid_function;
-  const bool _implicit_state_var;
   const MooseArray<ADReal> & _scalar_elem;
   const MooseArray<ADReal> & _scalar_neighbor;
   const bool _scalar_function_provided;
   const Function * const _scalar_function;
   const bool _velocity_function_includes_rho;
+
+  std::unique_ptr<Moose::FV::Limiter> _limiter;
 };

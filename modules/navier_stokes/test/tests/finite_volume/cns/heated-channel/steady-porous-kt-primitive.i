@@ -71,20 +71,20 @@ ud_in=${fparse u_in * eps}
 
 [FVKernels]
   [mass_advection]
-    type = PCNSFVInterpolatedLaxFriedrichs
+    type = PCNSFVLaxFriedrichs
     variable = pressure
     eqn = "mass"
   []
 
   [momentum_advection]
-    type = PCNSFVInterpolatedLaxFriedrichs
+    type = PCNSFVLaxFriedrichs
     variable = vel_x
     eqn = "momentum"
     momentum_component = 'x'
   []
 
   [energy_advection]
-    type = PCNSFVInterpolatedLaxFriedrichs
+    type = PCNSFVLaxFriedrichs
     variable = temperature
     eqn = "energy"
   []
@@ -97,7 +97,7 @@ ud_in=${fparse u_in * eps}
 
 [FVBCs]
   [rho_left]
-    type = PCNSFVInterpolatedLaxFriedrichsBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'left'
     variable = pressure
     superficial_velocity = 'ud_in'
@@ -105,7 +105,7 @@ ud_in=${fparse u_in * eps}
     eqn = 'mass'
   []
   [rhou_left]
-    type = PCNSFVInterpolatedLaxFriedrichsBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'left'
     variable = vel_x
     superficial_velocity = 'ud_in'
@@ -114,7 +114,7 @@ ud_in=${fparse u_in * eps}
     momentum_component = 'x'
   []
   [rho_et_left]
-    type = PCNSFVInterpolatedLaxFriedrichsBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'left'
     variable = temperature
     superficial_velocity = 'ud_in'
@@ -122,14 +122,14 @@ ud_in=${fparse u_in * eps}
     eqn = 'energy'
   []
   [rho_right]
-    type = PCNSFVInterpolatedLaxFriedrichsBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'right'
     variable = pressure
     pressure = ${p_initial}
     eqn = 'mass'
   []
   [rhou_right]
-    type = PCNSFVInterpolatedLaxFriedrichsBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'right'
     variable = vel_x
     pressure = ${p_initial}
@@ -137,7 +137,7 @@ ud_in=${fparse u_in * eps}
     momentum_component = 'x'
   []
   [rho_et_right]
-    type = PCNSFVInterpolatedLaxFriedrichsBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'right'
     variable = temperature
     pressure = ${p_initial}

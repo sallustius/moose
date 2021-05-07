@@ -10,7 +10,15 @@
 #pragma once
 
 #include "FVFluxKernel.h"
+#include <memory>
 
+namespace Moose
+{
+namespace FV
+{
+class Limiter;
+}
+}
 class SinglePhaseFluidProperties;
 
 class PCNSFVLaxFriedrichs : public FVFluxKernel
@@ -28,39 +36,33 @@ protected:
   void computeAValues();
 
   const SinglePhaseFluidProperties & _fluid;
-  const ADMaterialProperty<RealVectorValue> & _superficial_vel_elem;
-  const ADMaterialProperty<RealVectorValue> & _superficial_vel_neighbor;
-  const ADMaterialProperty<Real> & _rho_elem;
-  const ADMaterialProperty<Real> & _rho_neighbor;
-  const ADMaterialProperty<RealVectorValue> & _rhou_elem;
-  const ADMaterialProperty<RealVectorValue> & _rhou_neighbor;
-  const ADMaterialProperty<Real> & _rho_ht_elem;
-  const ADMaterialProperty<Real> & _rho_ht_neighbor;
+  const ADMaterialProperty<Real> & _sup_vel_x_elem;
+  const ADMaterialProperty<Real> & _sup_vel_x_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_x_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_x_neighbor;
+  const ADMaterialProperty<Real> & _sup_vel_y_elem;
+  const ADMaterialProperty<Real> & _sup_vel_y_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_y_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_y_neighbor;
+  const ADMaterialProperty<Real> & _sup_vel_z_elem;
+  const ADMaterialProperty<Real> & _sup_vel_z_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_z_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_z_neighbor;
+
   const ADMaterialProperty<Real> & _T_fluid_elem;
   const ADMaterialProperty<Real> & _T_fluid_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_T_fluid_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_T_fluid_neighbor;
   const ADMaterialProperty<Real> & _pressure_elem;
   const ADMaterialProperty<Real> & _pressure_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_pressure_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_pressure_neighbor;
   const MaterialProperty<Real> & _eps_elem;
   const MaterialProperty<Real> & _eps_neighbor;
-  const ADMaterialProperty<Real> & _e_elem;
-  const ADMaterialProperty<Real> & _e_neighbor;
   const MooseEnum _eqn;
   const unsigned int _index;
   const MooseArray<ADReal> & _scalar_elem;
   const MooseArray<ADReal> & _scalar_neighbor;
 
-  RealVectorValue _Sf;
-  ADReal _vSf_elem;
-  ADReal _vSf_neighbor;
-  ADReal _cSf_elem;
-  ADReal _cSf_neighbor;
-  ADReal _psi_elem;
-  ADReal _psi_neighbor;
-  ADReal _alpha_elem;
-  ADReal _alpha_neighbor;
-  ADReal _psi_max;
-  ADReal _omega;
-  ADReal _adjusted_vSf_elem;
-  ADReal _adjusted_vSf_neighbor;
-  ADReal _adjusted_vSf_max;
+  std::unique_ptr<Moose::FV::Limiter> _limiter;
 };
