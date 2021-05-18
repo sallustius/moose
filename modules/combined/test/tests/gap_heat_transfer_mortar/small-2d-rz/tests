@@ -28,7 +28,7 @@
       heavy = true
       detail = 'low conductivity in the gap and second order variables'
       cli_args = 'name=second_low_k Mesh/second_order=true order=SECOND Variables/frictionless_normal_lm/use_dual=false'
-      min_ad_size = '75'
+      min_ad_size = '73'
       ad_mode = 'sparse'
     []
     [second_high_k]
@@ -38,7 +38,7 @@
       heavy = true
       detail = 'high conductivity in the gap and second order variables'
       cli_args = 'name=second_high_k Mesh/second_order=true order=SECOND Variables/frictionless_normal_lm/use_dual=false Constraints/thermal_contact/k=100'
-      min_ad_size = '75'
+      min_ad_size = '73'
       ad_mode = 'sparse'
     []
   []
