@@ -20,14 +20,25 @@ v_in=1
     nx = 2
     ymin = 0
     ymax = 10
-    ny = 200
+    ny = 20
   []
 []
 
 [Modules]
   [FluidProperties]
-    [fp]
+    [fp_helium]
+     type = HeliumFluidProperties
+    []
+    [fp_air]
       type = IdealGasFluidProperties
+      gamma = 1.4
+      mu = 18.23e-6
+      k = 25.68e-3
+    []
+    [fp]
+      type = GasMixPHFluidProperties
+      fp_primary = fp_helium
+      fp_secondary = 'fp_air'
     []
   []
 []
@@ -94,7 +105,7 @@ v_in=1
   [pressure]
     type = ADMaterialRealAux
     variable = pressure
-    property = p
+    property = pressure
     execute_on = 'timestep_end'
   []
   [temperature]
@@ -117,7 +128,7 @@ v_in=1
     variable = rho
   []
   [mass_advection]
-    type = PCNSFVKT
+    type = PCNSFVLaxFriedrichs
     variable = rho
     eqn = "mass"
   []
@@ -127,7 +138,7 @@ v_in=1
     variable = rho_u
   []
   [momentum_advection_and_pressure_x]
-    type = PCNSFVKT
+    type = PCNSFVLaxFriedrichs
     variable = rho_u
     eqn = "momentum"
     momentum_component = 'x'
@@ -138,7 +149,7 @@ v_in=1
     variable = rho_v
   []
   [momentum_advection_and_pressure_y]
-    type = PCNSFVKT
+    type = PCNSFVLaxFriedrichs
     variable = rho_v
     eqn = "momentum"
     momentum_component = 'y'
@@ -149,7 +160,7 @@ v_in=1
     variable = rho_et
   []
   [energy_advection]
-    type = PCNSFVKT
+    type = PCNSFVLaxFriedrichs
     variable = rho_et
     eqn = "energy"
   []
@@ -160,7 +171,7 @@ v_in=1
     rho = rho
   []
   [mass_frac_advection]
-    type = PCNSFVKT
+    type = GasMixPCNSFVLaxFriedrichs
     variable = mass_frac
     eqn = "scalar"
   []
@@ -177,7 +188,7 @@ v_in=1
 
 [FVBCs]
   [rho_bottom]
-    type = PCNSFVStrongBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'bottom'
     variable = rho
     superficial_velocity = 'ud_in'
@@ -185,7 +196,7 @@ v_in=1
     eqn = 'mass'
   []
   [rho_u_bottom]
-    type = PCNSFVStrongBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'bottom'
     variable = rho_u
     superficial_velocity = 'ud_in'
@@ -194,7 +205,7 @@ v_in=1
     momentum_component = 'x'
   []
   [rho_v_bottom]
-    type = PCNSFVStrongBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'bottom'
     variable = rho_v
     superficial_velocity = 'ud_in'
@@ -203,7 +214,7 @@ v_in=1
     momentum_component = 'y'
   []
   [rho_et_bottom]
-    type = PCNSFVStrongBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'bottom'
     variable = rho_et
     superficial_velocity = 'ud_in'
@@ -211,50 +222,52 @@ v_in=1
     eqn = 'energy'
   []
   [mass_frac_bottom]
-    type = PCNSFVStrongBC
+    type = GasMixPCNSFVLaxFriedrichsBC
     boundary = 'bottom'
     variable = mass_frac
     superficial_velocity = 'ud_in'
     T_fluid = ${T}
     scalar = 1
+    fractions = 'mass_frac'
     eqn = 'scalar'
   []
 
   [rho_top]
-    type = PCNSFVStrongBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'top'
     variable = rho
-    p = ${p_initial}
+    pressure = ${p_initial}
     eqn = 'mass'
   []
   [rho_u_top]
-    type = PCNSFVStrongBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'top'
     variable = rho_u
-    p = ${p_initial}
+    pressure = ${p_initial}
     eqn = 'momentum'
     momentum_component = 'x'
   []
   [rho_v_top]
-    type = PCNSFVStrongBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'top'
     variable = rho_v
-    p = ${p_initial}
+    pressure = ${p_initial}
     eqn = 'momentum'
     momentum_component = 'y'
   []
   [rho_et_top]
-    type = PCNSFVStrongBC
+    type = PCNSFVLaxFriedrichsBC
     boundary = 'top'
     variable = rho_et
-    p = ${p_initial}
+    pressure = ${p_initial}
     eqn = 'energy'
   []
   [mass_frac_top]
-    type = PCNSFVStrongBC
+    type = GasMixPCNSFVLaxFriedrichsBC
     boundary = 'top'
     variable = mass_frac
-    p = ${p_initial}
+    pressure = ${p_initial}
+    fractions = 'mass_frac'
     eqn = 'scalar'
   []
 
@@ -274,13 +287,14 @@ v_in=1
 
 [Materials]
   [var_mat]
-    type = PorousConservedVarMaterial
+    type = GasMixPorousConservedVarMaterial
     rho = rho
     rho_et = rho_et
     superficial_rhou = rho_u
     superficial_rhov = rho_v
     fp = fp
     porosity = porosity
+    secondary_fraction=mass_frac
   []
   [porosity]
     type = GenericConstantMaterial
@@ -292,9 +306,7 @@ v_in=1
 [Executioner]
   solve_type = NEWTON
   type = Transient
-  [TimeIntegrator]
-    type = ActuallyExplicitEuler
-  []
+  nl_max_its = 10
   steady_state_detection = true
   steady_state_tolerance = 1e-12
   abort_on_solve_fail = true
