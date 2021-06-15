@@ -105,7 +105,7 @@ v_in=1
   [pressure]
     type = ADMaterialRealAux
     variable = pressure
-    property = pressure
+    property = p
     execute_on = 'timestep_end'
   []
   [temperature]
@@ -128,7 +128,7 @@ v_in=1
     variable = rho
   []
   [mass_advection]
-    type = PCNSFVLaxFriedrichs
+    type = PCNSFVKT
     variable = rho
     eqn = "mass"
   []
@@ -138,7 +138,7 @@ v_in=1
     variable = rho_u
   []
   [momentum_advection_and_pressure_x]
-    type = PCNSFVLaxFriedrichs
+    type = PCNSFVKT
     variable = rho_u
     eqn = "momentum"
     momentum_component = 'x'
@@ -149,7 +149,7 @@ v_in=1
     variable = rho_v
   []
   [momentum_advection_and_pressure_y]
-    type = PCNSFVLaxFriedrichs
+    type = PCNSFVKT
     variable = rho_v
     eqn = "momentum"
     momentum_component = 'y'
@@ -160,7 +160,7 @@ v_in=1
     variable = rho_et
   []
   [energy_advection]
-    type = PCNSFVLaxFriedrichs
+    type = PCNSFVKT
     variable = rho_et
     eqn = "energy"
   []
@@ -188,7 +188,7 @@ v_in=1
 
 [FVBCs]
   [rho_bottom]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'bottom'
     variable = rho
     superficial_velocity = 'ud_in'
@@ -196,7 +196,7 @@ v_in=1
     eqn = 'mass'
   []
   [rho_u_bottom]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'bottom'
     variable = rho_u
     superficial_velocity = 'ud_in'
@@ -205,7 +205,7 @@ v_in=1
     momentum_component = 'x'
   []
   [rho_v_bottom]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'bottom'
     variable = rho_v
     superficial_velocity = 'ud_in'
@@ -214,7 +214,7 @@ v_in=1
     momentum_component = 'y'
   []
   [rho_et_bottom]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'bottom'
     variable = rho_et
     superficial_velocity = 'ud_in'
@@ -233,40 +233,40 @@ v_in=1
   []
 
   [rho_top]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'top'
     variable = rho
-    pressure = ${p_initial}
+    p = ${p_initial}
     eqn = 'mass'
   []
   [rho_u_top]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'top'
     variable = rho_u
-    pressure = ${p_initial}
+    p = ${p_initial}
     eqn = 'momentum'
     momentum_component = 'x'
   []
   [rho_v_top]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'top'
     variable = rho_v
-    pressure = ${p_initial}
+    p = ${p_initial}
     eqn = 'momentum'
     momentum_component = 'y'
   []
   [rho_et_top]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'top'
     variable = rho_et
-    pressure = ${p_initial}
+    p = ${p_initial}
     eqn = 'energy'
   []
   [mass_frac_top]
     type = GasMixPCNSFVLaxFriedrichsBC
     boundary = 'top'
     variable = mass_frac
-    pressure = ${p_initial}
+    p = ${p_initial}
     fractions = 'mass_frac'
     eqn = 'scalar'
   []

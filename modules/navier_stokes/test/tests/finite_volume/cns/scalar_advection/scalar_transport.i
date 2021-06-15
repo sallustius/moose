@@ -105,7 +105,7 @@ rho_v_initial=${fparse rho_initial * v_in}
   [pressure]
     type = ADMaterialRealAux
     variable = pressure
-    property = pressure
+    property = p
     execute_on = 'timestep_end'
   []
   [temperature]
@@ -135,7 +135,7 @@ rho_v_initial=${fparse rho_initial * v_in}
     rho = rho
   []
   [mass_frac_advection]
-    type = PCNSFVLaxFriedrichs
+    type = PCNSFVKT
     variable = mass_frac
     eqn = "scalar"
   []
@@ -155,7 +155,7 @@ rho_v_initial=${fparse rho_initial * v_in}
 
 [FVBCs]
   [mf_bottom]
-    type = PCNSFVLaxFriedrichsBC
+    type = PCNSFVStrongBC
     boundary = 'bottom'
     variable = mass_frac
     superficial_velocity = 'ud_in'
@@ -206,4 +206,3 @@ rho_v_initial=${fparse rho_initial * v_in}
 [Debug]
   show_var_residual_norms = true
 []
-
