@@ -57,6 +57,10 @@ GasMixPCNSFVStrongBC::GasMixPCNSFVStrongBC(const InputParameters & params)
   : FVFluxBC(params),
     _fluid(getUserObject<SinglePhaseFluidProperties>(NS::fluid)),
     _dim(_mesh.dimension()),
+    _fraction_elem(getADMaterialProperty<Real>("fraction")),
+    _fraction_neighbor(getNeighborADMaterialProperty<Real>("fraction")),
+    _grad_fraction_elem(getADMaterialProperty<RealVectorValue>(NS::grad("fraction"))),
+    _grad_fraction_neighbor(getNeighborADMaterialProperty<RealVectorValue>(NS::grad("fraction"))),
     _sup_vel_x_elem(getADMaterialProperty<Real>(NS::superficial_velocity_x)),
     _sup_vel_x_neighbor(getNeighborADMaterialProperty<Real>(NS::superficial_velocity_x)),
     _grad_sup_vel_x_elem(
@@ -90,9 +94,11 @@ GasMixPCNSFVStrongBC::GasMixPCNSFVStrongBC(const InputParameters & params)
     _sup_vel_provided(isParamValid(NS::superficial_velocity)),
     _pressure_provided(isParamValid(NS::pressure)),
     _T_fluid_provided(isParamValid(NS::T_fluid)),
+    _fraction_provided(isParamValid("fraction")),
     _sup_vel_function(_sup_vel_provided ? &getFunction(NS::superficial_velocity) : nullptr),
     _pressure_function(_pressure_provided ? &getFunction(NS::pressure) : nullptr),
     _T_fluid_function(_T_fluid_provided ? &getFunction(NS::T_fluid) : nullptr),
+    _fraction_function(_fraction_provided ? &getFunction("fraction") : nullptr),
     _scalar_elem(_u),
     _scalar_neighbor(_u_neighbor),
     _grad_scalar_elem((_eqn == "scalar") ? &_var.adGradSln() : nullptr),
@@ -123,8 +129,10 @@ GasMixPCNSFVStrongBC::computeQpResidual()
   const auto & sup_vel_z_interior = out_of_elem ? _sup_vel_z_elem[_qp] : _sup_vel_z_neighbor[_qp];
   const auto & pressure_interior = out_of_elem ? _pressure_elem[_qp] : _pressure_neighbor[_qp];
   const auto & T_fluid_interior = out_of_elem ? _T_fluid_elem[_qp] : _T_fluid_neighbor[_qp];
-  const auto & scalar_interior = out_of_elem ? _scalar_elem[_qp] : _scalar_neighbor[_qp];
+  const auto & fraction_interior = out_of_elem ? _fraction_elem[_qp] : _fraction_neighbor[_qp];
 
+  const auto & grad_fraction_interior =
+      out_of_elem ? _grad_fraction_elem[_qp] : _grad_fraction_neighbor[_qp];
   const auto & grad_sup_vel_x_interior =
       out_of_elem ? _grad_sup_vel_x_elem[_qp] : _grad_sup_vel_x_neighbor[_qp];
   const auto & grad_sup_vel_y_interior =
@@ -135,8 +143,6 @@ GasMixPCNSFVStrongBC::computeQpResidual()
       out_of_elem ? _grad_pressure_elem[_qp] : _grad_pressure_neighbor[_qp];
   const auto & grad_T_fluid_interior =
       out_of_elem ? _grad_T_fluid_elem[_qp] : _grad_T_fluid_neighbor[_qp];
-  const auto & grad_scalar_interior =
-      out_of_elem ? (*_grad_scalar_elem)[_qp] : (*_grad_scalar_neighbor)[_qp];      
   const auto & interior_centroid =
       out_of_elem ? _face_info->elemCentroid() : _face_info->neighborCentroid();
   const auto dCf = _face_info->faceCentroid() - interior_centroid;
@@ -148,13 +154,12 @@ GasMixPCNSFVStrongBC::computeQpResidual()
   const auto T_fluid_boundary =
       _T_fluid_provided ? ADReal(_T_fluid_function->value(_t, _face_info->faceCentroid()))
                         : T_fluid_interior + grad_T_fluid_interior * dCf;
-  const auto scalar_boundary =
-      _scalar_function_provided ? ADReal(_scalar_function->value(_t, _face_info->faceCentroid()))
-                                : scalar_interior + grad_scalar_interior * dCf;
-  
+  const auto fraction_boundary =
+      _fraction_provided ? ADReal(_fraction_function->value(_t, _face_info->faceCentroid()))
+                        : fraction_interior + grad_fraction_interior * dCf;
+                        
   std::vector<ADReal> mass_fractions_boundary(1);
-  mass_fractions_boundary[0] = scalar_boundary;
-  std::cout<< scalar_boundary<<std::endl;
+  mass_fractions_boundary[0] = fraction_boundary;
   
   const auto rho_boundary = _fluid.rho_from_p_T_X(pressure_boundary, T_fluid_boundary, mass_fractions_boundary);
 
@@ -222,6 +227,12 @@ GasMixPCNSFVStrongBC::computeQpResidual()
   }
   else if (_eqn == "scalar")
   {
+    const auto & scalar_interior = out_of_elem ? _scalar_elem[_qp] : _scalar_neighbor[_qp];
+    const auto & grad_scalar_interior =
+        out_of_elem ? (*_grad_scalar_elem)[_qp] : (*_grad_scalar_neighbor)[_qp];
+    const auto scalar_boundary =
+        _scalar_function_provided ? ADReal(_scalar_function->value(_t, _face_info->faceCentroid()))
+                                  : scalar_interior + grad_scalar_interior * dCf;
     return rho_boundary * scalar_boundary * sup_vel_boundary * normal;
   }
   else

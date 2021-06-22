@@ -25,6 +25,10 @@ protected:
 
   const SinglePhaseFluidProperties & _fluid;
   const unsigned int _dim;
+  const ADMaterialProperty<Real> & _fraction_elem;
+  const ADMaterialProperty<Real> & _fraction_neighbor;
+  const ADMaterialProperty<RealVectorValue> & _grad_fraction_elem;
+  const ADMaterialProperty<RealVectorValue> & _grad_fraction_neighbor;
   const ADMaterialProperty<Real> & _sup_vel_x_elem;
   const ADMaterialProperty<Real> & _sup_vel_x_neighbor;
   const ADMaterialProperty<RealVectorValue> & _grad_sup_vel_x_elem;
@@ -53,9 +57,11 @@ protected:
   const bool _sup_vel_provided;
   const bool _pressure_provided;
   const bool _T_fluid_provided;
+  const bool _fraction_provided;
   const Function * const _sup_vel_function;
   const Function * const _pressure_function;
   const Function * const _T_fluid_function;
+  const Function * const _fraction_function;
   const ADVariableValue & _scalar_elem;
   const ADVariableValue & _scalar_neighbor;
   const ADVariableGradient * _grad_scalar_elem;
