@@ -57,12 +57,12 @@ GasMixPHFluidProperties::p_from_v_e_X(Real v, Real e, const std::vector<Real> & 
 {
   Real xp = xp_from_X(x), T = T_from_v_e_X(v, e, x);
   Real vi = v / xp, ei =  _fp_primary->e_from_T_v(T, vi);
-  Real p = xp * _fp_primary->p_from_v_e(vi, ei);
+  Real p = _fp_primary->p_from_v_e(vi, ei);
   for (unsigned int i = 0; i < _n_secondary_gas; i++)
   {
       vi = v / x[i];
       ei = _fp_secondary[i]->e_from_T_v(T, vi);
-      p += x[i] * _fp_secondary[i]->p_from_v_e(vi, ei);
+      p += _fp_secondary[i]->p_from_v_e(vi, ei);
   }
   return p;
 }
@@ -71,17 +71,14 @@ ADReal
 GasMixPHFluidProperties::p_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x) const
 {
   ADReal xp = xp_from_X(x), T = T_from_v_e_X(v, e, x);
-  std::cout<<xp<<std::endl;
-  std::cout<<T<<std::endl;
   ADReal vi = v / xp, ei =  _fp_primary->e_from_T_v(T, vi);
-  ADReal p = xp * _fp_primary->p_from_v_e(vi, ei);
+  ADReal p = _fp_primary->p_from_v_e(vi, ei);
   for (unsigned int i = 0; i < _n_secondary_gas; i++)
   {
       vi = v / x[i];
       ei = _fp_secondary[i]->e_from_T_v(T, vi);
-      p += x[i] * _fp_secondary[i]->p_from_v_e(vi, ei);
+      p += _fp_secondary[i]->p_from_v_e(vi, ei);
   }
-  std::cout<<p<<std::endl;
   return p;
 }
 
@@ -92,24 +89,17 @@ GasMixPHFluidProperties::p_from_v_e_X(Real v, Real e, const std::vector<Real> & 
   Real _gamma = cp_from_v_e_X(v, e, x) / cv_from_v_e_X(v, e, x);
   dp_dv = -(_gamma - 1.0) * e / v / v;
   dp_de = (_gamma - 1.0) / v;
-  Real T = T_from_v_e_X(v, e, x);
-  Real vi = v / x[0];
-  Real ei = _fp_secondary[0]->e_from_T_v(T, vi);
-  dp_dx = _fp_secondary[0]->p_from_v_e(vi, ei);
+  dp_dx = 0.0;
 }
 
 void
 GasMixPHFluidProperties::p_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x, ADReal & p, ADReal & dp_dv, ADReal & dp_de, ADReal & dp_dx) const
 {
   p = p_from_v_e_X(v, e, x);
-  std::cout<<p<<std::endl;
   ADReal _gamma = cp_from_v_e_X(v, e, x) / cv_from_v_e_X(v, e, x);
   dp_dv = -(_gamma - 1.0) * e / v / v;
   dp_de = (_gamma - 1.0) / v;
-  ADReal T = T_from_v_e_X(v, e, x);
-  ADReal vi = v / x[0];
-  ADReal ei = _fp_secondary[0]->e_from_T_v(T, vi);
-  dp_dx = _fp_secondary[0]->p_from_v_e(vi, ei);
+  dp_dx = 0.0;
 }
 
 Real
