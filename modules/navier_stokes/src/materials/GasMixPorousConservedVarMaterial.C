@@ -36,8 +36,8 @@ GasMixPorousConservedVarMaterial::validParams()
 GasMixPorousConservedVarMaterial::GasMixPorousConservedVarMaterial(const InputParameters & params)
   : Material(params),
     _fluid(UserObjectInterface::getUserObject<SinglePhaseFluidProperties>(NS::fluid)),
-    _fractions(adCoupledValue("secondary_fraction")),
-    _var_grad_fractions(adCoupledGradient("secondary_fraction")),
+    _var_fraction(adCoupledValue("secondary_fraction")),
+    _var_grad_fraction(adCoupledGradient("secondary_fraction")),
     _var_rho(adCoupledValue(NS::density)),
     _var_grad_rho(adCoupledGradient(NS::density)),
     _var_rho_ud(adCoupledValue(NS::superficial_momentum_x)),
@@ -55,6 +55,8 @@ GasMixPorousConservedVarMaterial::GasMixPorousConservedVarMaterial(const InputPa
     _var_total_energy_density(adCoupledValue(NS::total_energy_density)),
     _var_grad_rho_et(adCoupledGradient(NS::total_energy_density)),
     _epsilon(getMaterialProperty<Real>(NS::porosity)),
+    _fraction(declareADProperty<Real>("fraction")),
+    _grad_fraction(declareADProperty<RealVectorValue>(NS::grad("fraction"))),
     _rho(declareADProperty<Real>(NS::density)),
     _superficial_rho(declareADProperty<Real>(NS::superficial_density)),
     _mass_flux(declareADProperty<RealVectorValue>(NS::mass_flux)),
@@ -146,8 +148,8 @@ GasMixPorousConservedVarMaterial::computeQpProperties()
       (_vel_x[_qp] * grad_vel_x + _vel_y[_qp] * grad_vel_y + _vel_z[_qp] * grad_vel_z);
   // Modified ----------------------------------------------
   std::vector<ADReal> mass_fractions(1);
-  mass_fractions[0] = _fractions[_qp];
-  const auto grad_mf =  _var_grad_fractions[_qp];
+  mass_fractions[0] = _var_fraction[_qp];
+  const auto grad_mf =  _var_grad_fraction[_qp];
   ADReal dp_dv, dp_de, dp_dx;
   _fluid.p_from_v_e_X(_v[_qp], _specific_internal_energy[_qp], mass_fractions, _pressure[_qp], dp_dv, dp_de, dp_dx);
   _grad_pressure[_qp] = dp_dv * grad_v + dp_de * grad_e + dp_dx * grad_mf;

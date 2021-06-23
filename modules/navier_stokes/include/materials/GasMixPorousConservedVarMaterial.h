@@ -26,8 +26,8 @@ protected:
   /// fluid properties
   const SinglePhaseFluidProperties & _fluid;
 
-  const ADVariableValue & _fractions; 
-  const ADVariableGradient & _var_grad_fractions;
+  const ADVariableValue & _var_fraction; 
+  const ADVariableGradient & _var_grad_fraction;
   const ADVariableValue & _var_rho;
   const ADVariableGradient & _var_grad_rho;
   const ADVariableValue & _var_rho_ud;
@@ -39,6 +39,8 @@ protected:
   const ADVariableValue & _var_total_energy_density;
   const ADVariableGradient & _var_grad_rho_et;
   const MaterialProperty<Real> & _epsilon;
+  ADMaterialProperty<Real> & _fraction;
+  ADMaterialProperty<RealVectorValue> & _grad_fraction;
   ADMaterialProperty<Real> & _rho;
   ADMaterialProperty<Real> & _superficial_rho;
   ADMaterialProperty<RealVectorValue> & _mass_flux;
