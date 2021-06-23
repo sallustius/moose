@@ -108,6 +108,8 @@ void
 GasMixPorousConservedVarMaterial::computeQpProperties()
 {
   _rho[_qp] = _var_rho[_qp];
+  _fraction[_qp] = _var_fraction[_qp];
+  _grad_fraction[_qp] = _var_grad_fraction[_qp];
   _superficial_rho[_qp] = _rho[_qp] * _epsilon[_qp];
   _mass_flux[_qp] = {_var_rho_ud[_qp], _var_rho_vd[_qp], _var_rho_wd[_qp]};
   _momentum[_qp] = _mass_flux[_qp] / _epsilon[_qp];
@@ -148,8 +150,8 @@ GasMixPorousConservedVarMaterial::computeQpProperties()
       (_vel_x[_qp] * grad_vel_x + _vel_y[_qp] * grad_vel_y + _vel_z[_qp] * grad_vel_z);
   // Modified ----------------------------------------------
   std::vector<ADReal> mass_fractions(1);
-  mass_fractions[0] = _var_fraction[_qp];
-  const auto grad_mf =  _var_grad_fraction[_qp];
+  mass_fractions[0] = _fraction[_qp];
+  const auto grad_mf = _grad_fraction[_qp];
   ADReal dp_dv, dp_de, dp_dx;
   _fluid.p_from_v_e_X(_v[_qp], _specific_internal_energy[_qp], mass_fractions, _pressure[_qp], dp_dv, dp_de, dp_dx);
   _grad_pressure[_qp] = dp_dv * grad_v + dp_de * grad_e + dp_dx * grad_mf;
