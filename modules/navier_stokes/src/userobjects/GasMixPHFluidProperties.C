@@ -86,20 +86,42 @@ void
 GasMixPHFluidProperties::p_from_v_e_X(Real v, Real e, const std::vector<Real> & x, Real & p, Real & dp_dv, Real & dp_de, Real & dp_dx) const
 {
   p = p_from_v_e_X(v, e, x);
-  Real _gamma = cp_from_v_e_X(v, e, x) / cv_from_v_e_X(v, e, x);
-  dp_dv = -(_gamma - 1.0) * e / v / v;
-  dp_de = (_gamma - 1.0) / v;
-  dp_dx = 0.0;
+  Real xp = xp_from_X(x), T = T_from_v_e_X(v, e, x);
+  Real vi = v / xp, ei = _fp_primary->e_from_T_v(T, vi);
+  Real dp_dv_pr, dp_dv_sec, dp_de_pr, dp_de_sec, dummy; 
+  _fp_primary->p_from_v_e(vi, ei, dummy, dp_dv_pr, dp_de_pr);
+  dp_dv = dp_dv_pr / xp;
+  dp_de = dp_de_pr;
+  for (unsigned int i = 0; i < _n_secondary_gas; i++)
+  {
+      vi = v / x[i];
+      ei = _fp_secondary[i]->e_from_T_v(T, vi);
+      _fp_secondary[i]->p_from_v_e(vi, ei, dummy, dp_dv_sec, dp_de_sec);
+      dp_dv += dp_dv_sec / x[i];
+      dp_de += dp_de_sec;
+  }
+  dp_dx = dp_dv_pr * v / xp / xp - dp_dv_sec * v / x[0] / x[0]; 
 }
 
 void
 GasMixPHFluidProperties::p_from_v_e_X(ADReal v, ADReal e, const std::vector<ADReal> & x, ADReal & p, ADReal & dp_dv, ADReal & dp_de, ADReal & dp_dx) const
 {
   p = p_from_v_e_X(v, e, x);
-  ADReal _gamma = cp_from_v_e_X(v, e, x) / cv_from_v_e_X(v, e, x);
-  dp_dv = -(_gamma - 1.0) * e / v / v;
-  dp_de = (_gamma - 1.0) / v;
-  dp_dx = 0.0;
+  ADReal xp = xp_from_X(x), T = T_from_v_e_X(v, e, x);
+  ADReal vi = v / xp, ei = _fp_primary->e_from_T_v(T, vi);
+  ADReal dp_dv_pr, dp_dv_sec, dp_de_pr, dp_de_sec, dummy; 
+  _fp_primary->p_from_v_e(vi, ei, dummy, dp_dv_pr, dp_de_pr);
+  dp_dv = dp_dv_pr / xp;
+  dp_de = dp_de_pr;
+  for (unsigned int i = 0; i < _n_secondary_gas; i++)
+  {
+      vi = v / x[i];
+      ei = _fp_secondary[i]->e_from_T_v(T, vi);
+      _fp_secondary[i]->p_from_v_e(vi, ei, dummy, dp_dv_sec, dp_de_sec);
+      dp_dv += dp_dv_sec / x[i];
+      dp_de += dp_de_sec;
+  }
+  dp_dx = dp_dv_pr * v / xp / xp - dp_dv_sec * v / x[0] / x[0]; 
 }
 
 Real
@@ -121,9 +143,9 @@ GasMixPHFluidProperties::T_from_v_e_X(Real v, Real e, const std::vector<Real> & 
   Real cv = cv_from_v_e_X(v, e, x);
   Real vi = v / x[0];
   Real dcv_dx = _fp_secondary[0]->cv_from_v_e(vi, e);
-  Real de_dx = _fp_secondary[0]->e_from_T_v(T, vi);;
+  Real de_dx = _fp_secondary[0]->e_from_T_v(T, vi);
   dT_dv = 0.0;
-  dT_de = 1.0 / cv_from_v_e_X(v, e, x);
+  dT_de = 1.0 / cv;
   dT_dx = (de_dx * cv - dcv_dx * e) / cv / cv;
 }
 
@@ -134,9 +156,9 @@ GasMixPHFluidProperties::T_from_v_e_X(ADReal v, ADReal e, const std::vector<ADRe
   ADReal cv = cv_from_v_e_X(v, e, x);
   ADReal vi = v / x[0];
   ADReal dcv_dx = _fp_secondary[0]->cv_from_v_e(vi, e);
-  ADReal de_dx = _fp_secondary[0]->e_from_T_v(T, vi);;
+  ADReal de_dx = _fp_secondary[0]->e_from_T_v(T, vi);
   dT_dv = 0.0;
-  dT_de = 1.0 / cv_from_v_e_X(v, e, x);
+  dT_de = 1.0 / cv;
   dT_dx = (de_dx * cv - dcv_dx * e) / cv / cv;
 }
 
