@@ -39,7 +39,7 @@ GasMixPorousMixedVarMaterial::GasMixPorousMixedVarMaterial(const InputParameters
     // mixed variables
     _var_fraction(adCoupledValue("secondary_fraction")),
     _grad_var_fraction(adCoupledGradient("secondary_fraction")),
-    _fraction_dot(_is_transient ? adCoupledDot("fraction") : _ad_zero),
+    _fraction_dot(_is_transient ? adCoupledDot("secondary_fraction") : _ad_zero),
     _var_pressure(adCoupledValue(NS::pressure)),
     _grad_var_pressure(adCoupledGradient(NS::pressure)),
     _pressure_dot(_is_transient ? adCoupledDot(NS::pressure) : _ad_zero),
