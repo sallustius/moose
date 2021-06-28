@@ -44,6 +44,10 @@ GasMixPCNSFVStrongBC::validParams()
       "An optional name of a function for the fluid temperature. If not provided then the fluid "
       "temperature will be treated implicitly (e.g. we will use the interior value");
   params.addParam<FunctionName>(
+      "fraction",
+      "An optional name of a function for the secondary fraction. If not provided then the fluid "
+      "mass fraction will be treated implicitly (e.g. we will use the interior value");
+  params.addParam<FunctionName>(
       "scalar",
       "A function describing the value of the scalar at the boundary. If this function is not "
       "provided, then the interior value will be used.");
