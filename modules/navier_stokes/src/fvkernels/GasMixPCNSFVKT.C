@@ -226,7 +226,7 @@ GasMixPCNSFVKT::computeQpResidual()
   const auto u_neighbor = sup_vel_neighbor / _eps_neighbor[_qp];
   const auto rho_neighbor = _fluid.rho_from_p_T_X(pressure_neighbor, T_fluid_neighbor, mass_fractions_neighbor);
   const auto specific_volume_neighbor = 1. / rho_neighbor;
-  const auto e_neighbor = _fluid.e_from_p_T_X(pressure_elem, T_fluid_elem, mass_fractions_neighbor);
+  const auto e_neighbor = _fluid.e_from_p_T_X(pressure_neighbor, T_fluid_neighbor, mass_fractions_neighbor);
 
   const auto c_elem = _fluid.c_from_v_e_X(specific_volume_elem, e_elem, mass_fractions_elem);
   const auto c_neighbor = _fluid.c_from_v_e_X(specific_volume_neighbor, e_neighbor, mass_fractions_neighbor);
