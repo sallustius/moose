@@ -265,6 +265,13 @@ user_limiter='upwind'
   []
 []
 
+[Postprocessors]
+  [average_density]
+    type = ADElementAverageMaterialProperty
+    mat_prop = rho
+  []
+[]
+
 [Executioner]
   type = Steady
   solve_type = NEWTON

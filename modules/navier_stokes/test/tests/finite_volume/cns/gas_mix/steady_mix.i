@@ -38,7 +38,7 @@ user_limiter='upwind'
   two_term_boundary_expansion = true
   limiter = ${user_limiter}
   porosity = 1.0
-  secondary_fraction = '0.5'
+  secondary_fraction = '.99'
   fp = fp
 []
 
@@ -284,6 +284,13 @@ user_limiter='upwind'
     type = ParsedVectorFunction
     value_x = '0'
     value_y = '${rho_u_in}'
+  []
+[]
+
+[Postprocessors]
+  [average_density]
+    type = ADElementAverageMaterialProperty
+    mat_prop = rho
   []
 []
 
