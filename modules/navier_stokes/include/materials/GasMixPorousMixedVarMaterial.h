@@ -82,4 +82,5 @@ protected:
   ADMaterialProperty<Real> & _mom_z;
   ADMaterialProperty<Real> & _speed;
   ADMaterialProperty<Real> & _rho_et;
+  ADMaterialProperty<Real> & _sup_rho_f_dot;
 };

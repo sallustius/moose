@@ -101,7 +101,8 @@ GasMixPorousMixedVarMaterial::GasMixPorousMixedVarMaterial(const InputParameters
     _mom_y(declareADProperty<Real>(NS::momentum_y)),
     _mom_z(declareADProperty<Real>(NS::momentum_z)),
     _speed(declareADProperty<Real>(NS::speed)),
-    _rho_et(declareADProperty<Real>(NS::total_energy_density))
+    _rho_et(declareADProperty<Real>(NS::total_energy_density)),
+    _sup_rho_f_dot(declareADProperty<Real>(NS::time_deriv("rho_f")))
 {
   if (_mesh.dimension() >= 2 && !isCoupled(NS::superficial_momentum_y))
     mooseError("You must couple in a superficial y-momentum when solving 2D or 3D problems.");
@@ -136,6 +137,7 @@ GasMixPorousMixedVarMaterial::computeQpProperties()
   _fluid.rho_from_p_T_X(_pressure[_qp], _T_fluid[_qp], mass_fractions, _rho[_qp], drho_dp, drho_dT, drho_dx);
   const auto rho_dot = drho_dp * _pressure_dot[_qp] + drho_dT * _T_fluid_dot[_qp] + drho_dx * _fraction_dot[_qp];
   const auto grad_rho = drho_dp * _grad_pressure[_qp] + drho_dT * _grad_T_fluid[_qp] + drho_dx * _grad_fraction[_qp] ;
+  _sup_rho_f_dot[_qp] = _epsilon[_qp] * (rho_dot * _fraction[_qp]  + _rho[_qp] * _fraction_dot[_qp]);
   // ----------------------------------------------------------------------------------------------------------------------------------------
   _sup_rho_dot[_qp] = _epsilon[_qp] * rho_dot;
   _sup_vel[_qp] = superficial_momentum / _rho[_qp];
