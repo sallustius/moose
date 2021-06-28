@@ -507,7 +507,7 @@ GasMixPHFluidProperties::beta_from_p_T_X(Real p, Real T, const std::vector<Real>
 Real
 GasMixPHFluidProperties:: rho_from_p_T_X(Real p, Real T, const std::vector<Real> & x) const
 {
-    Real xp = xp_from_X(x);
+    /*Real xp = xp_from_X(x);
     Real M_g = molarMass_from_X(x);
     Real pi = p * (xp * M_g / _fp_primary->molarMass() );
     Real rho =  xp_from_X(x) / _fp_primary->rho_from_p_T(pi, T);
@@ -517,12 +517,15 @@ GasMixPHFluidProperties:: rho_from_p_T_X(Real p, Real T, const std::vector<Real>
         rho += x[i] / _fp_secondary[i]->rho_from_p_T(pi, T);
     }
     return 1 / rho;
+    */
+    Real R_specific = R_molar / molarMass_from_X(x);
+    return p / R_specific / T;
 }
 
 ADReal
 GasMixPHFluidProperties:: rho_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x) const
 {
-    ADReal xp = xp_from_X(x);
+    /*ADReal xp = xp_from_X(x);
     ADReal M_g = molarMass_from_X(x);
     ADReal pi = p * (xp * M_g / _fp_primary->molarMass() );
     ADReal rho =  xp_from_X(x) / _fp_primary->rho_from_p_T(pi, T);
@@ -532,12 +535,15 @@ GasMixPHFluidProperties:: rho_from_p_T_X(ADReal p, ADReal T, const std::vector<A
         rho += x[i] / _fp_secondary[i]->rho_from_p_T(pi, T);
     }
     return 1 / rho;
+*/
+    ADReal R_specific = R_molar / molarMass_from_X(x);
+    return p / R_specific / T;
 }
 
 void
 GasMixPHFluidProperties:: rho_from_p_T_X(Real p, Real T, const std::vector<Real> & x, Real & rho, Real & drho_dp, Real & drho_dT) const
 {
-    rho =  rho_from_p_T_X(p, T, x);
+    /*rho =  rho_from_p_T_X(p, T, x);
     // Derivatives calculation
     Real xp = xp_from_X(x);
     Real M_g = molarMass_from_X(x);
@@ -554,17 +560,22 @@ GasMixPHFluidProperties:: rho_from_p_T_X(Real p, Real T, const std::vector<Real>
     }
     drho_dp = std::pow(rho, 2) * dv_dp;
     drho_dT = std::pow(rho, 2) * dv_dT;
+    */
+    Real R_specific = R_molar / molarMass_from_X(x);
+    rho = p / R_specific / T;
+    drho_dp = 1 / R_specific / T;
+    drho_dT = - p / R_specific / T / T;
 }
 
 
 void
 GasMixPHFluidProperties:: rho_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x, ADReal & rho, ADReal & drho_dp, ADReal & drho_dT) const
 {
-    rho =  rho_from_p_T_X(p, T, x);
+    /*rho =  rho_from_p_T_X(p, T, x);
     // Derivatives calculation
     ADReal xp = xp_from_X(x);
     ADReal M_g = molarMass_from_X(x);
-    ADReal p_i = p * (xp * M_g / _fp_primary->molarMass() );
+    ADReal p_i = p * (xp * M_g / _fp_primary->molarMass()  );
     ADReal rho_i = 0., drhoi_dT = 0., drhoi_dp = 0.;
     _fp_primary->rho_from_p_T(p_i, T, rho_i, drhoi_dp, drhoi_dT);
     ADReal dv_dT = xp_from_X(x) * drhoi_dT / std::pow(rho_i, 2);
@@ -577,12 +588,23 @@ GasMixPHFluidProperties:: rho_from_p_T_X(ADReal p, ADReal T, const std::vector<A
     }
     drho_dp = std::pow(rho, 2) * dv_dp;
     drho_dT = std::pow(rho, 2) * dv_dT;
+    */
+    ADReal R_specific = R_molar / molarMass_from_X(x);
+    rho = p / R_specific / T;
+    drho_dp = 1 / R_specific / T;
+    drho_dT = - p / R_specific / T / T;
 }
 
 void
 GasMixPHFluidProperties:: rho_from_p_T_X(Real p, Real T, const std::vector<Real> & x, Real & rho, Real & drho_dp, Real & drho_dT, Real & drho_dx) const
 {
-    rho =  rho_from_p_T_X(p, T, x);
+    Real R_specific = R_molar / molarMass_from_X(x);
+    rho = p / R_specific / T;
+    drho_dp = 1 / R_specific / T;
+    drho_dT = -p / R_specific / T / T;
+    drho_dx = rho * molarMass_from_X(x) * ( 1/ _fp_primary->molarMass() - 1 / _fp_secondary[0]->molarMass() );
+    
+    /*rho =  rho_from_p_T_X(p, T, x);
     // Derivatives calculation
     Real xp = xp_from_X(x);
     Real M_g = molarMass_from_X(x);
@@ -600,12 +622,19 @@ GasMixPHFluidProperties:: rho_from_p_T_X(Real p, Real T, const std::vector<Real>
     drho_dp = std::pow(rho, 2) * dv_dp;
     drho_dT = std::pow(rho, 2) * dv_dT;
     drho_dx = -std::pow(rho, 2) / rho_i;
+    */
 }
 
 void
 GasMixPHFluidProperties:: rho_from_p_T_X(ADReal p, ADReal T, const std::vector<ADReal> & x, ADReal & rho, ADReal & drho_dp, ADReal & drho_dT, ADReal & drho_dx) const
 {
-    rho =  rho_from_p_T_X(p, T, x);
+    ADReal R_specific = R_molar / molarMass_from_X(x);
+    rho = p / R_specific / T;
+    drho_dp = 1 / R_specific / T;
+    drho_dT = - p / R_specific / T / T;
+    drho_dx = rho * molarMass_from_X(x) * ( 1/ _fp_primary->molarMass() - 1 / _fp_secondary[0]->molarMass() );
+
+    /*rho =  rho_from_p_T_X(p, T, x);
     // Derivatives calculation
     ADReal xp = xp_from_X(x);
     ADReal M_g = molarMass_from_X(x);
@@ -623,6 +652,7 @@ GasMixPHFluidProperties:: rho_from_p_T_X(ADReal p, ADReal T, const std::vector<A
     drho_dp = std::pow(rho, 2) * dv_dp;
     drho_dT = std::pow(rho, 2) * dv_dT;
     drho_dx = -std::pow(rho, 2) / rho_i;
+    */
 }
 
 Real
